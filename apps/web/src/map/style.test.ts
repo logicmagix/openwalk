@@ -1,3 +1,4 @@
+import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec';
 import { describe, expect, it } from 'vitest';
 import {
   BASEMAP_SOURCE,
@@ -114,13 +115,28 @@ describe('overlay layers', () => {
         [1, 0],
         [0, 0],
       ],
-      attribution: '© Someone',
     });
     const ids = style.layers.map((l) => l.id);
     const rasterAt = ids.indexOf(overlayLayerId('map'));
     expect(rasterAt).toBeGreaterThan(0);
     // The overlay sits above the base map but below the walkways and places.
     expect(rasterAt).toBeLessThan(ids.indexOf('walkways-line'));
+  });
+});
+
+describe('style validity', () => {
+  it('builds a style MapLibre accepts, in every layer combination', () => {
+    const combinations = [
+      undefined,
+      { overlays: ['map'] },
+      { walkways: false },
+      { labels: false },
+      { overlays: ['map'], walkways: false, labels: false },
+    ];
+    for (const layerPrefs of combinations) {
+      const style = buildStyle({ ...base, theme: 'light', overlays: [overlay], layerPrefs });
+      expect(validateStyleMin(style)).toEqual([]);
+    }
   });
 });
 
@@ -133,8 +149,8 @@ describe('layer visibility', () => {
   };
 
   it('shows walkways and labels by default', () => {
-    expect(layout(undefined, 'walkways-line').visibility).toBeUndefined();
-    expect(layout(undefined, 'places-label').visibility).toBeUndefined();
+    expect(layout(undefined, 'walkways-line').visibility).toBe('visible');
+    expect(layout(undefined, 'places-label').visibility).toBe('visible');
   });
 
   it('hides walkways and labels when switched off', () => {

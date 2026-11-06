@@ -308,7 +308,7 @@ async function start(): Promise<void> {
   const initialPrefs: LayerPrefs = setupLayers(
     { button: element<HTMLButtonElement>('layers'), panel: element('layers-panel') },
     {
-      overlays: overlays.map(({ id, name }) => ({ id, name })),
+      overlays: overlays.map(({ id, name, attribution }) => ({ id, name, attribution })),
       onChange: (prefs) => restyle({ layerPrefs: prefs }),
     },
   );

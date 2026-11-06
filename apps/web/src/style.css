@@ -126,6 +126,17 @@ body {
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
+.layers-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.layers-credit {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 .layers-row input {
   width: 18px;
   height: 18px;

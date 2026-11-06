@@ -12,13 +12,25 @@ export interface LayersElements {
 
 export interface LayersOptions {
   /** The site's overlays, in the order they should appear. */
-  readonly overlays: readonly { readonly id: string; readonly name: string }[];
+  readonly overlays: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly attribution?: string;
+  }[];
   /** Called with the full, normalised preferences whenever a checkbox changes. */
   readonly onChange: (prefs: LayerPrefs) => void;
 }
 
-/** A labelled checkbox row. */
-function checkbox(label: string, checked: boolean, onToggle: (on: boolean) => void): HTMLElement {
+/**
+ * A labelled checkbox row. An overlay also credits its source beneath the label,
+ * since an image layer has nowhere to put attribution in the map's own credit line.
+ */
+function checkbox(
+  label: string,
+  checked: boolean,
+  onToggle: (on: boolean) => void,
+  attribution?: string,
+): HTMLElement {
   const row = document.createElement('label');
   row.className = 'layers-row';
   const input = document.createElement('input');
@@ -26,7 +38,16 @@ function checkbox(label: string, checked: boolean, onToggle: (on: boolean) => vo
   input.checked = checked;
   input.addEventListener('change', () => onToggle(input.checked));
   const text = document.createElement('span');
-  text.textContent = label;
+  text.className = 'layers-text';
+  const name = document.createElement('span');
+  name.textContent = label;
+  text.append(name);
+  if (attribution) {
+    const credit = document.createElement('small');
+    credit.className = 'layers-credit';
+    credit.textContent = attribution;
+    text.append(credit);
+  }
   row.append(input, text);
   return row;
 }
@@ -48,11 +69,16 @@ export function setupLayers(elements: LayersElements, options: LayersOptions): L
 
   for (const overlay of options.overlays) {
     panel.append(
-      checkbox(overlay.name, false, (on) => {
-        if (on) shownOverlays.add(overlay.id);
-        else shownOverlays.delete(overlay.id);
-        options.onChange(current());
-      }),
+      checkbox(
+        overlay.name,
+        false,
+        (on) => {
+          if (on) shownOverlays.add(overlay.id);
+          else shownOverlays.delete(overlay.id);
+          options.onChange(current());
+        },
+        overlay.attribution,
+      ),
     );
   }
   panel.append(

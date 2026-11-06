@@ -97,9 +97,13 @@ const COLOURS = {
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
-/** MapLibre hides a layer with visibility 'none'; a shown layer omits the key. */
-function visibility(shown: boolean): 'none' | undefined {
-  return shown ? undefined : 'none';
+/**
+ * MapLibre's layout.visibility must be exactly 'visible' or 'none'; it rejects a
+ * key present with value undefined, so a shown layer is spelled 'visible', not left
+ * out.
+ */
+function visibility(shown: boolean): 'visible' | 'none' {
+  return shown ? 'visible' : 'none';
 }
 
 export function buildStyle(inputs: StyleInputs): StyleSpecification {
@@ -119,6 +123,9 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
 
   // Each shown overlay is an image source positioned by its four corners, drawn as
   // a raster layer just above the base map. The site data and position stay on top.
+  // An image source carries only a url and its four corners; the style spec has no
+  // place for attribution on it, so an overlay's credit is shown by the layers
+  // control instead, beside the switch that turns the overlay on.
   const overlaySources: Record<string, SourceSpecification> = {};
   for (const overlay of shownOverlays) {
     overlaySources[overlaySourceId(overlay.id)] = {
@@ -130,7 +137,6 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         [number, number],
         [number, number],
       ],
-      ...(overlay.attribution ? { attribution: overlay.attribution } : {}),
     };
   }
   const overlayLayers = shownOverlays.map((overlay) => ({
