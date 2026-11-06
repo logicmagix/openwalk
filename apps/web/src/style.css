@@ -101,6 +101,44 @@ body {
   font-size: 11px;
 }
 
+/* "Nearest" chips, directly under the search box. A short horizontal row that
+   scrolls sideways when a site offers several categories. */
+.nearest {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 68px);
+  max-width: 420px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nearest[hidden] {
+  display: none;
+}
+
+.nearest button {
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nearest button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Search box, top left, leaving room for the locate button. */
 .search {
   position: fixed;

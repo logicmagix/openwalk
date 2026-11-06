@@ -9,6 +9,10 @@ view:
   center: [-82.1322, 29.1927]
   zoom: 17
 units: imperial
+nearest:
+  # The park's two picnic shelters are the category with more than one place, so
+  # "nearest" has a real choice to make.
+  - { category: amenity, label: Picnic shelter }
 attribution: Map data © OpenStreetMap contributors (ODbL)
 tiles:
   # A dated Protomaps basemap build; only the tiles covering the park are read.

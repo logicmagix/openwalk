@@ -12,6 +12,12 @@
   "zoom": 17
  },
  "units": "imperial",
+ "nearest": [
+  {
+   "category": "amenity",
+   "label": "Picnic shelter"
+  }
+ ],
  "attribution": "Map data © OpenStreetMap contributors (ODbL)",
  "tiles": {
   "source": "https://build.protomaps.com/20261105.pmtiles"

@@ -4,7 +4,14 @@
 import './style.css';
 import { buildIndex, type PlaceFeature } from '@openwalk/search';
 import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle } from './app';
-import { describe, destinationOf, hasArrived, makeRouter, planRoute } from './directions';
+import {
+  describe,
+  destinationOf,
+  hasArrived,
+  makeRouter,
+  nearestInCategory,
+  planRoute,
+} from './directions';
 import { Locator } from './locate';
 import { MapView } from './map/adapter';
 import {
@@ -123,6 +130,8 @@ async function start(): Promise<void> {
   let destination: PlaceFeature | null = null;
   let lastFix: PositionFix | null = null;
   let fitted = false;
+  // A "nearest" request made before a position was known, resolved on the next fix.
+  let pendingNearest: { category: string; label: string } | null = null;
 
   const panel = setupPanel(
     {
@@ -194,6 +203,28 @@ async function start(): Promise<void> {
     guide();
   }
 
+  /**
+   * Find the closest place of a category on foot and make it the destination.
+   * Needs a position, so without one it turns on location and resolves on the
+   * next fix.
+   */
+  function chooseNearest(category: string, label: string): void {
+    if (lastFix === null || !locator.on) {
+      pendingNearest = { category, label };
+      showStatus(`Finding the nearest ${label.toLowerCase()}…`);
+      if (!locator.on) toggleLocate();
+      return;
+    }
+    const match = nearestInCategory(router, lastFix, site.places.features, category);
+    if (match === null) {
+      showStatus(`No ${label.toLowerCase()} can be reached from here.`);
+      return;
+    }
+    showStatus(null);
+    searchInput.value = '';
+    chooseDestination(match.place);
+  }
+
   // --- position ------------------------------------------------------------------
   const locateButton = element<HTMLButtonElement>('locate');
   const locator = new Locator(await makeProvider(siteId), {
@@ -201,8 +232,15 @@ async function start(): Promise<void> {
       lastFix = fix;
       inputs.current = { ...inputs.current, position: fix };
       map.setPosition(positionCollection(fix));
-      if (first && destination === null) map.easeTo(fix.position, LOCATE_ZOOM);
+      if (first && destination === null && pendingNearest === null) {
+        map.easeTo(fix.position, LOCATE_ZOOM);
+      }
       guide();
+      if (pendingNearest !== null) {
+        const request = pendingNearest;
+        pendingNearest = null;
+        chooseNearest(request.category, request.label);
+      }
     },
     onError(error) {
       showStatus(positionErrorMessage(error));
@@ -249,6 +287,18 @@ async function start(): Promise<void> {
   map.onRotate(() => {
     if (destination !== null && inputs.current.route && lastFix !== null) guide();
   });
+
+  // --- "nearest" chips ----------------------------------------------------------
+  // One button per category the site configures; hidden when it configures none.
+  const nearest = element('nearest');
+  for (const { category, label } of site.config.nearest ?? []) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `Nearest ${label.toLowerCase()}`;
+    button.addEventListener('click', () => chooseNearest(category, label));
+    nearest.append(button);
+  }
+  nearest.hidden = nearest.childElementCount === 0;
 
   // A share link opens straight onto its place, with the panel ready.
   if (link !== null) {
