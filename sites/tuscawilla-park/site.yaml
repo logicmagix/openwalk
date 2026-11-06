@@ -9,3 +9,6 @@ view:
   center: [-82.1322, 29.1927]
   zoom: 17
 attribution: Map data © OpenStreetMap contributors (ODbL)
+tiles:
+  # A dated Protomaps basemap build; only the tiles covering the park are read.
+  source: https://build.protomaps.com/20261105.pmtiles
