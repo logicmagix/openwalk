@@ -1,36 +1,50 @@
 import { describe, expect, it } from 'vitest';
-import {
-  APP_NAME,
-  placeholderStatus,
-  positionErrorMessage,
-  positionMessage,
-  secureContextMessage,
-} from './app';
+import type { PlacesDocument } from '@openwalk/search';
+import { initialView, labelLanguage, pageTitle } from './app';
 
-describe('placeholderStatus', () => {
-  it('mentions the app name', () => {
-    expect(placeholderStatus()).toContain(APP_NAME);
+const places = (coords: [number, number][]): PlacesDocument => ({
+  type: 'FeatureCollection',
+  features: coords.map((c, i) => ({
+    type: 'Feature',
+    id: `p${i}`,
+    geometry: { type: 'Point', coordinates: c },
+    properties: { name: `P${i}`, category: 'x', keywords: [], verified: false },
+  })),
+});
+
+describe('initialView', () => {
+  it('prefers the configured view', () => {
+    const view = initialView(
+      { id: 'a', name: 'A', view: { center: [1, 2], zoom: 15 } },
+      places([]),
+    );
+    expect(view).toEqual({ center: [1, 2], zoom: 15 });
+  });
+
+  it('falls back to the middle of the places', () => {
+    const view = initialView(
+      { id: 'a', name: 'A' },
+      places([
+        [0, 0],
+        [2, 4],
+      ]),
+    );
+    expect(view).toEqual({ center: [1, 2], zoom: 16 });
+  });
+
+  it('shows the world when there is nothing to centre on', () => {
+    expect(initialView({ id: 'a', name: 'A' }, places([])).zoom).toBe(2);
   });
 });
 
-describe('secureContextMessage', () => {
-  it('tells the tester to use https when the context is not secure', () => {
-    expect(secureContextMessage(false)).toContain('https');
-    expect(secureContextMessage(true)).not.toContain('https');
+describe('labelLanguage', () => {
+  it('keeps the primary subtag and falls back to English', () => {
+    expect(labelLanguage('de-AT')).toBe('de');
+    expect(labelLanguage('EN')).toBe('en');
+    expect(labelLanguage('')).toBe('en');
   });
 });
 
-describe('positionMessage', () => {
-  it('rounds the accuracy to whole metres and never includes coordinates', () => {
-    expect(positionMessage(12.6)).toBe('Position received, accurate to about 13 m.');
-  });
-});
-
-describe('positionErrorMessage', () => {
-  it('maps the three standard error codes and falls back for others', () => {
-    expect(positionErrorMessage(1)).toMatch(/denied/);
-    expect(positionErrorMessage(2)).toMatch(/unavailable/);
-    expect(positionErrorMessage(3)).toMatch(/Timed out/);
-    expect(positionErrorMessage(99)).toMatch(/Unknown/);
-  });
+it('titles the page after the site', () => {
+  expect(pageTitle({ id: 'a', name: 'Somewhere' })).toBe('Somewhere · OpenWalk');
 });

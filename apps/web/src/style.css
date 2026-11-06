@@ -1,0 +1,90 @@
+/* The map is the page. Controls float over it and respect phone safe areas. */
+
+:root {
+  color-scheme: light dark;
+  --surface: #ffffff;
+  --ink: #1a202c;
+  --accent: #1a73e8;
+  --shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #202124;
+    --ink: #e8eaed;
+    --accent: #8ab4f8;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+#locate {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#locate[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+#locate:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#locate svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+#status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+}
+
+#status[hidden] {
+  display: none;
+}
+
+/* MapLibre's own controls, adjusted for the safe area. */
+.maplibregl-ctrl-top-right {
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}

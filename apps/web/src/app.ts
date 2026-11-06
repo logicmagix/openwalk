@@ -1,39 +1,39 @@
-// Pure helpers that do not touch the DOM live here so they can be unit tested
-// in Node without a browser environment.
+// Pure helpers behind the page, kept free of DOM access so they run in plain tests.
+
+import type { PlacesDocument } from '@openwalk/search';
+import type { Position, SiteConfig } from './site/types';
 
 export const APP_NAME = 'OpenWalk';
 
-/** The text shown on the placeholder page while the map does not exist yet. */
-export function placeholderStatus(): string {
-  return `${APP_NAME} placeholder page.`;
+/** Zoom used when centring on the person; close enough to tell paths apart. */
+export const LOCATE_ZOOM = 17;
+
+/** Where the map opens: the configured view, or the middle of the places. */
+export function initialView(
+  config: SiteConfig,
+  places: PlacesDocument,
+): { center: Position; zoom: number } {
+  if (config.view) return { center: config.view.center, zoom: config.view.zoom };
+  const points = places.features.map((f) => f.geometry.coordinates);
+  if (points.length === 0) return { center: [0, 0], zoom: 2 };
+  const lons = points.map((p) => p[0]);
+  const lats = points.map((p) => p[1]);
+  return {
+    center: [
+      (Math.min(...lons) + Math.max(...lons)) / 2,
+      (Math.min(...lats) + Math.max(...lats)) / 2,
+    ],
+    zoom: 16,
+  };
 }
 
-/**
- * Browsers expose the Geolocation API only in a "secure context": an https://
- * page, or http://localhost. This message tells a tester which case they are in
- * before they tap the button.
- */
-export function secureContextMessage(isSecure: boolean): string {
-  return isSecure
-    ? 'Secure context: location access is possible.'
-    : 'Not a secure context: open this page over https to allow location access.';
+/** The two-letter language for base map labels, from the browser's preference. */
+export function labelLanguage(locale: string): string {
+  const primary = locale.split('-')[0]?.toLowerCase() ?? '';
+  return /^[a-z]{2,3}$/.test(primary) ? primary : 'en';
 }
 
-/** Human-readable summary of a received position. Shows accuracy, never coordinates. */
-export function positionMessage(accuracyMetres: number): string {
-  return `Position received, accurate to about ${Math.round(accuracyMetres)} m.`;
-}
-
-/** Maps GeolocationPositionError.code (1, 2, 3) to a short explanation. */
-export function positionErrorMessage(code: number): string {
-  switch (code) {
-    case 1:
-      return 'Location permission denied.';
-    case 2:
-      return 'Position unavailable.';
-    case 3:
-      return 'Timed out waiting for a position.';
-    default:
-      return 'Unknown location error.';
-  }
+/** The page title for a site. */
+export function pageTitle(config: SiteConfig): string {
+  return `${config.name} · ${APP_NAME}`;
 }
