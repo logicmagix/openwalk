@@ -1,0 +1,20 @@
+# Keep the build context small and free of secrets. Paths are relative to the
+# repository root, which is the build context in deploy/compose.yaml.
+.git
+node_modules
+**/node_modules
+**/dist
+**/coverage
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+certs
+secrets
+deploy/secrets
+sites/*/raw
+docs
+.vscode
+.idea

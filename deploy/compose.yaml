@@ -1,0 +1,36 @@
+# Local development stack. Run from the repository root:
+#
+#   docker compose -f deploy/compose.yaml up --build
+#
+# then open http://localhost:8080. Swarm deployment uses deploy/stack.yaml,
+# not this file.
+
+name: openwalk
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: openwalk/web:dev
+    ports:
+      - '8080:8080'
+    # The image already runs as uid 101; these harden it further: an
+    # immutable filesystem with writable tmpfs only where nginx needs it,
+    # and no way to gain privileges.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
+      interval: 15s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
