@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { loadSite, siteBaseUrl, siteIdFromPath, sitePagePath } from './load';
+import {
+  loadSite,
+  placeLinkFromPath,
+  placeLinkPath,
+  siteBaseUrl,
+  siteIdFromPath,
+  sitePagePath,
+} from './load';
 
 describe('siteIdFromPath', () => {
   it('reads the id from the map page path, with or without a trailing slash', () => {
@@ -16,10 +23,32 @@ describe('siteIdFromPath', () => {
   });
 });
 
+describe('placeLinkFromPath', () => {
+  it('reads the site and place ids from a share link', () => {
+    expect(placeLinkFromPath('/p/demo-site/east-hall')).toEqual({
+      siteId: 'demo-site',
+      placeId: 'east-hall',
+    });
+    expect(placeLinkFromPath('/p/demo-site/east-hall/')).toEqual({
+      siteId: 'demo-site',
+      placeId: 'east-hall',
+    });
+  });
+
+  it('returns null for other paths and malformed ids', () => {
+    expect(placeLinkFromPath('/s/demo-site/')).toBeNull();
+    expect(placeLinkFromPath('/p/demo-site/')).toBeNull();
+    expect(placeLinkFromPath('/p/demo-site/East-Hall')).toBeNull();
+    expect(placeLinkFromPath('/p/demo-site/east/extra')).toBeNull();
+    expect(placeLinkFromPath('/p/../etc/passwd')).toBeNull();
+  });
+});
+
 describe('paths', () => {
   it('derives the page and file locations from the id', () => {
     expect(sitePagePath('demo-site')).toBe('/s/demo-site/');
     expect(siteBaseUrl('demo-site')).toBe('/sites/demo-site/');
+    expect(placeLinkPath('demo-site', 'east-hall')).toBe('/p/demo-site/east-hall');
   });
 });
 

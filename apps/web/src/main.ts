@@ -20,7 +20,13 @@ import { parseGpx } from './position/gpx';
 import { positionErrorMessage, type PositionFix, type PositionProvider } from './position/provider';
 import { ReplayProvider } from './position/replay';
 import { chooseProvider, replayAllowed, traceUrl } from './position/select';
-import { loadSite, siteBaseUrl, siteIdFromPath, sitePagePath } from './site/load';
+import {
+  loadSite,
+  placeLinkFromPath,
+  siteBaseUrl,
+  siteIdFromPath,
+  sitePagePath,
+} from './site/load';
 import { watchTheme } from './theme';
 import { listPlaces } from './ui/listing';
 import { setupPanel } from './ui/panel';
@@ -68,7 +74,10 @@ async function makeProvider(siteId: string): Promise<PositionProvider> {
 }
 
 async function start(): Promise<void> {
-  const siteId = siteIdFromPath(location.pathname);
+  // A page is reached either as the map (/s/<site>/) or as a share link to one
+  // place (/p/<site>/<place-id>); the latter opens the map on that place.
+  const link = placeLinkFromPath(location.pathname);
+  const siteId = link?.siteId ?? siteIdFromPath(location.pathname);
   if (siteId === null) {
     const fallback = import.meta.env.VITE_DEFAULT_SITE;
     if (fallback && location.pathname === '/') {
@@ -240,6 +249,16 @@ async function start(): Promise<void> {
   map.onRotate(() => {
     if (destination !== null && inputs.current.route && lastFix !== null) guide();
   });
+
+  // A share link opens straight onto its place, with the panel ready.
+  if (link !== null) {
+    const place = placesById.get(link.placeId);
+    if (place === undefined) {
+      showStatus('That place is not on this map.');
+    } else {
+      chooseDestination(place);
+    }
+  }
 }
 
 start().catch((error: unknown) => {
