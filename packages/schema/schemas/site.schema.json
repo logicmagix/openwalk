@@ -97,6 +97,10 @@
           "description": "How far a hand-drawn walkway's end may be from a mapped walkway and still be joined to it.",
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "parking_aisles": {
+          "description": "Whether the aisles of parking lots count as walkways. On by default: people walk through lots, and the router can still prefer sidewalks.",
+          "type": "boolean"
         }
       },
       "additionalProperties": false

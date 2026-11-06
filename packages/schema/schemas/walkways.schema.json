@@ -140,6 +140,10 @@
             },
             "level": {
               "type": "string"
+            },
+            "service": {
+              "description": "For highway=service ways: the OpenStreetMap service value, such as parking_aisle.",
+              "type": "string"
             }
           },
           "additionalProperties": false
