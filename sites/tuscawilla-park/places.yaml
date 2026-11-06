@@ -33,3 +33,12 @@ places:
     annotation: South shelter
     keywords: [pavilion, picnic, shade]
     osm: way/673008050
+  - id: downtown-art-park
+    name: Downtown Art Park
+    category: park
+    annotation: Across the railway, west of the park
+    keywords: [art, sculptures, murals]
+    # The south-east corner, where the sidewalk along Northeast 5th Street meets the
+    # art park's own paths. The park is outside the fetched boundary, so the entrance
+    # is placed by hand.
+    entrance: [-82.1345973, 29.1917808]

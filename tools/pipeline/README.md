@@ -1,9 +1,9 @@
 # OpenWalk data pipeline
 
 Build-time scripts that turn a site's configuration and OpenStreetMap data into the
-files the app serves: `places.geojson`, `walkways.geojson`, and `graph.json` under
-`sites/<site-id>/`. The output is committed, so the running application never needs
-Python or network access.
+files the app serves: `places.geojson`, `walkways.geojson`, `graph.json` and the base
+map `basemap.pmtiles` under `sites/<site-id>/`. The output is committed, so the running
+application never needs Python or network access.
 
 ## Setup
 
@@ -33,8 +33,19 @@ generated files and validates each against the schemas in `packages/schema/schem
 ```
 .venv/bin/openwalk-pipeline fetch sites/<site-id>
 .venv/bin/openwalk-pipeline build sites/<site-id>
+.venv/bin/openwalk-pipeline tiles sites/<site-id>
 .venv/bin/openwalk-pipeline debug sites/<site-id>
 ```
+
+`tiles` writes `basemap.pmtiles`, the site's base map. A PMTiles archive is a single
+file holding map tiles with an index at the front, so a plain file server can serve it
+and a client fetches only the tiles it needs by HTTP range request. The command reads a
+planet-wide archive the same way: from the URL in `tiles.source` in `site.yaml` it takes
+only the tiles covering the site's walkways and places, plus a margin, at every zoom
+level, and copies them unchanged. A campus comes to a few megabytes and about thirty
+tiles. Dated Protomaps basemap builds (`https://build.protomaps.com/<date>.pmtiles`)
+are a suitable source; the attribution they carry is kept in the output and the app
+shows it.
 
 `debug` writes `debug.html` into the site directory: a map of the generated files over
 satellite imagery for checking by eye. The root README describes the whole process of

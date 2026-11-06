@@ -1,0 +1,417 @@
+{
+  "graph": "sites/tuscawilla-park/graph.json",
+  "weights": {
+    "walkway": 1,
+    "area": 1,
+    "connector": 1,
+    "steps": 1.2,
+    "aisle": 1.5,
+    "road": 3
+  },
+  "routes": [
+    {
+      "from": "baseball-field",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154],
+      "cost": 285.94,
+      "metres": 175.26
+    },
+    {
+      "from": "baseball-field",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        156, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 40, 39, 38,
+        37, 36, 33, 32, 31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
+      ],
+      "cost": 711.55,
+      "metres": 600.87
+    },
+    {
+      "from": "baseball-field",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        156, 155, 17, 16, 7, 149, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126, 127, 128,
+        129, 130, 150, 151
+      ],
+      "cost": 798.06,
+      "metres": 345.42
+    },
+    {
+      "from": "baseball-field",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 157],
+      "cost": 227.22,
+      "metres": 116.54
+    },
+    {
+      "from": "baseball-field",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 92, 91, 158, 159],
+      "cost": 232.65,
+      "metres": 121.97
+    },
+    {
+      "from": "baseball-field",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [156, 155, 18, 152, 153],
+      "cost": 399.49,
+      "metres": 154.69
+    },
+    {
+      "from": "basketball-courts",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [154, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156],
+      "cost": 285.94,
+      "metres": 175.26
+    },
+    {
+      "from": "basketball-courts",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        154, 84, 83, 82, 81, 80, 79, 78, 40, 39, 38, 37, 36, 33, 32, 31, 30, 29, 28, 2, 1, 0, 144,
+        145, 146, 147, 148
+      ],
+      "cost": 476.73,
+      "metres": 476.73
+    },
+    {
+      "from": "basketball-courts",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        154, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 149, 136, 137, 138, 139, 140, 121, 122, 123,
+        124, 125, 126, 127, 128, 129, 130, 150, 151
+      ],
+      "cost": 724.56,
+      "metres": 382.6
+    },
+    {
+      "from": "basketball-courts",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [154, 84, 85, 86, 87, 94, 157],
+      "cost": 81.34,
+      "metres": 81.34
+    },
+    {
+      "from": "basketball-courts",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [154, 84, 85, 86, 87, 88, 89, 90, 158, 159],
+      "cost": 90.6,
+      "metres": 90.6
+    },
+    {
+      "from": "basketball-courts",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [154, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
+      "cost": 658.03,
+      "metres": 302.55
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156
+      ],
+      "cost": 711.55,
+      "metres": 600.87
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 154
+      ],
+      "cost": 476.73,
+      "metres": 476.73
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 149, 136, 137, 138, 139, 140, 121, 122,
+        123, 124, 125, 126, 127, 128, 129, 130, 150, 151
+      ],
+      "cost": 1150.17,
+      "metres": 808.21
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 85, 86, 87, 94, 157
+      ],
+      "cost": 506.95,
+      "metres": 506.95
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 158, 159
+      ],
+      "cost": 516.21,
+      "metres": 516.21
+    },
+    {
+      "from": "downtown-art-park",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [
+        148, 147, 146, 145, 144, 0, 1, 2, 28, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40, 78, 79, 80,
+        81, 82, 83, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153
+      ],
+      "cost": 1083.64,
+      "metres": 728.16
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        16, 17, 155, 156
+      ],
+      "cost": 798.06,
+      "metres": 345.42
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154
+      ],
+      "cost": 724.56,
+      "metres": 382.6
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 40, 39, 38, 37, 36, 33, 32, 31,
+        30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
+      ],
+      "cost": 1150.17,
+      "metres": 808.21
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        6, 5, 4, 3, 93, 94, 157
+      ],
+      "cost": 665.84,
+      "metres": 323.88
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        6, 5, 4, 3, 92, 91, 158, 159
+      ],
+      "cost": 671.27,
+      "metres": 329.31
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [
+        151, 150, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 149, 7,
+        16, 17, 155, 18, 152, 153
+      ],
+      "cost": 1170.15,
+      "metres": 472.71
+    },
+    {
+      "from": "shelter-north",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [157, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156],
+      "cost": 227.22,
+      "metres": 116.54
+    },
+    {
+      "from": "shelter-north",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [157, 94, 87, 86, 85, 84, 154],
+      "cost": 81.34,
+      "metres": 81.34
+    },
+    {
+      "from": "shelter-north",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        157, 94, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 40, 39, 38, 37, 36, 33, 32, 31, 30, 29, 28,
+        2, 1, 0, 144, 145, 146, 147, 148
+      ],
+      "cost": 506.95,
+      "metres": 506.95
+    },
+    {
+      "from": "shelter-north",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        157, 94, 93, 3, 4, 5, 6, 7, 149, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126, 127,
+        128, 129, 130, 150, 151
+      ],
+      "cost": 665.84,
+      "metres": 323.88
+    },
+    {
+      "from": "shelter-north",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [157, 94, 93, 3, 92, 91, 158, 159],
+      "cost": 48.31,
+      "metres": 48.31
+    },
+    {
+      "from": "shelter-north",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [157, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
+      "cost": 599.31,
+      "metres": 243.83
+    },
+    {
+      "from": "shelter-south",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [159, 158, 91, 92, 3, 4, 5, 6, 7, 16, 17, 155, 156],
+      "cost": 232.65,
+      "metres": 121.97
+    },
+    {
+      "from": "shelter-south",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [159, 158, 90, 89, 88, 87, 86, 85, 84, 154],
+      "cost": 90.6,
+      "metres": 90.6
+    },
+    {
+      "from": "shelter-south",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        159, 158, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 40, 39, 38, 37, 36, 33, 32,
+        31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
+      ],
+      "cost": 516.21,
+      "metres": 516.21
+    },
+    {
+      "from": "shelter-south",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        159, 158, 91, 92, 3, 4, 5, 6, 7, 149, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126,
+        127, 128, 129, 130, 150, 151
+      ],
+      "cost": 671.27,
+      "metres": 329.31
+    },
+    {
+      "from": "shelter-south",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [159, 158, 91, 92, 3, 93, 94, 157],
+      "cost": 48.31,
+      "metres": 48.31
+    },
+    {
+      "from": "shelter-south",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [159, 158, 91, 92, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
+      "cost": 604.74,
+      "metres": 249.26
+    },
+    {
+      "from": "tennis-courts",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [153, 152, 18, 155, 156],
+      "cost": 399.49,
+      "metres": 154.69
+    },
+    {
+      "from": "tennis-courts",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154],
+      "cost": 658.03,
+      "metres": 302.55
+    },
+    {
+      "from": "tennis-courts",
+      "to": "downtown-art-park",
+      "reachable": true,
+      "nodes": [
+        153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78,
+        40, 39, 38, 37, 36, 33, 32, 31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
+      ],
+      "cost": 1083.64,
+      "metres": 728.16
+    },
+    {
+      "from": "tennis-courts",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        153, 152, 18, 155, 17, 16, 7, 149, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126,
+        127, 128, 129, 130, 150, 151
+      ],
+      "cost": 1170.15,
+      "metres": 472.71
+    },
+    {
+      "from": "tennis-courts",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 157],
+      "cost": 599.31,
+      "metres": 243.83
+    },
+    {
+      "from": "tennis-courts",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 92, 91, 158, 159],
+      "cost": 604.74,
+      "metres": 249.26
+    }
+  ]
+}

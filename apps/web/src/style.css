@@ -1,0 +1,269 @@
+/* The map is the page. Controls float over it and respect phone safe areas. */
+
+:root {
+  color-scheme: light dark;
+  --surface: #ffffff;
+  --ink: #1a202c;
+  --accent: #1a73e8;
+  --shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #202124;
+    --ink: #e8eaed;
+    --accent: #8ab4f8;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+#locate {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#locate[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+#locate:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#locate svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+#status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+}
+
+#status[hidden] {
+  display: none;
+}
+
+/* MapLibre's own controls. The selectors carry #map so they outrank the library's
+   stylesheet, which is loaded after this one. The compass sits below the locate
+   button and takes the page's colours. */
+#map .maplibregl-ctrl-top-right {
+  top: calc(env(safe-area-inset-top, 0px) + 58px);
+  right: calc(env(safe-area-inset-right, 0px) + 2px);
+}
+
+#map .maplibregl-ctrl-group {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+#map .maplibregl-ctrl-group button + button {
+  border-top-color: rgb(128 128 128 / 0.3);
+}
+
+#map .maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+
+/* Search box, top left, leaving room for the locate button. */
+.search {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 68px);
+  max-width: 420px;
+}
+
+#search-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS zooming into the field */
+}
+
+#search-input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#search-list {
+  margin: 8px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  max-height: min(50vh, 360px);
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+#search-list li {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#search-list li.active,
+#search-list li:hover {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+}
+
+#search-list .detail {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+/* Directions panel, bottom, above the attribution. */
+.panel {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panel.arrived {
+  outline: 3px solid #2f855a;
+}
+
+.panel-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.panel p {
+  margin: 2px 0 0;
+  font-size: 15px;
+}
+
+#panel-detail {
+  opacity: 0.75;
+}
+
+.panel-arrow {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+  transition: transform 0.3s;
+}
+
+.panel-arrow[hidden] {
+  display: none;
+}
+
+.panel-arrow svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+#panel-action {
+  margin-top: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--surface);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#panel-close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#panel-close svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+#panel-action:focus-visible,
+#panel-close:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#status {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+
+/* While the directions panel is open, notices sit above it. */
+body:has(.panel:not([hidden])) #status {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 130px);
+}

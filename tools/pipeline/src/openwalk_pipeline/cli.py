@@ -9,8 +9,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from openwalk_pipeline import __version__, debug, graph, osm, overlay, overpass, places, walkways
-from openwalk_pipeline.site import Site, load_site
+import requests
+
+from openwalk_pipeline import __version__, debug, graph, osm, overlay, overpass, places, tiles, walkways
+from openwalk_pipeline.site import DEFAULT_MARGIN_M, Site, load_site
 from openwalk_pipeline.validate import validate
 
 
@@ -29,6 +31,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     build = commands.add_parser("build", help="generate the site's data files from the cache")
     build.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
+
+    basemap = commands.add_parser("tiles", help="extract the site's base map tiles into basemap.pmtiles")
+    basemap.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
+    basemap.add_argument("--source", help="PMTiles archive URL, overriding tiles.source in site.yaml")
+    basemap.add_argument("--max-zoom", type=int, help="highest zoom level to extract")
 
     check = commands.add_parser("debug", help="write a map page for checking the generated files by eye")
     check.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
@@ -56,6 +63,10 @@ def run_build(site: Site) -> int:
         return 1
     with cache.open(encoding="utf-8") as handle:
         elements: list[dict[str, Any]] = json.load(handle)["elements"]
+
+    # The browser reads the configuration as JSON; site.yaml stays the file people edit.
+    write_json(site.site_json_path, site.config)
+
     conversion = osm.convert(elements)
     for skipped in conversion.skipped:
         print(f"{site.id}: skipped {skipped} (no usable geometry)", file=sys.stderr)
@@ -110,11 +121,58 @@ def run_build(site: Site) -> int:
     return 0
 
 
+def run_tiles(site: Site, *, source: str | None, max_zoom: int | None, session: tiles.RangeFetcher | None = None) -> int:
+    url = source or (site.tiles.source if site.tiles else None)
+    if url is None:
+        print(f"{site.id}: no tiles.source in site.yaml and no --source given", file=sys.stderr)
+        return 1
+    margin = site.tiles.margin_m if site.tiles else DEFAULT_MARGIN_M
+    if max_zoom is None and site.tiles:
+        max_zoom = site.tiles.max_zoom
+
+    collections: list[dict[str, Any]] = []
+    for path in (site.walkways_path, site.places_path):
+        if path.exists():
+            with path.open(encoding="utf-8") as handle:
+                collections.append(json.load(handle))
+    extent = tiles.extent_of(collections)
+    if extent is None and site.boundary.kind == "bbox":
+        south, west, north, east = (float(v) for v in site.boundary.value)  # type: ignore[union-attr]
+        extent = tiles.Extent(west, south, east, north)
+    if extent is None:
+        print(f"{site.id}: nothing to cover; run 'openwalk-pipeline build' first", file=sys.stderr)
+        return 1
+    extent = extent.expand(margin)
+
+    view = site.view
+    fetcher = tiles.RangeSource(url, session or requests.Session())
+    result = tiles.extract(
+        fetcher.get_bytes,
+        extent,
+        site.basemap_path,
+        name=f"{site.name} base map",
+        source=url,
+        max_zoom=max_zoom,
+        center=view[0] if view else None,
+        center_zoom=round(view[1]) if view else None,
+    )
+    size_kb = site.basemap_path.stat().st_size / 1024
+    print(
+        f"{site.id}: {result.tiles} tiles, zoom {result.min_zoom} to {result.max_zoom}, {size_kb:.0f} KB"
+        f" in {site.basemap_path} ({fetcher.requests} requests, {fetcher.bytes / 1024:.0f} KB read)"
+    )
+    if result.missing:
+        print(f"{site.id}: {result.missing} tiles missing from the source", file=sys.stderr)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     site = load_site(args.site)
     if args.command == "fetch":
         return run_fetch(site, refresh=args.refresh, endpoint=args.endpoint)
+    if args.command == "tiles":
+        return run_tiles(site, source=args.source, max_zoom=args.max_zoom)
     if args.command == "debug":
         path = debug.write(site, args.out)
         print(f"{site.id}: wrote {path}; open it in a browser")

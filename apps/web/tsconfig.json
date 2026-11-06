@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    // The browser app needs DOM typings and Vite's `import.meta.env` typings.
+    // The browser app needs DOM typings, Vite's `import.meta.env` typings, and the
+    // GeoJSON namespace the map library's types refer to.
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "types": ["vite/client", "geojson"]
   },
   "include": ["src"]
 }

@@ -1,0 +1,19 @@
+{
+ "id": "tuscawilla-park",
+ "name": "Tuscawilla Park",
+ "boundary": {
+  "osm_way": 462341602
+ },
+ "view": {
+  "center": [
+   -82.1322,
+   29.1927
+  ],
+  "zoom": 17
+ },
+ "units": "imperial",
+ "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+ "tiles": {
+  "source": "https://build.protomaps.com/20261105.pmtiles"
+ }
+}
