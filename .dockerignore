@@ -15,6 +15,7 @@ certs
 secrets
 deploy/secrets
 sites/*/raw
+sites/*/debug.html
 docs
 .vscode
 .idea

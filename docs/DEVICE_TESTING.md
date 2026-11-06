@@ -17,7 +17,8 @@ dev build.
    Install a certificate, CA certificate. iPhone: open the root file in Safari, install
    the profile, then enable full trust under Settings, General, About, Certificate
    Trust Settings.
-5. Open `https://192.168.1.20:5173` on the phone. GPS prompts appear.
+5. Open `https://192.168.1.20:5173/s/<site-id>/` on the phone. Tapping the locate
+   button asks for location access.
 
 The certificates and the mkcert root key are listed in `.gitignore` and are never
 committed.

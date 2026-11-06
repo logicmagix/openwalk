@@ -112,6 +112,18 @@ npm run build       # production bundle in apps/web/dist
 docker compose -f deploy/compose.yaml up --build   # nginx serving the bundle
 ```
 
+The dev server serves every directory under `sites/` at `/sites/<site-id>/`, and the
+map for a site is at `/s/<site-id>/`, for example
+`https://localhost:5173/s/tuscawilla-park/`. The root path redirects to the site named
+by `VITE_DEFAULT_SITE` at build time (set in `apps/web/.env.local` for development);
+the Docker image sets it to the site it is built for, chosen with
+`--build-arg SITE=<site-id>` and defaulting to the example site.
+
+The base map's fonts and icons are served by the app itself from
+`apps/web/public/basemap/`, so no third-party host is contacted. They cover Latin,
+Greek, Cyrillic, Hebrew and Arabic scripts; `tools/basemap-assets/fetch.sh` fetches
+more glyph ranges for a site whose labels need another script.
+
 Testing on a real phone, including HTTPS on a local network, is described in
 `docs/DEVICE_TESTING.md`. See `CONTRIBUTING.md` before opening a pull request.
 
