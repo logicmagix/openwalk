@@ -65,3 +65,9 @@ jobs:
       - run: pyright
 
       - run: pytest
+
+      # The example site is built from its committed OpenStreetMap snapshot; the
+      # generated files must match what is committed.
+      - run: openwalk-pipeline build ../../sites/tuscawilla-park
+
+      - run: git diff --exit-code -- ../../sites

@@ -1,0 +1,35 @@
+# Destinations in the example site, taken from what OpenStreetMap maps in the park.
+# Schema: packages/schema/schemas/places-yaml.schema.json.
+places:
+  - id: reilly-arts-center
+    name: Reilly Arts Center
+    category: building
+    keywords: [theatre, theater, concerts, arts]
+    osm: way/817345555
+  - id: tennis-courts
+    name: Tennis Courts
+    category: sports
+    keywords: [tennis]
+    osm: way/503134007
+  - id: basketball-courts
+    name: Basketball Courts
+    category: sports
+    keywords: [basketball]
+    osm: way/673008042
+  - id: baseball-field
+    name: Baseball Field
+    category: sports
+    keywords: [baseball, softball, field]
+    osm: way/462341883
+  - id: shelter-north
+    name: Picnic Shelter
+    category: amenity
+    annotation: North shelter
+    keywords: [pavilion, picnic, shade]
+    osm: way/673008044
+  - id: shelter-south
+    name: Picnic Shelter
+    category: amenity
+    annotation: South shelter
+    keywords: [pavilion, picnic, shade]
+    osm: way/673008050

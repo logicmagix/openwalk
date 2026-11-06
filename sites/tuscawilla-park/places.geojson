@@ -1,0 +1,136 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "baseball-field",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.13075134689518,
+     29.193511152251567
+    ]
+   },
+   "properties": {
+    "name": "Baseball Field",
+    "category": "sports",
+    "keywords": [
+     "baseball",
+     "softball",
+     "field"
+    ],
+    "verified": false,
+    "osm_id": "way/462341883"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "basketball-courts",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.1320676,
+     29.194336899999996
+    ]
+   },
+   "properties": {
+    "name": "Basketball Courts",
+    "category": "sports",
+    "keywords": [
+     "basketball"
+    ],
+    "verified": false,
+    "osm_id": "way/673008042"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "reilly-arts-center",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.1316313,
+     29.1954172
+    ]
+   },
+   "properties": {
+    "name": "Reilly Arts Center",
+    "category": "building",
+    "keywords": [
+     "theatre",
+     "theater",
+     "concerts",
+     "arts"
+    ],
+    "verified": false,
+    "osm_id": "way/817345555"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "shelter-north",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.13138881347989,
+     29.19411808073033
+    ]
+   },
+   "properties": {
+    "name": "Picnic Shelter",
+    "category": "amenity",
+    "keywords": [
+     "pavilion",
+     "picnic",
+     "shade"
+    ],
+    "verified": false,
+    "annotation": "North shelter",
+    "osm_id": "way/673008044"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "shelter-south",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.13159665885118,
+     29.194507655696086
+    ]
+   },
+   "properties": {
+    "name": "Picnic Shelter",
+    "category": "amenity",
+    "keywords": [
+     "pavilion",
+     "picnic",
+     "shade"
+    ],
+    "verified": false,
+    "annotation": "South shelter",
+    "osm_id": "way/673008050"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "tennis-courts",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.13152419999999,
+     29.192973149999997
+    ]
+   },
+   "properties": {
+    "name": "Tennis Courts",
+    "category": "sports",
+    "keywords": [
+     "tennis"
+    ],
+    "verified": false,
+    "osm_id": "way/503134007"
+   }
+  }
+ ]
+}

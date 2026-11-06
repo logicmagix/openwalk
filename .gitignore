@@ -34,11 +34,9 @@ notes/
 .vscode/
 *.swp
 
-# sites are separate repositories cloned here for local work; only the example is tracked
+# sites are separate repositories cloned here for local work; only the example is
+# tracked, including its OpenStreetMap snapshot so the build is reproducible offline
 sites/*
 !sites/README.md
 !sites/tuscawilla-park/
-
-# raw downloads are kept out of git unless small and licensed; decide per file
-sites/*/raw/*.osm
-sites/*/raw/*.json
+sites/*/debug.html
