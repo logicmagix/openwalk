@@ -145,11 +145,11 @@ const latlng = i => [nodes[i][1], nodes[i][0]];
 const islands = new Set(DATA.islands);
 const edgeLines = [], connectorLines = [], islandLines = [];
 DATA.graph.edges.forEach(([a, b, m, kind], index) => {
-  const line = L.polyline([latlng(a), latlng(b)]);
-  line.bindTooltip(kind + ' ' + m + ' m');
-  if (islands.has(index)) { line.setStyle({ color: '#e31a1c', weight: 7, opacity: 0.8 }); islandLines.push(line); }
+  const line = L.polyline([latlng(a), latlng(b)]).bindTooltip(kind + ' ' + m + ' m');
   if (kind === 'connector') { line.setStyle({ color: '#d53ef2', weight: 3, dashArray: '4 4' }); connectorLines.push(line); }
   else { line.setStyle({ color: '#ffffff', weight: 1, opacity: 0.7 }); edgeLines.push(line); }
+  // Islands are drawn a second time, thick and red, on their own layer.
+  if (islands.has(index)) islandLines.push(L.polyline([latlng(a), latlng(b)], { color: '#e31a1c', weight: 7, opacity: 0.8 }).bindTooltip('island: ' + kind + ' ' + m + ' m'));
 });
 const graphEdges = L.layerGroup(edgeLines);
 const connectors = L.layerGroup(connectorLines).addTo(map);
@@ -188,10 +188,17 @@ map.on('click', e => {
   document.getElementById('clicked').textContent = '[' + e.latlng.lng.toFixed(6) + ', ' + e.latlng.lat.toFixed(6) + ']';
 });
 
+// The view lives in the URL hash as #zoom/lat/lon so a spot can be linked to.
+const hash = location.hash.match(/^#(\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$$/);
 const bounds = walkways.getBounds();
-if (DATA.center) map.setView([DATA.center[1], DATA.center[0]], DATA.zoom);
+if (hash) map.setView([+hash[2], +hash[3]], +hash[1]);
+else if (DATA.center) map.setView([DATA.center[1], DATA.center[0]], DATA.zoom);
 else if (bounds.isValid()) map.fitBounds(bounds);
 else map.setView([0, 0], 2);
+map.on('moveend', () => {
+  const c = map.getCenter();
+  history.replaceState(null, '', '#' + map.getZoom() + '/' + c.lat.toFixed(5) + '/' + c.lng.toFixed(5));
+});
 
 document.getElementById('stats').textContent =
   DATA.walkways.features.length + ' walkways, ' + DATA.places.features.length + ' places, ' +
