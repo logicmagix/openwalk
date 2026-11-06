@@ -34,6 +34,11 @@ notes/
 .vscode/
 *.swp
 
+# sites are separate repositories cloned here for local work; only the example is tracked
+sites/*
+!sites/README.md
+!sites/tuscawilla-park/
+
 # raw downloads are kept out of git unless small and licensed; decide per file
 sites/*/raw/*.osm
 sites/*/raw/*.json

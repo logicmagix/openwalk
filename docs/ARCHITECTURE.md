@@ -49,8 +49,9 @@ could run on a server without change.
 it with a hand-curated `places.yaml`, and emits `sites/<site-id>/places.geojson`,
 `sites/<site-id>/walkways.geojson`, and a prebuilt `graph.json`. Python is used because
 geodata tooling (shapely, pyproj, networkx for cross-checking the project's own
-algorithms) is strongest there. The pipeline output is committed, so the runtime
-containers never need Python or network access to OpenStreetMap.
+algorithms) is strongest there. The pipeline output is committed in the site's
+repository, so the runtime containers never need Python or network access to
+OpenStreetMap.
 
 ## Site configuration layout
 
@@ -70,6 +71,16 @@ sites/
 
 Adding a new site is adding a new directory and running the pipeline.
 
+## Site data lives outside the application repository
+
+This repository contains the application, the pipeline, the schemas, and one example
+site used to demonstrate and test the pipeline. A real site is its own repository with
+the layout above, cloned to `sites/<site-id>/` for local work; everything under
+`sites/` except the example is ignored by git. For deployment, a site repository builds
+its own image from the published generic web image and copies its directory in. The
+application repository therefore never carries an institution's names, coordinates, or
+map images, and a site owner can withdraw their data by deleting one repository.
+
 ## Repository layout
 
 ```
@@ -78,7 +89,7 @@ apps/api/        Fastify service
 packages/routing/  graph building, Dijkstra, A*, snapping, haversine; pure, tested
 packages/search/   fuzzy search over places; pure, tested
 packages/schema/   JSON Schema files shared by pipeline output, api, and web
-sites/           per-site config and data (see Site configuration layout)
+sites/           the example site; real sites are separate repositories cloned here
 tools/pipeline/  Python data preparation
 deploy/          Dockerfiles, compose file for local dev, swarm stack file, nginx conf
 docs/            this folder
