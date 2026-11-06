@@ -92,6 +92,11 @@
           "description": "A place whose entrance is further than this from a walkway is reported.",
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "snap_m": {
+          "description": "How far a hand-drawn walkway's end may be from a mapped walkway and still be joined to it.",
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
       "additionalProperties": false

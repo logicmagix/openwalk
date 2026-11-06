@@ -2,20 +2,35 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://openwalk.app/schemas/walkways.schema.json",
   "title": "Walkways",
-  "description": "The generated walkways.geojson: every way a pedestrian may use, as a GeoJSON FeatureCollection. Linear ways are LineStrings; pedestrian areas such as plazas are Polygons.",
+  "description": "The generated walkways.geojson: every way a pedestrian may use, as a GeoJSON FeatureCollection. Linear ways are LineStrings; pedestrian areas such as plazas are Polygons. Most come from OpenStreetMap; a site may add hand-drawn ones.",
   "type": "object",
   "required": ["type", "features"],
   "properties": {
-    "type": { "const": "FeatureCollection" },
-    "features": { "type": "array", "items": { "$ref": "#/$defs/walkway" } }
+    "type": {
+      "const": "FeatureCollection"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/walkway"
+      }
+    }
   },
   "additionalProperties": false,
   "$defs": {
     "position": {
       "type": "array",
       "prefixItems": [
-        { "type": "number", "minimum": -180, "maximum": 180 },
-        { "type": "number", "minimum": -90, "maximum": 90 }
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
       ],
       "minItems": 2,
       "maxItems": 2
@@ -24,8 +39,16 @@
       "type": "object",
       "required": ["type", "coordinates"],
       "properties": {
-        "type": { "const": "LineString" },
-        "coordinates": { "type": "array", "items": { "$ref": "#/$defs/position" }, "minItems": 2 }
+        "type": {
+          "const": "LineString"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/position"
+          },
+          "minItems": 2
+        }
       },
       "additionalProperties": false
     },
@@ -33,10 +56,18 @@
       "type": "object",
       "required": ["type", "coordinates"],
       "properties": {
-        "type": { "const": "Polygon" },
+        "type": {
+          "const": "Polygon"
+        },
         "coordinates": {
           "type": "array",
-          "items": { "type": "array", "items": { "$ref": "#/$defs/position" }, "minItems": 4 },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/position"
+            },
+            "minItems": 4
+          },
           "minItems": 1
         }
       },
@@ -46,27 +77,70 @@
       "type": "object",
       "required": ["type", "geometry", "properties"],
       "properties": {
-        "type": { "const": "Feature" },
-        "id": { "type": "string" },
-        "geometry": { "oneOf": [{ "$ref": "#/$defs/lineString" }, { "$ref": "#/$defs/polygon" }] },
+        "type": {
+          "const": "Feature"
+        },
+        "id": {
+          "type": "string"
+        },
+        "geometry": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/lineString"
+            },
+            {
+              "$ref": "#/$defs/polygon"
+            }
+          ]
+        },
         "properties": {
           "type": "object",
-          "required": ["osm_id", "highway"],
+          "required": ["source", "highway"],
           "properties": {
+            "source": {
+              "description": "Where the way comes from: OpenStreetMap, or drawn by hand for this site.",
+              "enum": ["osm", "hand"]
+            },
             "osm_id": {
               "description": "OpenStreetMap element reference, for example way/123.",
               "type": "string",
               "pattern": "^(node|way|relation)/[0-9]+$"
             },
-            "highway": { "type": "string" },
-            "name": { "type": "string" },
-            "surface": { "type": "string" },
-            "lit": { "type": "string" },
-            "incline": { "type": "string" },
-            "step_count": { "type": "integer", "minimum": 1 },
-            "wheelchair": { "type": "string" },
-            "covered": { "type": "string" },
-            "level": { "type": "string" }
+            "highway": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            },
+            "verified": {
+              "description": "For hand-drawn ways: true once walked.",
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            },
+            "surface": {
+              "type": "string"
+            },
+            "lit": {
+              "type": "string"
+            },
+            "incline": {
+              "type": "string"
+            },
+            "step_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "wheelchair": {
+              "type": "string"
+            },
+            "covered": {
+              "type": "string"
+            },
+            "level": {
+              "type": "string"
+            }
           },
           "additionalProperties": false
         }
