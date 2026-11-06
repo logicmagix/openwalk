@@ -33,7 +33,8 @@ def test_build_writes_valid_walkways_from_cache(site_dir: Path) -> None:
 
     output: dict[str, Any] = json.loads((site_dir / "walkways.geojson").read_text(encoding="utf-8"))
     validate(output, "walkways")
-    assert len(output["features"]) == 3
+    # Three footways and plazas, plus the service loop admitted as a minor road.
+    assert len(output["features"]) == 4
     assert not (site_dir / "places.geojson").exists()
 
 
