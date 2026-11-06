@@ -163,6 +163,31 @@
       },
       "additionalProperties": false
     },
+    "tiles": {
+      "description": "Where the site's base map tiles are extracted from. The pipeline's tiles command reads only the tiles covering the site's data, plus a margin, from a planet-wide PMTiles archive and writes basemap.pmtiles into the site directory.",
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "description": "URL of a PMTiles archive that answers HTTP range requests, for example a dated Protomaps basemap build.",
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "margin_m": {
+          "description": "How far beyond the site's walkways and places the extract reaches, in metres.",
+          "type": "number",
+          "minimum": 0,
+          "default": 500
+        },
+        "max_zoom": {
+          "description": "Highest zoom level to extract; the source's own maximum when omitted. The map overzooms beyond it.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        }
+      },
+      "additionalProperties": false
+    },
     "attribution": {
       "type": "string"
     },
