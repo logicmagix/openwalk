@@ -96,12 +96,16 @@ no request ever carries a position (R27).
   development machine.
 - Playwright: `context.setGeolocation()` and `grantPermissions(['geolocation'])` in
   the end-to-end suite.
-- Demo mode: the app's position provider has three implementations: real GPS, a mocked
+- Demo mode: the app's position provider has three implementations: real GPS, a
   fixed position, and replay of a recorded GPX trace at real or accelerated speed.
-  Record a trace at the site with any GPS-logger app on the phone, save it under
-  `sites/<site-id>/traces/` (traces are routes: only the recorder's own),
-  and replay it elsewhere to test directions, re-routing, and arrival
-  detection.
+  Record a trace at the site with any GPS-logger app on the phone, save it as
+  `sites/<site-id>/traces/<name>.gpx` (traces are routes: only the recorder's own),
+  and open `/s/<site-id>/?replay=<name>&speed=5` elsewhere to test directions,
+  re-routing, and arrival detection; add `&loop` to start over at the end. A fixed
+  position is `/s/<site-id>/?at=<lon>,<lat>&accuracy=<metres>`. Both work in the
+  development server and are ignored by production builds unless the build sets
+  `VITE_ENABLE_REPLAY=true`. The example site ships a synthetic trace,
+  `demo-walk`, generated along its walkways rather than recorded.
 
 ## Tester checklist (copy to testers)
 
