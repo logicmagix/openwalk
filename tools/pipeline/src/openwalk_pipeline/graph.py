@@ -22,7 +22,13 @@ from shapely.geometry import LineString, Point, Polygon, shape
 from shapely.ops import nearest_points
 
 JsonObject = dict[str, Any]
-Kind = Literal["walkway", "steps", "area", "aisle", "connector"]
+Kind = Literal["walkway", "steps", "area", "aisle", "road", "connector"]
+
+# Highway values that are streets rather than paths. A service way is a street too,
+# unless it is a parking aisle.
+ROAD_HIGHWAYS = frozenset(
+    {"service", "unclassified", "residential", "tertiary", "secondary", "primary", "trunk", "road"}
+)
 XY = tuple[float, float]
 
 # Points closer than this, in metres, are the same node.
@@ -159,8 +165,10 @@ def edge_kind(properties: JsonObject) -> Kind:
     highway = properties.get("highway")
     if highway == "steps":
         return "steps"
-    if highway == "service":
+    if highway == "service" and properties.get("service") == "parking_aisle":
         return "aisle"
+    if highway in ROAD_HIGHWAYS:
+        return "road"
     return "walkway"
 
 

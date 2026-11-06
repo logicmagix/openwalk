@@ -11,7 +11,7 @@ from tests.conftest import FIXTURES
 def build(overpass_small: dict[str, Any], max_connector_m: float = 30.0) -> graph.GraphBuild:
     features = osm.convert(overpass_small["elements"]).features
     by_osm_id = {f["id"]: f for f in features}
-    selection = walkways.select_walkways(features, ("footway", "steps", "pedestrian"))
+    selection = walkways.select_walkways(features, ("footway", "steps", "pedestrian"), roads=())
     curated = places.load_places_yaml(FIXTURES / "places_small.yaml")
     return graph.build_graph(selection.collection, curated, by_osm_id, max_connector_m)
 
@@ -107,7 +107,7 @@ def hand(way_id: str, coordinates: list[list[float]]) -> dict[str, Any]:
 def test_hand_drawn_walkway_snaps_onto_the_network_and_joins_islands(overpass_small: dict[str, Any]) -> None:
     features = osm.convert(overpass_small["elements"]).features
     by_osm_id = {f["id"]: f for f in features}
-    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian")).collection
+    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian"), roads=()).collection
     curated = places.load_places_yaml(FIXTURES / "places_small.yaml")
     # From a point 2 m east of the footway's first vertex to a point 2 m below the
     # plaza's south-west corner: both ends are within the snap distance.
@@ -127,7 +127,7 @@ def test_hand_drawn_walkway_snaps_onto_the_network_and_joins_islands(overpass_sm
 def test_hand_drawn_end_too_far_from_the_network_is_reported(overpass_small: dict[str, Any]) -> None:
     features = osm.convert(overpass_small["elements"]).features
     by_osm_id = {f["id"]: f for f in features}
-    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian")).collection
+    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian"), roads=()).collection
     curated = places.load_places_yaml(FIXTURES / "places_small.yaml")
     stray = hand("stray", [[20.0003, 10.0], [20.0003, 10.0005]])  # about 33 m east of the footway
     built = graph.build_graph(walkways.merge(collection, [stray]), curated, by_osm_id, snap_m=5.0)
@@ -135,7 +135,10 @@ def test_hand_drawn_end_too_far_from_the_network_is_reported(overpass_small: dic
     assert built.component_count == 3
 
 
-def test_parking_aisles_get_their_own_edge_kind() -> None:
+def test_edge_kinds_by_highway() -> None:
     assert graph.edge_kind({"highway": "service", "service": "parking_aisle"}) == "aisle"
+    assert graph.edge_kind({"highway": "service", "service": "driveway"}) == "road"
+    assert graph.edge_kind({"highway": "unclassified"}) == "road"
     assert graph.edge_kind({"highway": "steps"}) == "steps"
     assert graph.edge_kind({"highway": "footway"}) == "walkway"
+    assert graph.edge_kind({"highway": "living_street"}) == "walkway"

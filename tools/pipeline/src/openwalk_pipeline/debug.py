@@ -109,6 +109,7 @@ PAGE = Template(
     <span style="background:#f5a623"></span>steps
     <span style="background:#41ab5d"></span>area
     <span style="background:#bdbdbd"></span>aisle
+    <span style="background:#616161"></span>road
     <span style="background:#00e5ff"></span>hand-drawn
     <span style="background:#d53ef2"></span>connector
     <span style="background:#e31a1c;height:6px"></span>island
@@ -138,7 +139,8 @@ const walkwayStyle = f => {
   const steps = f.properties.highway === 'steps';
   const area = f.geometry.type === 'Polygon';
   if (f.properties.source === 'hand') return { color: '#00e5ff', weight: 4, dashArray: f.properties.verified ? null : '6 4' };
-  if (f.properties.highway === 'service') return { color: '#bdbdbd', weight: 2, opacity: 0.9 };
+  if (f.properties.highway === 'service' && f.properties.service === 'parking_aisle') return { color: '#bdbdbd', weight: 2, opacity: 0.9 };
+  if (['service', 'unclassified', 'residential', 'tertiary', 'secondary', 'primary', 'trunk', 'road'].includes(f.properties.highway)) return { color: '#616161', weight: 2, dashArray: '2 6' };
   return { color: steps ? '#f5a623' : area ? '#41ab5d' : '#2c7fb8', weight: steps ? 4 : 3, fillOpacity: area ? 0.2 : 0 };
 };
 const walkways = show('walkways', L.geoJSON(DATA.walkways, {

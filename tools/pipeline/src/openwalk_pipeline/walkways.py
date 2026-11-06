@@ -67,6 +67,12 @@ def exclusion_reason(tags: dict[str, Any], unpaved: Iterable[str]) -> str | None
     return None
 
 
+# Roads a pedestrian may walk along as a last resort. Minor roads only: a sidewalk's
+# crossing ends on the road, and a parking aisle starts from one, so without them the
+# network falls into pieces. Major roads stay out unless a site adds them.
+DEFAULT_ROADS: tuple[str, ...] = ("service", "unclassified", "residential")
+
+
 def is_parking_aisle(tags: dict[str, Any]) -> bool:
     return tags.get("highway") == "service" and tags.get("service") == "parking_aisle"
 
@@ -76,14 +82,16 @@ def select_walkways(
     highways: Iterable[str],
     unpaved: Iterable[str] = DEFAULT_UNPAVED,
     parking_aisles: bool = True,
+    roads: Iterable[str] = DEFAULT_ROADS,
 ) -> Selection:
     """Select the features whose highway tag is in ``highways`` and that are paved.
 
-    Parking aisles are included too unless ``parking_aisles`` is off. Only linear ways
-    and pedestrian areas qualify; points and multipolygons never do. Ways excluded for
-    being informal or unpaved are listed with the reason.
+    Parking aisles are included too unless ``parking_aisles`` is off, and so are the
+    minor roads in ``roads``. Only linear ways and pedestrian areas qualify; points and
+    multipolygons never do. Ways excluded for being informal or unpaved are listed with
+    the reason.
     """
-    wanted = set(highways)
+    wanted = set(highways) | set(roads)
     unpaved_set = set(unpaved)
     selected: list[JsonObject] = []
     excluded: list[str] = []

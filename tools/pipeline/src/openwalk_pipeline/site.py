@@ -9,7 +9,7 @@ from typing import Any, Literal
 import yaml
 
 from openwalk_pipeline.validate import validate
-from openwalk_pipeline.walkways import DEFAULT_UNPAVED
+from openwalk_pipeline.walkways import DEFAULT_ROADS, DEFAULT_UNPAVED
 
 BoundaryKind = Literal["osm_way", "osm_relation", "bbox"]
 
@@ -50,6 +50,7 @@ class Site:
     max_connector_m: float
     snap_m: float
     parking_aisles: bool
+    roads: tuple[str, ...]
     config: dict[str, Any]
 
     @property
@@ -112,5 +113,6 @@ def load_site(directory: Path) -> Site:
         max_connector_m=float(walkways.get("max_connector_m", DEFAULT_MAX_CONNECTOR_M)),
         snap_m=float(walkways.get("snap_m", DEFAULT_SNAP_M)),
         parking_aisles=bool(walkways.get("parking_aisles", True)),
+        roads=tuple(walkways.get("roads", DEFAULT_ROADS)),
         config=config,
     )

@@ -11,7 +11,7 @@ from openwalk_pipeline.validate import SchemaError, validate
 
 def build(overpass_small: dict[str, Any], highways: tuple[str, ...] = DEFAULT_WALKWAY_HIGHWAYS) -> dict[str, Any]:
     features = osm.convert(overpass_small["elements"]).features
-    return walkways.select_walkways(features, highways).collection
+    return walkways.select_walkways(features, highways, roads=()).collection
 
 
 def test_selects_only_configured_highways(overpass_small: dict[str, Any]) -> None:
@@ -122,7 +122,15 @@ def test_parking_aisles_are_walkways_unless_the_site_says_otherwise() -> None:
         }
 
     features = [service("way/1", service="parking_aisle"), service("way/2", service="driveway"), service("way/3")]
-    with_aisles = walkways.select_walkways(features, ("footway",)).collection["features"]
+    with_aisles = walkways.select_walkways(features, ("footway",), roads=()).collection["features"]
     assert [f["id"] for f in with_aisles] == ["way/1"]
     assert with_aisles[0]["properties"]["service"] == "parking_aisle"
-    assert walkways.select_walkways(features, ("footway",), parking_aisles=False).collection["features"] == []
+    assert walkways.select_walkways(features, ("footway",), parking_aisles=False, roads=()).collection["features"] == []
+
+
+def test_minor_roads_are_admitted_by_the_roads_list(overpass_small: dict[str, Any]) -> None:
+    features = osm.convert(overpass_small["elements"]).features
+    default = walkways.select_walkways(features, ("footway",)).collection["features"]
+    assert "way/14" in [f["id"] for f in default]  # the service loop
+    without = walkways.select_walkways(features, ("footway",), roads=()).collection["features"]
+    assert "way/14" not in [f["id"] for f in without]
