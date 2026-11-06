@@ -1,0 +1,39 @@
+# dependencies and builds
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+
+# secrets and local config: never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+certs/
+*.p12
+rootCA*.pem
+deploy/secrets/
+
+# local files, not part of the project
+CLAUDE.md
+notes/
+.claude/
+
+# editor and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# raw downloads are kept out of git unless small and licensed; decide per file
+sites/*/raw/*.osm
+sites/*/raw/*.json
