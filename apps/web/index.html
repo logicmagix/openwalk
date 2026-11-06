@@ -8,6 +8,23 @@
   </head>
   <body>
     <div id="map" role="application" aria-label="Map"></div>
+
+    <div id="search" class="search">
+      <input
+        id="search-input"
+        type="search"
+        role="combobox"
+        aria-label="Search for a place"
+        aria-autocomplete="list"
+        aria-expanded="false"
+        aria-controls="search-list"
+        placeholder="Search places"
+        autocomplete="off"
+        disabled
+      />
+      <ul id="search-list" role="listbox" aria-label="Places" hidden></ul>
+    </div>
+
     <button id="locate" type="button" aria-label="Show my location" aria-pressed="false" disabled>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -15,6 +32,26 @@
         />
       </svg>
     </button>
+
+    <section id="panel" class="panel" aria-label="Directions" aria-live="polite" hidden>
+      <div id="panel-arrow" class="panel-arrow" aria-hidden="true" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 2 4 20l8-4 8 4z" /></svg>
+      </div>
+      <div class="panel-text">
+        <h2 id="panel-name"></h2>
+        <p id="panel-detail" hidden></p>
+        <p id="panel-status"></p>
+        <button id="panel-action" type="button" hidden>Turn on location</button>
+      </div>
+      <button id="panel-close" type="button" aria-label="Close directions">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"
+          />
+        </svg>
+      </button>
+    </section>
+
     <p id="status" role="status" aria-live="polite" hidden></p>
     <script type="module" src="/src/main.ts"></script>
   </body>
