@@ -79,6 +79,19 @@
           },
           "minItems": 1,
           "uniqueItems": true
+        },
+        "unpaved": {
+          "description": "Surface values that make a way unusable here, replacing the default list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "max_connector_m": {
+          "description": "A place whose entrance is further than this from a walkway is reported.",
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
       "additionalProperties": false
