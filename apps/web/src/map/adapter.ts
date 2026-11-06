@@ -22,7 +22,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // suffix asks Vite for the file's address rather than its contents.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { Position } from '../site/types';
-import { POSITION_SOURCE } from './style';
+import { DESTINATION_SOURCE, PLACE_LAYERS, POSITION_SOURCE, ROUTE_SOURCE } from './style';
 
 let configured = false;
 
@@ -65,8 +65,68 @@ export class MapView {
 
   /** Update the position marker without touching the rest of the style. */
   setPosition(data: GeoJSON.FeatureCollection): void {
-    const source = this.map.getSource(POSITION_SOURCE) as GeoJSONSource | undefined;
+    this.setData(POSITION_SOURCE, data);
+  }
+
+  setRoute(data: GeoJSON.FeatureCollection): void {
+    this.setData(ROUTE_SOURCE, data);
+  }
+
+  setDestination(data: GeoJSON.FeatureCollection): void {
+    this.setData(DESTINATION_SOURCE, data);
+  }
+
+  private setData(sourceId: string, data: GeoJSON.FeatureCollection): void {
+    const source = this.map.getSource(sourceId) as GeoJSONSource | undefined;
     source?.setData(data);
+  }
+
+  /** Calls back with the place id when a place's dot or label is tapped. */
+  onPlaceTap(callback: (placeId: string) => void): void {
+    for (const layer of PLACE_LAYERS) {
+      this.map.on('click', layer, (event) => {
+        const id = event.features?.[0]?.properties?.['id'];
+        if (typeof id === 'string') callback(id);
+      });
+      this.map.on('mouseenter', layer, () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', layer, () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+    }
+  }
+
+  /** The map's rotation in degrees, for drawing arrows relative to the screen. */
+  getBearing(): number {
+    return this.map.getBearing();
+  }
+
+  onRotate(callback: () => void): void {
+    this.map.on('rotate', callback);
+  }
+
+  /** Zoom and pan so every position is on screen, clear of the controls. */
+  fitPositions(positions: readonly Position[], padding: number): void {
+    const first = positions[0];
+    if (first === undefined) return;
+    let west = first[0];
+    let south = first[1];
+    let east = first[0];
+    let north = first[1];
+    for (const [lon, lat] of positions) {
+      west = Math.min(west, lon);
+      east = Math.max(east, lon);
+      south = Math.min(south, lat);
+      north = Math.max(north, lat);
+    }
+    this.map.fitBounds(
+      [
+        [west, south],
+        [east, north],
+      ],
+      { padding, maxZoom: 18, duration: 600 },
+    );
   }
 
   /** Glide to a position, zooming in only if the map is zoomed out. */

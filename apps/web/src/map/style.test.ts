@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { BASEMAP_SOURCE, POSITION_SOURCE, buildStyle, positionCollection } from './style';
+import {
+  BASEMAP_SOURCE,
+  POSITION_SOURCE,
+  buildStyle,
+  destinationCollection,
+  positionCollection,
+  routeCollection,
+} from './style';
 
 const origin = 'https://example.test';
 const base = {
@@ -36,6 +43,10 @@ describe('buildStyle', () => {
     expect(ids.slice(first)).toEqual([
       'walkways-line',
       'walkways-area',
+      'route-casing',
+      'route-path',
+      'route-offpath',
+      'destination-ring',
       'position-accuracy',
       'places-dot',
       'places-label',
@@ -57,6 +68,53 @@ describe('buildStyle', () => {
     const urls = JSON.stringify(style).match(/https?:\/\/[^"\s]+/g) ?? [];
     expect(urls.length).toBeGreaterThan(0);
     for (const url of urls) expect(url.startsWith(`${origin}/`)).toBe(true);
+  });
+});
+
+describe('routeCollection', () => {
+  it('tags the legs and leaves out empty ones', () => {
+    const found = {
+      approach: [
+        [0, 0],
+        [0, 1],
+      ] as const,
+      path: [
+        [0, 1],
+        [1, 1],
+      ] as const,
+      departure: [],
+      positions: [],
+      distanceM: 0,
+      durationS: 0,
+      cost: 0,
+    };
+    const kinds = routeCollection(found).features.map((f) => f.properties?.kind);
+    expect(kinds).toEqual(['approach', 'path']);
+    expect(routeCollection(null).features).toEqual([]);
+  });
+
+  it('copies place ids into properties so taps can read them', () => {
+    const places = {
+      type: 'FeatureCollection' as const,
+      features: [
+        {
+          type: 'Feature' as const,
+          id: 'gate',
+          geometry: { type: 'Point' as const, coordinates: [0, 0] as const },
+          properties: { name: 'Gate', category: 'x', keywords: [], verified: false },
+        },
+      ],
+    };
+    const style = buildStyle({ ...base, theme: 'light', places });
+    const source = style.sources['places'] as { data: GeoJSON.FeatureCollection };
+    expect(source.data.features[0]?.properties).toMatchObject({ id: 'gate', name: 'Gate' });
+  });
+});
+
+describe('destinationCollection', () => {
+  it('holds one point or nothing', () => {
+    expect(destinationCollection([1, 2]).features).toHaveLength(1);
+    expect(destinationCollection(null).features).toEqual([]);
   });
 });
 

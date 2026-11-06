@@ -4,6 +4,7 @@
 // input changes keeps every state reachable from one place, and MapLibre applies
 // only the difference.
 
+import type { Position, Route } from '@openwalk/routing';
 import type { PlacesDocument } from '@openwalk/search';
 import type { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
@@ -25,6 +26,9 @@ export interface StyleInputs {
   readonly walkways?: WalkwaysDocument | null;
   readonly places?: PlacesDocument | null;
   readonly position?: PositionFix | null;
+  readonly route?: Route | null;
+  /** The chosen destination, ringed on the map. */
+  readonly destination?: Position | null;
 }
 
 /** Layer and source ids the app refers to. */
@@ -32,6 +36,10 @@ export const BASEMAP_SOURCE = 'basemap';
 export const WALKWAYS_SOURCE = 'walkways';
 export const PLACES_SOURCE = 'places';
 export const POSITION_SOURCE = 'position';
+export const ROUTE_SOURCE = 'route';
+export const DESTINATION_SOURCE = 'destination';
+/** Layers a tap on selects a place; the feature's `id` property is the place id. */
+export const PLACE_LAYERS = ['places-dot', 'places-label'] as const;
 
 const COLOURS = {
   light: {
@@ -42,6 +50,8 @@ const COLOURS = {
     placeHalo: '#ffffff',
     position: '#1a73e8',
     positionStroke: '#ffffff',
+    route: '#7c3aed',
+    routeCasing: '#ffffff',
   },
   dark: {
     walkway: '#90cdf4',
@@ -51,6 +61,8 @@ const COLOURS = {
     placeHalo: '#1a202c',
     position: '#8ab4f8',
     positionStroke: '#202124',
+    route: '#c4b5fd',
+    routeCasing: '#202124',
   },
 } as const;
 
@@ -60,7 +72,9 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
   const colours = COLOURS[inputs.theme];
   const position = positionCollection(inputs.position ?? null);
   const walkways = asGeoJson(inputs.walkways ?? EMPTY);
-  const places = asGeoJson(inputs.places ?? EMPTY);
+  const places = withIdProperty(inputs.places ?? EMPTY);
+  const routeData = routeCollection(inputs.route ?? null);
+  const destination = destinationCollection(inputs.destination ?? null);
 
   return {
     version: 8,
@@ -78,6 +92,8 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
       [WALKWAYS_SOURCE]: { type: 'geojson', data: walkways },
       [PLACES_SOURCE]: { type: 'geojson', data: places },
       [POSITION_SOURCE]: { type: 'geojson', data: position },
+      [ROUTE_SOURCE]: { type: 'geojson', data: routeData },
+      [DESTINATION_SOURCE]: { type: 'geojson', data: destination },
     },
     layers: [
       ...basemapLayers(BASEMAP_SOURCE, namedFlavor(inputs.theme), { lang: inputs.lang }),
@@ -104,6 +120,42 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: WALKWAYS_SOURCE,
         filter: ['==', ['geometry-type'], 'Polygon'],
         paint: { 'line-color': colours.walkway, 'line-width': 1, 'line-opacity': 0.6 },
+      },
+      {
+        id: 'route-casing',
+        type: 'line',
+        source: ROUTE_SOURCE,
+        filter: ['==', ['get', 'kind'], 'path'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': colours.routeCasing, 'line-width': 9, 'line-opacity': 0.9 },
+      },
+      {
+        id: 'route-path',
+        type: 'line',
+        source: ROUTE_SOURCE,
+        filter: ['==', ['get', 'kind'], 'path'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': colours.route, 'line-width': 5 },
+      },
+      {
+        // The walk to and from the network, where no path is mapped: dashed.
+        id: 'route-offpath',
+        type: 'line',
+        source: ROUTE_SOURCE,
+        filter: ['!=', ['get', 'kind'], 'path'],
+        paint: { 'line-color': colours.route, 'line-width': 4, 'line-dasharray': [1, 2] },
+      },
+      {
+        id: 'destination-ring',
+        type: 'circle',
+        source: DESTINATION_SOURCE,
+        paint: {
+          'circle-radius': 14,
+          'circle-color': colours.route,
+          'circle-opacity': 0.25,
+          'circle-stroke-color': colours.route,
+          'circle-stroke-width': 3,
+        },
       },
       {
         id: 'position-accuracy',
@@ -166,6 +218,51 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
 /** The site's read-only documents are plain GeoJSON; this only tells the types so. */
 function asGeoJson(document: object): GeoJSON.FeatureCollection {
   return document as unknown as GeoJSON.FeatureCollection;
+}
+
+/** Places with their id copied into the properties, where a tap can read it. */
+function withIdProperty(places: PlacesDocument | typeof EMPTY): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: places.features.map((feature) => ({
+      ...(feature as unknown as GeoJSON.Feature),
+      properties: { ...feature.properties, id: feature.id },
+    })),
+  };
+}
+
+/** The route's three legs as lines tagged approach, path and departure. */
+export function routeCollection(found: Route | null): GeoJSON.FeatureCollection {
+  if (found === null) return { type: 'FeatureCollection', features: [] };
+  const legs: [string, readonly Position[]][] = [
+    ['approach', found.approach],
+    ['path', found.path],
+    ['departure', found.departure],
+  ];
+  return {
+    type: 'FeatureCollection',
+    features: legs
+      .filter(([, positions]) => positions.length >= 2)
+      .map(([kind, positions]) => ({
+        type: 'Feature',
+        properties: { kind },
+        geometry: { type: 'LineString', coordinates: positions.map((p) => [p[0], p[1]]) },
+      })),
+  };
+}
+
+export function destinationCollection(position: Position | null): GeoJSON.FeatureCollection {
+  if (position === null) return { type: 'FeatureCollection', features: [] };
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: [position[0], position[1]] },
+      },
+    ],
+  };
 }
 
 /** The position marker and its accuracy ring as GeoJSON, empty when unknown. */
