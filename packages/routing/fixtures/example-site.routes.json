@@ -1,0 +1,283 @@
+{
+  "graph": "sites/tuscawilla-park/graph.json",
+  "weights": {
+    "walkway": 1,
+    "area": 1,
+    "connector": 1,
+    "steps": 1.2,
+    "aisle": 1.5,
+    "road": 3
+  },
+  "routes": [
+    {
+      "from": "baseball-field",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [151, 150, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 149],
+      "cost": 285.94,
+      "metres": 175.26
+    },
+    {
+      "from": "baseball-field",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        151, 150, 17, 16, 7, 144, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126, 127, 128,
+        129, 130, 145, 146
+      ],
+      "cost": 798.06,
+      "metres": 345.42
+    },
+    {
+      "from": "baseball-field",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [151, 150, 17, 16, 7, 6, 5, 4, 3, 93, 94, 152],
+      "cost": 227.22,
+      "metres": 116.54
+    },
+    {
+      "from": "baseball-field",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [151, 150, 17, 16, 7, 6, 5, 4, 3, 92, 91, 153, 154],
+      "cost": 232.65,
+      "metres": 121.97
+    },
+    {
+      "from": "baseball-field",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [151, 150, 18, 147, 148],
+      "cost": 399.49,
+      "metres": 154.69
+    },
+    {
+      "from": "basketball-courts",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [149, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 150, 151],
+      "cost": 285.94,
+      "metres": 175.26
+    },
+    {
+      "from": "basketball-courts",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        149, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 144, 136, 137, 138, 139, 140, 121, 122, 123,
+        124, 125, 126, 127, 128, 129, 130, 145, 146
+      ],
+      "cost": 724.56,
+      "metres": 382.6
+    },
+    {
+      "from": "basketball-courts",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [149, 84, 85, 86, 87, 94, 152],
+      "cost": 81.34,
+      "metres": 81.34
+    },
+    {
+      "from": "basketball-courts",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [149, 84, 85, 86, 87, 88, 89, 90, 153, 154],
+      "cost": 90.6,
+      "metres": 90.6
+    },
+    {
+      "from": "basketball-courts",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [149, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 150, 18, 147, 148],
+      "cost": 658.03,
+      "metres": 302.55
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [
+        146, 145, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 144, 7,
+        16, 17, 150, 151
+      ],
+      "cost": 798.06,
+      "metres": 345.42
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [
+        146, 145, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 144, 7,
+        6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 149
+      ],
+      "cost": 724.56,
+      "metres": 382.6
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [
+        146, 145, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 144, 7,
+        6, 5, 4, 3, 93, 94, 152
+      ],
+      "cost": 665.84,
+      "metres": 323.88
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [
+        146, 145, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 144, 7,
+        6, 5, 4, 3, 92, 91, 153, 154
+      ],
+      "cost": 671.27,
+      "metres": 329.31
+    },
+    {
+      "from": "reilly-arts-center",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [
+        146, 145, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 140, 139, 138, 137, 136, 144, 7,
+        16, 17, 150, 18, 147, 148
+      ],
+      "cost": 1170.15,
+      "metres": 472.71
+    },
+    {
+      "from": "shelter-north",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [152, 94, 93, 3, 4, 5, 6, 7, 16, 17, 150, 151],
+      "cost": 227.22,
+      "metres": 116.54
+    },
+    {
+      "from": "shelter-north",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [152, 94, 87, 86, 85, 84, 149],
+      "cost": 81.34,
+      "metres": 81.34
+    },
+    {
+      "from": "shelter-north",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        152, 94, 93, 3, 4, 5, 6, 7, 144, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126, 127,
+        128, 129, 130, 145, 146
+      ],
+      "cost": 665.84,
+      "metres": 323.88
+    },
+    {
+      "from": "shelter-north",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [152, 94, 93, 3, 92, 91, 153, 154],
+      "cost": 48.31,
+      "metres": 48.31
+    },
+    {
+      "from": "shelter-north",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [152, 94, 93, 3, 4, 5, 6, 7, 16, 17, 150, 18, 147, 148],
+      "cost": 599.31,
+      "metres": 243.83
+    },
+    {
+      "from": "shelter-south",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [154, 153, 91, 92, 3, 4, 5, 6, 7, 16, 17, 150, 151],
+      "cost": 232.65,
+      "metres": 121.97
+    },
+    {
+      "from": "shelter-south",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [154, 153, 90, 89, 88, 87, 86, 85, 84, 149],
+      "cost": 90.6,
+      "metres": 90.6
+    },
+    {
+      "from": "shelter-south",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        154, 153, 91, 92, 3, 4, 5, 6, 7, 144, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126,
+        127, 128, 129, 130, 145, 146
+      ],
+      "cost": 671.27,
+      "metres": 329.31
+    },
+    {
+      "from": "shelter-south",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [154, 153, 91, 92, 3, 93, 94, 152],
+      "cost": 48.31,
+      "metres": 48.31
+    },
+    {
+      "from": "shelter-south",
+      "to": "tennis-courts",
+      "reachable": true,
+      "nodes": [154, 153, 91, 92, 3, 4, 5, 6, 7, 16, 17, 150, 18, 147, 148],
+      "cost": 604.74,
+      "metres": 249.26
+    },
+    {
+      "from": "tennis-courts",
+      "to": "baseball-field",
+      "reachable": true,
+      "nodes": [148, 147, 18, 150, 151],
+      "cost": 399.49,
+      "metres": 154.69
+    },
+    {
+      "from": "tennis-courts",
+      "to": "basketball-courts",
+      "reachable": true,
+      "nodes": [148, 147, 18, 150, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 149],
+      "cost": 658.03,
+      "metres": 302.55
+    },
+    {
+      "from": "tennis-courts",
+      "to": "reilly-arts-center",
+      "reachable": true,
+      "nodes": [
+        148, 147, 18, 150, 17, 16, 7, 144, 136, 137, 138, 139, 140, 121, 122, 123, 124, 125, 126,
+        127, 128, 129, 130, 145, 146
+      ],
+      "cost": 1170.15,
+      "metres": 472.71
+    },
+    {
+      "from": "tennis-courts",
+      "to": "shelter-north",
+      "reachable": true,
+      "nodes": [148, 147, 18, 150, 17, 16, 7, 6, 5, 4, 3, 93, 94, 152],
+      "cost": 599.31,
+      "metres": 243.83
+    },
+    {
+      "from": "tennis-courts",
+      "to": "shelter-south",
+      "reachable": true,
+      "nodes": [148, 147, 18, 150, 17, 16, 7, 6, 5, 4, 3, 92, 91, 153, 154],
+      "cost": 604.74,
+      "metres": 249.26
+    }
+  ]
+}

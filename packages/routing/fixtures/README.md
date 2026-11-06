@@ -13,3 +13,7 @@ walkway area steps      aisle
 ```
 
 Places: `corner` is node 2, `top` is node 4, `island` is node 7.
+
+`example-site.routes.json` holds every route between two places of the example site
+over its `graph.json`, computed by an independent implementation (networkx) and used
+as golden answers.
