@@ -17,6 +17,9 @@ BoundaryKind = Literal["osm_way", "osm_relation", "bbox"]
 # hand-placed entrance; the build reports it.
 DEFAULT_MAX_CONNECTOR_M = 30.0
 
+# A hand-drawn walkway's end within this distance of a mapped walkway is joined to it.
+DEFAULT_SNAP_M = 5.0
+
 # Highway values that pedestrians may use, unless the site overrides the list.
 DEFAULT_WALKWAY_HIGHWAYS: tuple[str, ...] = (
     "footway",
@@ -45,6 +48,7 @@ class Site:
     walkway_highways: tuple[str, ...]
     unpaved: tuple[str, ...]
     max_connector_m: float
+    snap_m: float
     config: dict[str, Any]
 
     @property
@@ -54,6 +58,10 @@ class Site:
     @property
     def places_yaml_path(self) -> Path:
         return self.directory / "places.yaml"
+
+    @property
+    def walkways_yaml_path(self) -> Path:
+        return self.directory / "walkways.yaml"
 
     @property
     def walkways_path(self) -> Path:
@@ -101,5 +109,6 @@ def load_site(directory: Path) -> Site:
         walkway_highways=tuple(walkways.get("highway", DEFAULT_WALKWAY_HIGHWAYS)),
         unpaved=tuple(walkways.get("unpaved", DEFAULT_UNPAVED)),
         max_connector_m=float(walkways.get("max_connector_m", DEFAULT_MAX_CONNECTOR_M)),
+        snap_m=float(walkways.get("snap_m", DEFAULT_SNAP_M)),
         config=config,
     )

@@ -155,11 +155,30 @@ def _plane_transformers(features: Iterable[JsonObject]) -> tuple[Transformer, Tr
     )
 
 
-def add_walkway(graph: Graph, feature: JsonObject) -> None:
+def add_walkway(graph: Graph, feature: JsonObject, snap_m: float = 0.0) -> None:
+    """Add a walkway's vertices and segments.
+
+    With ``snap_m`` above zero, each end of a line that lies within that distance of an
+    existing edge is moved onto the edge and joined there. Hand-drawn walkways use
+    this so a line drawn to roughly the right spot connects to the mapped network.
+    """
     geometry = feature["geometry"]
     kind: Kind = "steps" if feature["properties"].get("highway") == "steps" else "walkway"
     if geometry["type"] == "LineString":
-        ids = [graph.node(graph.project(lon, lat)) for lon, lat in geometry["coordinates"]]
+        points = [graph.project(lon, lat) for lon, lat in geometry["coordinates"]]
+        ids: list[int] = []
+        for position, point in enumerate(points):
+            is_end = position in (0, len(points) - 1)
+            found = graph.nearest_edge(point) if is_end and snap_m > 0 else None
+            if found is not None and found[2] <= snap_m:
+                ids.append(graph.split_edge(found[0], found[1]))
+            else:
+                if is_end and snap_m > 0:
+                    graph.warnings.append(
+                        f"{feature['id']}: end at {geometry['coordinates'][position]} is not within"
+                        f" {snap_m:g} m of a mapped walkway"
+                    )
+                ids.append(graph.node(point))
         for a, b in zip(ids, ids[1:]):
             graph.add_edge(a, b, kind)
         return
@@ -227,13 +246,21 @@ def build_graph(
     places: Iterable[JsonObject],
     by_osm_id: dict[str, JsonObject],
     max_connector_m: float = 30.0,
+    snap_m: float = 5.0,
 ) -> GraphBuild:
-    """Build the graph from the walkways collection and the curated places."""
+    """Build the graph from the walkways collection and the curated places.
+
+    Mapped walkways go in first; hand-drawn ones are then snapped onto them.
+    """
     features: list[JsonObject] = walkways["features"]
     to_plane, to_lonlat = _plane_transformers(features)
     graph = Graph(to_plane, to_lonlat)
+    hand = [f for f in features if f["properties"].get("source") == "hand"]
     for feature in features:
-        add_walkway(graph, feature)
+        if feature["properties"].get("source") != "hand":
+            add_walkway(graph, feature)
+    for feature in hand:
+        add_walkway(graph, feature, snap_m)
     for place in places:
         graph.connect(place["id"], entrance_of(place, by_osm_id, graph), max_connector_m)
 

@@ -2,6 +2,8 @@ from typing import Any
 
 import pytest
 
+from pathlib import Path
+
 from openwalk_pipeline import osm, walkways
 from openwalk_pipeline.site import DEFAULT_WALKWAY_HIGHWAYS
 from openwalk_pipeline.validate import SchemaError, validate
@@ -26,13 +28,14 @@ def test_properties_are_whitelisted_and_typed(overpass_small: dict[str, Any]) ->
     collection = build(overpass_small)
     props = {f["id"]: f["properties"] for f in collection["features"]}
     assert props["way/10"] == {
+        "source": "osm",
         "osm_id": "way/10",
         "highway": "footway",
         "surface": "paving_stones",
         "lit": "yes",
     }
     assert props["way/11"]["step_count"] == 12
-    assert props["way/13"] == {"osm_id": "way/13", "highway": "pedestrian", "name": "Plaza"}
+    assert props["way/13"] == {"source": "osm", "osm_id": "way/13", "highway": "pedestrian", "name": "Plaza"}
 
 
 def test_unparseable_step_count_is_dropped() -> None:
@@ -77,3 +80,33 @@ def test_site_can_replace_the_unpaved_list() -> None:
     }
     assert walkways.select_walkways([feature], ("path",), unpaved=("grass",)).excluded == []
     assert walkways.select_walkways([feature], ("path",)).excluded == ["way/1 (surface=gravel)"]
+
+
+def test_hand_drawn_walkways_load_and_merge(overpass_small: dict[str, Any], tmp_path: Path) -> None:
+    path = tmp_path / "walkways.yaml"
+    path.write_text(
+        "walkways:\n"
+        "  - id: plaza-link\n    highway: footway\n    note: Across the lawn\n"
+        "    coordinates: [[20.0005, 10.002], [20.001, 10.003]]\n"
+        "  - id: back-steps\n    highway: steps\n    verified: true\n"
+        "    coordinates: [[20.0, 10.0], [20.0, 9.9999]]\n"
+    )
+    hand = walkways.load_walkways_yaml(path)
+    assert [f["id"] for f in hand] == ["hand/plaza-link", "hand/back-steps"]
+    assert hand[0]["properties"] == {"source": "hand", "highway": "footway", "verified": False, "note": "Across the lawn"}
+    assert hand[1]["properties"]["verified"] is True
+
+    merged = walkways.merge(build(overpass_small), hand)
+    validate(merged, "walkways")
+    assert [f["id"] for f in merged["features"]] == ["hand/back-steps", "hand/plaza-link", "way/10", "way/11", "way/13"]
+
+
+def test_hand_drawn_duplicate_ids_are_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "walkways.yaml"
+    path.write_text(
+        "walkways:\n"
+        "  - {id: a, highway: footway, coordinates: [[0, 0], [0, 1]]}\n"
+        "  - {id: a, highway: footway, coordinates: [[1, 0], [1, 1]]}\n"
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        walkways.load_walkways_yaml(path)

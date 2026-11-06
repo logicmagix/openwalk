@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
+
+import yaml
+
+from openwalk_pipeline.validate import validate
 
 JsonObject = dict[str, Any]
 
@@ -37,7 +42,7 @@ class Selection:
 
 
 def walkway_properties(tags: dict[str, Any]) -> JsonObject:
-    properties: JsonObject = {"osm_id": tags["osm_id"], "highway": tags["highway"]}
+    properties: JsonObject = {"source": "osm", "osm_id": tags["osm_id"], "highway": tags["highway"]}
     for key in STRING_TAGS:
         if key in tags:
             properties[key] = str(tags[key])
@@ -96,3 +101,41 @@ def select_walkways(
         )
     selected.sort(key=lambda item: item["id"])
     return Selection({"type": "FeatureCollection", "features": selected}, excluded)
+
+
+def load_walkways_yaml(path: Path) -> list[JsonObject]:
+    """Hand-drawn walkways as features with ids ``hand/<id>`` and ``source: hand``."""
+    with path.open(encoding="utf-8") as handle:
+        document: JsonObject = yaml.safe_load(handle)
+    validate(document, "walkways-yaml")
+    features: list[JsonObject] = []
+    seen: set[str] = set()
+    for way in document["walkways"]:
+        if way["id"] in seen:
+            raise ValueError(f"duplicate hand-drawn walkway id {way['id']!r}")
+        seen.add(way["id"])
+        properties: JsonObject = {
+            "source": "hand",
+            "highway": way["highway"],
+            "verified": bool(way.get("verified", False)),
+        }
+        if "note" in way:
+            properties["note"] = way["note"]
+        features.append(
+            {
+                "type": "Feature",
+                "id": f"hand/{way['id']}",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[float(lon), float(lat)] for lon, lat in way["coordinates"]],
+                },
+                "properties": properties,
+            }
+        )
+    return features
+
+
+def merge(collection: JsonObject, extra: Iterable[JsonObject]) -> JsonObject:
+    """A collection with the extra features added, sorted by id."""
+    features = sorted([*collection["features"], *extra], key=lambda item: item["id"])
+    return {"type": "FeatureCollection", "features": features}

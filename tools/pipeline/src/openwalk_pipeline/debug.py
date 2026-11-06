@@ -108,6 +108,7 @@ PAGE = Template(
     <span style="background:#2c7fb8"></span>walkway
     <span style="background:#f5a623"></span>steps
     <span style="background:#41ab5d"></span>area
+    <span style="background:#00e5ff"></span>hand-drawn
     <span style="background:#d53ef2"></span>connector
     <span style="background:#e31a1c;height:6px"></span>island
   </div>
@@ -132,6 +133,7 @@ document.getElementById('title').textContent = DATA.name;
 const walkwayStyle = f => {
   const steps = f.properties.highway === 'steps';
   const area = f.geometry.type === 'Polygon';
+  if (f.properties.source === 'hand') return { color: '#00e5ff', weight: 4, dashArray: f.properties.verified ? null : '6 4' };
   return { color: steps ? '#f5a623' : area ? '#41ab5d' : '#2c7fb8', weight: steps ? 4 : 3, fillOpacity: area ? 0.2 : 0 };
 };
 const walkways = L.geoJSON(DATA.walkways, {

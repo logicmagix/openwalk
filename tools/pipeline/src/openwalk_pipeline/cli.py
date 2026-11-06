@@ -66,6 +66,10 @@ def run_build(site: Site) -> int:
     for excluded in selection.excluded:
         print(f"{site.id}: excluded {excluded}", file=sys.stderr)
     walkway_collection = selection.collection
+    if site.walkways_yaml_path.exists():
+        hand = walkways.load_walkways_yaml(site.walkways_yaml_path)
+        walkway_collection = walkways.merge(walkway_collection, hand)
+        print(f"{site.id}: {len(hand)} hand-drawn walkways from {site.walkways_yaml_path}")
     validate(walkway_collection, "walkways")
     write_json(site.walkways_path, walkway_collection)
     print(f"{site.id}: {len(walkway_collection['features'])} walkways in {site.walkways_path}")
@@ -78,7 +82,7 @@ def run_build(site: Site) -> int:
         write_json(site.places_path, collection)
         print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
 
-    built = graph.build_graph(walkway_collection, curated, by_osm_id, site.max_connector_m)
+    built = graph.build_graph(walkway_collection, curated, by_osm_id, site.max_connector_m, site.snap_m)
     for warning in built.warnings:
         print(f"{site.id}: {warning}", file=sys.stderr)
     validate(built.document, "graph")

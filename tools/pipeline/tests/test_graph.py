@@ -93,3 +93,43 @@ def test_edge_lengths_match_the_geodesic(overpass_small: dict[str, Any]) -> None
         (lon1, lat1), (lon2, lat2) = document["nodes"][a], document["nodes"][b]
         _, _, geodesic = geod.inv(lon1, lat1, lon2, lat2)
         assert length == pytest.approx(geodesic, rel=1e-4, abs=0.02)
+
+
+def hand(way_id: str, coordinates: list[list[float]]) -> dict[str, Any]:
+    return {
+        "type": "Feature",
+        "id": f"hand/{way_id}",
+        "geometry": {"type": "LineString", "coordinates": coordinates},
+        "properties": {"source": "hand", "highway": "footway", "verified": False},
+    }
+
+
+def test_hand_drawn_walkway_snaps_onto_the_network_and_joins_islands(overpass_small: dict[str, Any]) -> None:
+    features = osm.convert(overpass_small["elements"]).features
+    by_osm_id = {f["id"]: f for f in features}
+    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian")).collection
+    curated = places.load_places_yaml(FIXTURES / "places_small.yaml")
+    # From a point 2 m east of the footway's first vertex to a point 2 m below the
+    # plaza's south-west corner: both ends are within the snap distance.
+    link = hand("link", [[20.00002, 10.0], [20.001, 10.00298]])
+    merged = walkways.merge(collection, [link])
+
+    built = graph.build_graph(merged, curated, by_osm_id, snap_m=5.0)
+    assert built.component_count == 1
+    assert built.unreachable == []
+    assert not [w for w in built.warnings if w.startswith("hand/")]
+    # The link's ends became network nodes, not new dangling ones: no node lies at
+    # the raw drawn coordinates.
+    assert [20.00002, 10.0] not in built.document["nodes"]
+    validate(built.document, "graph")
+
+
+def test_hand_drawn_end_too_far_from_the_network_is_reported(overpass_small: dict[str, Any]) -> None:
+    features = osm.convert(overpass_small["elements"]).features
+    by_osm_id = {f["id"]: f for f in features}
+    collection = walkways.select_walkways(features, ("footway", "steps", "pedestrian")).collection
+    curated = places.load_places_yaml(FIXTURES / "places_small.yaml")
+    stray = hand("stray", [[20.0003, 10.0], [20.0003, 10.0005]])  # about 33 m east of the footway
+    built = graph.build_graph(walkways.merge(collection, [stray]), curated, by_osm_id, snap_m=5.0)
+    assert len([w for w in built.warnings if w.startswith("hand/stray:")]) == 2
+    assert built.component_count == 3
