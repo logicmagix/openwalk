@@ -17,6 +17,8 @@ export interface SiteConfig {
   /** How distances are shown; metric when absent. */
   readonly units?: 'metric' | 'imperial';
   readonly attribution?: string;
+  /** Categories offered as one-tap "nearest" buttons, each with the label it shows. */
+  readonly nearest?: readonly { readonly category: string; readonly label: string }[];
   readonly routing?: {
     readonly weights?: Partial<Record<string, number>>;
     readonly walking_speed?: number;

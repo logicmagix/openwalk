@@ -11,6 +11,7 @@ import {
   formatDuration,
   hasArrived,
   makeRouter,
+  nearestInCategory,
   nextWaypoint,
   planRoute,
 } from './directions';
@@ -58,6 +59,34 @@ describe('destinationOf', () => {
   it('uses the routing node for a known place and the point otherwise', () => {
     expect(destinationOf(router, place('corner', [9, 9]))).toEqual([0.002, 0]);
     expect(destinationOf(router, place('unknown', [9, 9]))).toEqual([9, 9]);
+  });
+});
+
+describe('nearestInCategory', () => {
+  const place = (id: string, category: string) => ({
+    type: 'Feature' as const,
+    id,
+    geometry: { type: 'Point' as const, coordinates: [0, 0] as [number, number] },
+    properties: { name: id, category, keywords: [], verified: false },
+  });
+  // 'corner' and 'top' are reachable graph places; 'island' is cut off.
+  const places = [place('corner', 'parking'), place('top', 'parking'), place('island', 'parking')];
+
+  it('picks the category place reachable by the shortest walk', () => {
+    const start = fix(0.0005, -0.0001);
+    const corner = planRoute(router, start, 'corner');
+    const top = planRoute(router, start, 'top');
+    if (corner === null || top === null) throw new Error('expected both routes');
+    const shorter = corner.distanceM <= top.distanceM ? 'corner' : 'top';
+    const nearest = nearestInCategory(router, start, places, 'parking');
+    expect(nearest?.place.id).toBe(shorter);
+    expect(nearest?.route.distanceM).toBeCloseTo(Math.min(corner.distanceM, top.distanceM), 6);
+  });
+
+  it('skips unreachable places and ignores other categories', () => {
+    const start = fix(0, 0);
+    expect(nearestInCategory(router, start, [place('island', 'parking')], 'parking')).toBeNull();
+    expect(nearestInCategory(router, start, places, 'water')).toBeNull();
   });
 });
 
