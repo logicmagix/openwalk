@@ -1,0 +1,49 @@
+# The data pipeline is a standalone Python project inside the npm monorepo. It runs at
+# build time only: it reads a site's configuration and raw downloads under
+# sites/<site-id>/ and writes the generated GeoJSON and graph files next to them. The
+# runtime containers never need Python.
+
+[build-system]
+requires = ["hatchling~=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openwalk-pipeline"
+version = "0.1.0"
+description = "Prepares a site's places, walkways, and pedestrian graph for OpenWalk"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+  "shapely~=2.2",     # geometry: footprints, centroids, projecting points onto lines
+  "pyproj~=3.8",      # geodesic distance and local metric projections
+  "networkx~=3.7",    # cross-checks the project's own shortest-path code
+  "pyyaml~=6.0",      # site.yaml and places.yaml
+  "jsonschema~=4.26", # validates generated files against the shared schemas
+  "requests~=2.34",   # Overpass fetch
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest~=9.2",
+  "pyright~=1.1",
+]
+
+[project.scripts]
+openwalk-pipeline = "openwalk_pipeline.cli:main"
+
+# src layout: the package is importable only after installation, so tests exercise the
+# installed package exactly as the command line does.
+[tool.hatch.build.targets.wheel]
+packages = ["src/openwalk_pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.pyright]
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
