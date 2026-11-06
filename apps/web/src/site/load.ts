@@ -3,7 +3,14 @@
 // single place is /p/<site-id>/<place-id>.
 
 import type { GraphDocument } from '@openwalk/routing';
-import type { PlacesDocument, SiteConfig, SiteData, WalkwaysDocument } from './types';
+import type {
+  OverlayEntry,
+  OverlaysDocument,
+  PlacesDocument,
+  SiteConfig,
+  SiteData,
+  WalkwaysDocument,
+} from './types';
 
 // Site ids and place ids share the same shape: lowercase words joined by hyphens.
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -52,18 +59,32 @@ export async function fetchJson(url: string): Promise<unknown> {
   return response.json();
 }
 
-/** Loads a site's configuration, places, walkways and routing graph in parallel. */
+/**
+ * Loads a site's overlays, if it has any. overlays.json is optional: a site with no
+ * official map image simply has no file, so a failed fetch means "no overlays".
+ */
+async function loadOverlays(base: string, fetchFn: JsonFetcher): Promise<OverlayEntry[]> {
+  try {
+    const document = (await fetchFn(`${base}overlays.json`)) as OverlaysDocument;
+    return [...(document.overlays ?? [])];
+  } catch {
+    return [];
+  }
+}
+
+/** Loads a site's configuration, places, walkways, graph and overlays in parallel. */
 export async function loadSite(
   siteId: string,
   fetchFn: JsonFetcher = fetchJson,
 ): Promise<SiteData> {
   if (!ID.test(siteId)) throw new Error(`invalid site id: ${siteId}`);
   const base = siteBaseUrl(siteId);
-  const [config, places, walkways, graph] = await Promise.all([
+  const [config, places, walkways, graph, overlays] = await Promise.all([
     fetchFn(`${base}site.json`) as Promise<SiteConfig>,
     fetchFn(`${base}places.geojson`) as Promise<PlacesDocument>,
     fetchFn(`${base}walkways.geojson`) as Promise<WalkwaysDocument>,
     fetchFn(`${base}graph.json`) as Promise<GraphDocument>,
+    loadOverlays(base, fetchFn),
   ]);
-  return { config, places, walkways, graph, basemapUrl: `${base}basemap.pmtiles` };
+  return { config, places, walkways, graph, overlays, basemapUrl: `${base}basemap.pmtiles` };
 }
