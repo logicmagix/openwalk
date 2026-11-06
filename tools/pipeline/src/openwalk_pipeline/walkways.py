@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 from typing import Any
 
 JsonObject = dict[str, Any]
@@ -11,6 +12,28 @@ JsonObject = dict[str, Any]
 # in OpenStreetMap is dropped so the app loads only what it uses.
 STRING_TAGS = ("name", "surface", "lit", "incline", "wheelchair", "covered", "level")
 INTEGER_TAGS = ("step_count",)
+
+# Surface values that mean "not a paved walkway", unless a site says otherwise. A way
+# with no surface tag is kept: an untagged campus sidewalk is the common case.
+DEFAULT_UNPAVED: tuple[str, ...] = (
+    "unpaved",
+    "grass",
+    "dirt",
+    "ground",
+    "earth",
+    "mud",
+    "sand",
+    "gravel",
+    "fine_gravel",
+    "pebblestone",
+    "woodchips",
+)
+
+
+@dataclass
+class Selection:
+    collection: JsonObject
+    excluded: list[str] = field(default_factory=list[str])
 
 
 def walkway_properties(tags: dict[str, Any]) -> JsonObject:
@@ -29,18 +52,39 @@ def walkway_properties(tags: dict[str, Any]) -> JsonObject:
     return properties
 
 
-def select_walkways(features: Iterable[JsonObject], highways: Iterable[str]) -> JsonObject:
-    """Return a FeatureCollection of the features whose highway tag is in ``highways``.
+def exclusion_reason(tags: dict[str, Any], unpaved: Iterable[str]) -> str | None:
+    """Why a way with a wanted highway value is still not a walkway, or None."""
+    if tags.get("informal") == "yes":
+        return "informal path"
+    surface = tags.get("surface")
+    if surface in set(unpaved):
+        return f"surface={surface}"
+    return None
+
+
+def select_walkways(
+    features: Iterable[JsonObject],
+    highways: Iterable[str],
+    unpaved: Iterable[str] = DEFAULT_UNPAVED,
+) -> Selection:
+    """Select the features whose highway tag is in ``highways`` and that are paved.
 
     Only linear ways and pedestrian areas qualify; points and multipolygons never do.
+    Ways excluded for being informal or unpaved are listed with the reason.
     """
     wanted = set(highways)
+    unpaved_set = set(unpaved)
     selected: list[JsonObject] = []
+    excluded: list[str] = []
     for feature in features:
         tags: dict[str, Any] = feature["properties"]
         if tags.get("highway") not in wanted:
             continue
         if feature["geometry"]["type"] not in ("LineString", "Polygon"):
+            continue
+        reason = exclusion_reason(tags, unpaved_set)
+        if reason is not None:
+            excluded.append(f"{feature['id']} ({reason})")
             continue
         selected.append(
             {
@@ -51,4 +95,4 @@ def select_walkways(features: Iterable[JsonObject], highways: Iterable[str]) -> 
             }
         )
     selected.sort(key=lambda item: item["id"])
-    return {"type": "FeatureCollection", "features": selected}
+    return Selection({"type": "FeatureCollection", "features": selected}, excluded)

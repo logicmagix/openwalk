@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from openwalk_pipeline import __version__, osm, overlay, overpass, places, walkways
+from openwalk_pipeline import __version__, graph, osm, overlay, overpass, places, walkways
 from openwalk_pipeline.site import Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -56,11 +56,17 @@ def run_build(site: Site) -> int:
     for skipped in conversion.skipped:
         print(f"{site.id}: skipped {skipped} (no usable geometry)", file=sys.stderr)
 
-    collection = walkways.select_walkways(conversion.features, site.walkway_highways)
-    validate(collection, "walkways")
-    write_json(site.walkways_path, collection)
-    print(f"{site.id}: {len(collection['features'])} walkways in {site.walkways_path}")
+    by_osm_id = {feature["id"]: feature for feature in conversion.features}
 
+    selection = walkways.select_walkways(conversion.features, site.walkway_highways, site.unpaved)
+    for excluded in selection.excluded:
+        print(f"{site.id}: excluded {excluded}", file=sys.stderr)
+    walkway_collection = selection.collection
+    validate(walkway_collection, "walkways")
+    write_json(site.walkways_path, walkway_collection)
+    print(f"{site.id}: {len(walkway_collection['features'])} walkways in {site.walkways_path}")
+
+    curated: list[dict[str, Any]] = []
     if site.places_yaml_path.exists():
         curated = places.load_places_yaml(site.places_yaml_path)
         collection = places.build_places(curated, conversion.features)
@@ -68,8 +74,20 @@ def run_build(site: Site) -> int:
         write_json(site.places_path, collection)
         print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
 
+    built = graph.build_graph(walkway_collection, curated, by_osm_id, site.max_connector_m)
+    for warning in built.warnings:
+        print(f"{site.id}: {warning}", file=sys.stderr)
+    validate(built.document, "graph")
+    write_json(site.graph_path, built.document)
+    document = built.document
+    print(
+        f"{site.id}: graph with {len(document['nodes'])} nodes and {len(document['edges'])} edges"
+        f" in {built.component_count} connected pieces, in {site.graph_path}"
+    )
+    if built.unreachable:
+        print(f"{site.id}: unreachable from the main network: {', '.join(built.unreachable)}", file=sys.stderr)
+
     if site.overlays:
-        by_osm_id = {feature["id"]: feature for feature in conversion.features}
         document = overlay.build_overlays(site.overlays, site.directory, by_osm_id)
         validate(document, "overlays")
         write_json(site.overlays_path, document)

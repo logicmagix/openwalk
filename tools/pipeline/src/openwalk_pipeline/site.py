@@ -9,8 +9,13 @@ from typing import Any, Literal
 import yaml
 
 from openwalk_pipeline.validate import validate
+from openwalk_pipeline.walkways import DEFAULT_UNPAVED
 
 BoundaryKind = Literal["osm_way", "osm_relation", "bbox"]
+
+# A place whose entrance lies further than this from a walkway probably needs a
+# hand-placed entrance; the build reports it.
+DEFAULT_MAX_CONNECTOR_M = 30.0
 
 # Highway values that pedestrians may use, unless the site overrides the list.
 DEFAULT_WALKWAY_HIGHWAYS: tuple[str, ...] = (
@@ -38,6 +43,8 @@ class Site:
     name: str
     boundary: Boundary
     walkway_highways: tuple[str, ...]
+    unpaved: tuple[str, ...]
+    max_connector_m: float
     config: dict[str, Any]
 
     @property
@@ -61,6 +68,10 @@ class Site:
         return self.directory / "overlays.json"
 
     @property
+    def graph_path(self) -> Path:
+        return self.directory / "graph.json"
+
+    @property
     def overlays(self) -> list[dict[str, Any]]:
         return list(self.config.get("overlays", []))
 
@@ -82,12 +93,13 @@ def load_site(directory: Path) -> Site:
     if config["id"] != directory.name:
         raise ValueError(f"site id {config['id']!r} does not match directory {directory.name!r}")
     walkways: dict[str, Any] = config.get("walkways", {})
-    highways = tuple(walkways.get("highway", DEFAULT_WALKWAY_HIGHWAYS))
     return Site(
         directory=directory,
         id=config["id"],
         name=config["name"],
         boundary=parse_boundary(config["boundary"]),
-        walkway_highways=highways,
+        walkway_highways=tuple(walkways.get("highway", DEFAULT_WALKWAY_HIGHWAYS)),
+        unpaved=tuple(walkways.get("unpaved", DEFAULT_UNPAVED)),
+        max_connector_m=float(walkways.get("max_connector_m", DEFAULT_MAX_CONNECTOR_M)),
         config=config,
     )
