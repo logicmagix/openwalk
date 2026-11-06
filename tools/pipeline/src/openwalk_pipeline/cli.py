@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from openwalk_pipeline import __version__, osm, overpass, places, walkways
+from openwalk_pipeline import __version__, osm, overlay, overpass, places, walkways
 from openwalk_pipeline.site import Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -67,6 +67,18 @@ def run_build(site: Site) -> int:
         validate(collection, "places")
         write_json(site.places_path, collection)
         print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
+
+    if site.overlays:
+        by_osm_id = {feature["id"]: feature for feature in conversion.features}
+        document = overlay.build_overlays(site.overlays, site.directory, by_osm_id)
+        validate(document, "overlays")
+        write_json(site.overlays_path, document)
+        for entry in document["overlays"]:
+            fit = entry["fit"]
+            print(
+                f"{site.id}: overlay {entry['id']} fitted from {fit['control_points']} points,"
+                f" rms {fit['rms_m']} m, max {fit['max_m']} m"
+            )
     return 0
 
 

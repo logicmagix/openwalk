@@ -56,6 +56,14 @@ class Site:
     def places_path(self) -> Path:
         return self.directory / "places.geojson"
 
+    @property
+    def overlays_path(self) -> Path:
+        return self.directory / "overlays.json"
+
+    @property
+    def overlays(self) -> list[dict[str, Any]]:
+        return list(self.config.get("overlays", []))
+
 
 def parse_boundary(config: dict[str, Any]) -> Boundary:
     if "osm_way" in config:
