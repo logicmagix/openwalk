@@ -1,0 +1,13 @@
+{
+  "name": "@openwalk/routing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pedestrian routing: graph, snapping, Dijkstra, A*. Pure, no I/O.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

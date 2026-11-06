@@ -1,0 +1,33 @@
+{
+  // Shared compiler settings. Every workspace extends this file and adds only
+  // what differs (the browser app adds the DOM library, for example).
+  "compilerOptions": {
+    // Emit-free: Vite bundles the app and Vitest runs tests, so tsc is used
+    // purely as a type checker.
+    "noEmit": true,
+
+    // Modern JavaScript output; every phone browser we target supports ES2022.
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // Native ES modules, resolved the way a bundler resolves them (package
+    // "exports" fields, extensionless imports between workspaces).
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    // Each file must be compilable on its own, which is what Vite and Vitest do.
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    // Strictness: all of "strict", plus indexing a map or array yields
+    // "T | undefined" so missing keys are handled explicitly.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Do not pull in every @types package automatically; workspaces opt in.
+    "types": [],
+    "skipLibCheck": true
+  }
+}

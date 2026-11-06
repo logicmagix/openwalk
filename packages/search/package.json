@@ -1,0 +1,13 @@
+{
+  "name": "@openwalk/search",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fuzzy search over a site's places. Pure, no I/O.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
