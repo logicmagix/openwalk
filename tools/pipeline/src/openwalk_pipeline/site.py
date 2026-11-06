@@ -95,6 +95,10 @@ class Site:
         return self.directory / "graph.json"
 
     @property
+    def site_json_path(self) -> Path:
+        return self.directory / "site.json"
+
+    @property
     def basemap_path(self) -> Path:
         return self.directory / "basemap.pmtiles"
 

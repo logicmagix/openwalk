@@ -31,6 +31,10 @@ def test_build_writes_valid_walkways_from_cache(site_dir: Path) -> None:
 
     assert main(["build", str(site_dir)]) == 0
 
+    config: dict[str, Any] = json.loads((site_dir / "site.json").read_text(encoding="utf-8"))
+    validate(config, "site")
+    assert config["id"] == "demo-site"
+
     output: dict[str, Any] = json.loads((site_dir / "walkways.geojson").read_text(encoding="utf-8"))
     validate(output, "walkways")
     # Three footways and plazas, plus the service loop admitted as a minor road.

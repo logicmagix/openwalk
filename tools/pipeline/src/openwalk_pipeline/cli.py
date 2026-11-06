@@ -63,6 +63,10 @@ def run_build(site: Site) -> int:
         return 1
     with cache.open(encoding="utf-8") as handle:
         elements: list[dict[str, Any]] = json.load(handle)["elements"]
+
+    # The browser reads the configuration as JSON; site.yaml stays the file people edit.
+    write_json(site.site_json_path, site.config)
+
     conversion = osm.convert(elements)
     for skipped in conversion.skipped:
         print(f"{site.id}: skipped {skipped} (no usable geometry)", file=sys.stderr)
