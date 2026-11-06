@@ -19,6 +19,8 @@ import {
   destinationCollection,
   positionCollection,
   routeCollection,
+  type LayerPrefs,
+  type OverlaySpec,
   type StyleInputs,
 } from './map/style';
 import { FixedPositionProvider } from './position/fixed';
@@ -35,6 +37,7 @@ import {
   sitePagePath,
 } from './site/load';
 import { watchTheme } from './theme';
+import { setupLayers } from './ui/layers';
 import { listPlaces } from './ui/listing';
 import { setupPanel } from './ui/panel';
 import { setupSearch } from './ui/search';
@@ -101,6 +104,17 @@ async function start(): Promise<void> {
   const index = buildIndex(site.places);
   const placesById = new Map(site.places.features.map((place) => [place.id, place]));
 
+  // Overlay images are addressed relative to the site directory; resolve each to an
+  // absolute, same-origin URL so the style can hand it to MapLibre.
+  const siteBase = siteBaseUrl(siteId);
+  const overlays: OverlaySpec[] = site.overlays.map((overlay) => ({
+    id: overlay.id,
+    name: overlay.name,
+    imageUrl: new URL(`${siteBase}${overlay.image}`, location.href).href,
+    corners: overlay.corners,
+    ...(overlay.attribution ? { attribution: overlay.attribution } : {}),
+  }));
+
   // --- the map ---------------------------------------------------------------
   const inputs: { current: StyleInputs } = {
     current: {
@@ -111,6 +125,8 @@ async function start(): Promise<void> {
       attribution: site.config.attribution,
       walkways: site.walkways,
       places: site.places,
+      overlays,
+      layerPrefs: { overlays: [], walkways: true, labels: true },
       position: null,
       route: null,
       destination: null,
@@ -287,6 +303,16 @@ async function start(): Promise<void> {
   map.onRotate(() => {
     if (destination !== null && inputs.current.route && lastFix !== null) guide();
   });
+
+  // --- layers control -----------------------------------------------------------
+  const initialPrefs: LayerPrefs = setupLayers(
+    { button: element<HTMLButtonElement>('layers'), panel: element('layers-panel') },
+    {
+      overlays: overlays.map(({ id, name }) => ({ id, name })),
+      onChange: (prefs) => restyle({ layerPrefs: prefs }),
+    },
+  );
+  inputs.current = { ...inputs.current, layerPrefs: initialPrefs };
 
   // --- "nearest" chips ----------------------------------------------------------
   // One button per category the site configures; hidden when it configures none.

@@ -35,6 +35,24 @@
       </svg>
     </button>
 
+    <button
+      id="layers"
+      type="button"
+      aria-label="Map layers"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-controls="layers-panel"
+      disabled
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"
+        />
+      </svg>
+    </button>
+
+    <div id="layers-panel" class="layers-panel" role="group" aria-label="Map layers" hidden></div>
+
     <section id="panel" class="panel" aria-label="Directions" aria-live="polite" hidden>
       <div id="panel-arrow" class="panel-arrow" aria-hidden="true" hidden>
         <svg viewBox="0 0 24 24"><path d="M12 2 4 20l8-4 8 4z" /></svg>
