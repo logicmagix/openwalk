@@ -45,6 +45,28 @@
   },
   {
    "type": "Feature",
+   "id": "downtown-art-park",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.1345973,
+     29.1917808
+    ]
+   },
+   "properties": {
+    "name": "Downtown Art Park",
+    "category": "park",
+    "keywords": [
+     "art",
+     "sculptures",
+     "murals"
+    ],
+    "verified": false,
+    "annotation": "Across the railway, west of the park"
+   }
+  },
+  {
+   "type": "Feature",
    "id": "reilly-arts-center",
    "geometry": {
     "type": "Point",

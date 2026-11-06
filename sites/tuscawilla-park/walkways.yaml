@@ -8,3 +8,14 @@ walkways:
     coordinates:
       - [-82.132054, 29.19484]
       - [-82.131195, 29.194847]
+  - id: art-park-sidewalk
+    highway: footway
+    note: The sidewalk on the north side of Northeast 5th Street, from the park's south-west footway west to the art park's corner.
+    verified: false
+    coordinates:
+      - [-82.1335958, 29.1917363]
+      - [-82.1336752, 29.1917039]
+      - [-82.1341433, 29.1917064]
+      - [-82.1342741, 29.1917039]
+      - [-82.1343978, 29.1916769]
+      - [-82.1345973, 29.1917808]
