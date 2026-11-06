@@ -1,0 +1,78 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "lecture-hall",
+      "geometry": { "type": "Point", "coordinates": [0.001, 0.001] },
+      "properties": {
+        "name": "Lecture Hall",
+        "number": "1",
+        "category": "building",
+        "keywords": ["lectures", "auditorium"],
+        "verified": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "workshop",
+      "geometry": { "type": "Point", "coordinates": [0.002, 0.001] },
+      "properties": {
+        "name": "Workshop",
+        "number": "10",
+        "category": "building",
+        "keywords": ["tools", "woodwork"],
+        "verified": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "library",
+      "geometry": { "type": "Point", "coordinates": [0.001, 0.002] },
+      "properties": {
+        "name": "Library",
+        "number": "12",
+        "category": "building",
+        "annotation": "Study rooms upstairs",
+        "keywords": ["books", "study", "quiet"],
+        "verified": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "health-centre",
+      "geometry": { "type": "Point", "coordinates": [0.002, 0.002] },
+      "properties": {
+        "name": "Health Centre",
+        "number": "120",
+        "category": "service",
+        "keywords": ["first aid", "nurse", "clinic"],
+        "verified": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "cafe",
+      "geometry": { "type": "Point", "coordinates": [0.003, 0.002] },
+      "properties": {
+        "name": "Café Central",
+        "number": "2",
+        "category": "service",
+        "keywords": ["cafeteria", "food", "coffee", "lunch"],
+        "verified": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "call-box-library",
+      "geometry": { "type": "Point", "coordinates": [0.0015, 0.002] },
+      "properties": {
+        "name": "Emergency Call Box",
+        "category": "call_box",
+        "annotation": "Outside the library",
+        "keywords": ["emergency", "help", "phone"],
+        "verified": false
+      }
+    }
+  ]
+}
