@@ -11,26 +11,43 @@
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
-    "name": { "type": "string", "minLength": 1 },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
     "boundary": {
       "description": "The area OpenStreetMap data is fetched for. Exactly one of the three forms.",
       "oneOf": [
         {
           "type": "object",
           "required": ["osm_way"],
-          "properties": { "osm_way": { "type": "integer", "minimum": 1 } },
+          "properties": {
+            "osm_way": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
           "additionalProperties": false
         },
         {
           "type": "object",
           "required": ["osm_relation"],
-          "properties": { "osm_relation": { "type": "integer", "minimum": 1 } },
+          "properties": {
+            "osm_relation": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
           "additionalProperties": false
         },
         {
           "type": "object",
           "required": ["bbox"],
-          "properties": { "bbox": { "$ref": "#/$defs/bbox" } },
+          "properties": {
+            "bbox": {
+              "$ref": "#/$defs/bbox"
+            }
+          },
           "additionalProperties": false
         }
       ]
@@ -40,8 +57,14 @@
       "type": "object",
       "required": ["center", "zoom"],
       "properties": {
-        "center": { "$ref": "#/$defs/position" },
-        "zoom": { "type": "number", "minimum": 0, "maximum": 24 }
+        "center": {
+          "$ref": "#/$defs/position"
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        }
       },
       "additionalProperties": false
     },
@@ -51,14 +74,87 @@
       "properties": {
         "highway": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1,
           "uniqueItems": true
         }
       },
       "additionalProperties": false
     },
-    "attribution": { "type": "string" }
+    "attribution": {
+      "type": "string"
+    },
+    "overlays": {
+      "description": "Images of the site's own maps, georeferenced by control points: a pixel in the image paired with the OpenStreetMap element or the position it depicts.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "image", "control_points"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "image": {
+            "description": "PNG file, relative to the site directory.",
+            "type": "string",
+            "pattern": "\\.png$"
+          },
+          "attribution": {
+            "type": "string"
+          },
+          "control_points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": ["pixel"],
+              "properties": {
+                "pixel": {
+                  "description": "Column then row, from the top-left corner of the image.",
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "osm": {
+                  "type": "string",
+                  "pattern": "^(node|way|relation)/[0-9]+$"
+                },
+                "position": {
+                  "$ref": "#/$defs/position"
+                }
+              },
+              "oneOf": [
+                {
+                  "required": ["osm"]
+                },
+                {
+                  "required": ["position"]
+                }
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": true,
   "$defs": {
@@ -66,8 +162,16 @@
       "description": "Longitude then latitude, as GeoJSON orders them.",
       "type": "array",
       "prefixItems": [
-        { "type": "number", "minimum": -180, "maximum": 180 },
-        { "type": "number", "minimum": -90, "maximum": 90 }
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
       ],
       "minItems": 2,
       "maxItems": 2
@@ -76,10 +180,26 @@
       "description": "South, west, north, east in degrees, the order Overpass uses.",
       "type": "array",
       "prefixItems": [
-        { "type": "number", "minimum": -90, "maximum": 90 },
-        { "type": "number", "minimum": -180, "maximum": 180 },
-        { "type": "number", "minimum": -90, "maximum": 90 },
-        { "type": "number", "minimum": -180, "maximum": 180 }
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
       ],
       "minItems": 4,
       "maxItems": 4
