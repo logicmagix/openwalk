@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from openwalk_pipeline import __version__, graph, osm, overlay, overpass, places, walkways
+from openwalk_pipeline import __version__, debug, graph, osm, overlay, overpass, places, walkways
 from openwalk_pipeline.site import Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -29,6 +29,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     build = commands.add_parser("build", help="generate the site's data files from the cache")
     build.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
+
+    check = commands.add_parser("debug", help="write a map page for checking the generated files by eye")
+    check.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
+    check.add_argument("--out", type=Path, help="where to write the page (default: <site>/debug.html)")
     return parser
 
 
@@ -105,6 +109,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     site = load_site(args.site)
     if args.command == "fetch":
         return run_fetch(site, refresh=args.refresh, endpoint=args.endpoint)
+    if args.command == "debug":
+        path = debug.write(site, args.out)
+        print(f"{site.id}: wrote {path}; open it in a browser")
+        return 0
     return run_build(site)
 
 
