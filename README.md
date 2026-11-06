@@ -38,6 +38,47 @@ This repository ships one example site. A real site is its own repository, clone
 and map images never enter this repository's history. To deploy a site, its repository
 builds an image from the generic web image and copies the site directory in.
 
+## Adding a site
+
+A site is built with the Python pipeline in `tools/pipeline/`; its README covers the
+one-time setup. The example site under `sites/tuscawilla-park/` shows every file
+described here. Paths below are relative to the repository root.
+
+1. **Create the site directory.** A real site is its own repository cloned to
+   `sites/<site-id>/`; the id is lowercase words joined by hyphens.
+2. **Write `site.yaml`.** The id, a display name, the boundary as an OpenStreetMap way
+   or relation id or a south-west-north-east bounding box, and the default view.
+   `packages/schema/schemas/site.schema.json` lists every setting.
+3. **Fetch OpenStreetMap data.** `openwalk-pipeline fetch sites/<site-id>` queries the
+   Overpass API for everything inside the boundary and caches the result in `raw/`.
+   The cache is reused until `--refresh` is given. Commit it if the licence allows, as
+   the example does: OpenStreetMap data is ODbL.
+4. **Build.** `openwalk-pipeline build sites/<site-id>` writes `walkways.geojson` and
+   `graph.json`, then `places.geojson` and `overlays.json` once their inputs exist. It
+   reports ways excluded as unpaved, places whose entrance is far from any walkway,
+   and whether the network is in one piece.
+5. **Write `places.yaml`.** Every destination: an id, a name, a category, search
+   keywords, and a position given as an OpenStreetMap element, a hand-placed location,
+   or a hand-placed entrance. Mark each `verified: true` only after checking it on
+   foot. Rebuild.
+6. **Check it on a map.** `openwalk-pipeline debug sites/<site-id>` writes
+   `debug.html`, a page that draws everything over satellite imagery. Clicking the map
+   prints coordinates in the order the YAML files use; the view is kept in the URL
+   hash so a spot can be linked to, and `?hide=overlay,places` opens with layers off.
+7. **Close gaps in the network.** Where OpenStreetMap lacks a paved connection, draw
+   it in `walkways.yaml` with coordinates taken from the page. Each end within a few
+   metres of a mapped walkway is joined to it. Mapping the connection in
+   OpenStreetMap afterwards is the lasting fix.
+8. **Add an official map, optionally.** Put a PNG of it under `overlay/` and list
+   control points in `site.yaml`: a pixel in the image paired with the OpenStreetMap
+   element or position it depicts. The build fits the image to the ground and reports
+   the residual error in metres. Permission from the map's owner is needed to display it.
+
+Which ways count as walkways is set per site under `walkways` in `site.yaml`:
+the highway values admitted, surface values treated as unpaved, whether parking aisles
+and which minor roads may be walked as a last resort, and the snapping distance for
+hand-drawn ways.
+
 ## Repository layout
 
 ```

@@ -33,4 +33,9 @@ generated files and validates each against the schemas in `packages/schema/schem
 ```
 .venv/bin/openwalk-pipeline fetch sites/<site-id>
 .venv/bin/openwalk-pipeline build sites/<site-id>
+.venv/bin/openwalk-pipeline debug sites/<site-id>
 ```
+
+`debug` writes `debug.html` into the site directory: a map of the generated files over
+satellite imagery for checking by eye. The root README describes the whole process of
+adding a site.
