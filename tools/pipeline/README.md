@@ -22,3 +22,15 @@ python3 -m venv .venv
 ```
 
 Tests use small fixtures and never reach the network.
+
+## Usage
+
+Each command takes a site directory. `fetch` downloads OpenStreetMap data for the
+boundary in `site.yaml` and caches it in `raw/`; it never contacts the network again
+for the same query unless `--refresh` is given. `build` turns the cached data into the
+generated files and validates each against the schemas in `packages/schema/schemas/`.
+
+```
+.venv/bin/openwalk-pipeline fetch sites/<site-id>
+.venv/bin/openwalk-pipeline build sites/<site-id>
+```
