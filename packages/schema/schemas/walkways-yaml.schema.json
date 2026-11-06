@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openwalk.app/schemas/walkways-yaml.schema.json",
+  "title": "Hand-drawn walkways",
+  "description": "The hand-written walkways.yaml of a site: paved ways that OpenStreetMap lacks, drawn from imagery or a site visit. Each is merged into walkways.geojson and its ends are joined to the nearest mapped walkway.",
+  "type": "object",
+  "required": ["walkways"],
+  "properties": {
+    "walkways": { "type": "array", "items": { "$ref": "#/$defs/walkway" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "position": {
+      "description": "Longitude then latitude, as GeoJSON orders them.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "walkway": {
+      "type": "object",
+      "required": ["id", "highway", "coordinates"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "highway": {
+          "description": "The OpenStreetMap highway value it would carry, such as footway or steps.",
+          "type": "string"
+        },
+        "note": { "description": "Why it is here and what it connects.", "type": "string" },
+        "verified": { "description": "True once walked.", "type": "boolean" },
+        "coordinates": { "type": "array", "items": { "$ref": "#/$defs/position" }, "minItems": 2 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

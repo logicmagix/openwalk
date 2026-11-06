@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openwalk.app/schemas/site.schema.json",
+  "title": "Site configuration",
+  "description": "The hand-written site.yaml that describes one site: identity, boundary, default view, and how the pipeline selects walkways.",
+  "type": "object",
+  "required": ["id", "name", "boundary"],
+  "properties": {
+    "id": {
+      "description": "Directory name under sites/ and the site segment of share URLs.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "boundary": {
+      "description": "The area OpenStreetMap data is fetched for. Exactly one of the three forms.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["osm_way"],
+          "properties": {
+            "osm_way": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["osm_relation"],
+          "properties": {
+            "osm_relation": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["bbox"],
+          "properties": {
+            "bbox": {
+              "$ref": "#/$defs/bbox"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "view": {
+      "description": "Where the map opens before a position is known.",
+      "type": "object",
+      "required": ["center", "zoom"],
+      "properties": {
+        "center": {
+          "$ref": "#/$defs/position"
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        }
+      },
+      "additionalProperties": false
+    },
+    "walkways": {
+      "description": "Which OpenStreetMap highway values count as walkways for this site.",
+      "type": "object",
+      "properties": {
+        "highway": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "unpaved": {
+          "description": "Surface values that make a way unusable here, replacing the default list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "max_connector_m": {
+          "description": "A place whose entrance is further than this from a walkway is reported.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "snap_m": {
+          "description": "How far a hand-drawn walkway's end may be from a mapped walkway and still be joined to it.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "parking_aisles": {
+          "description": "Whether the aisles of parking lots count as walkways. On by default: people walk through lots, and the router can still prefer sidewalks.",
+          "type": "boolean"
+        },
+        "roads": {
+          "description": "Highway values of roads a pedestrian may walk along when nothing better exists; they join sidewalks and parking aisles into one network. Replaces the default list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "attribution": {
+      "type": "string"
+    },
+    "overlays": {
+      "description": "Images of the site's own maps, georeferenced by control points: a pixel in the image paired with the OpenStreetMap element or the position it depicts.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "image", "control_points"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "image": {
+            "description": "PNG file, relative to the site directory.",
+            "type": "string",
+            "pattern": "\\.png$"
+          },
+          "attribution": {
+            "type": "string"
+          },
+          "control_points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": ["pixel"],
+              "properties": {
+                "pixel": {
+                  "description": "Column then row, from the top-left corner of the image.",
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "osm": {
+                  "type": "string",
+                  "pattern": "^(node|way|relation)/[0-9]+$"
+                },
+                "position": {
+                  "$ref": "#/$defs/position"
+                }
+              },
+              "oneOf": [
+                {
+                  "required": ["osm"]
+                },
+                {
+                  "required": ["position"]
+                }
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "position": {
+      "description": "Longitude then latitude, as GeoJSON orders them.",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "bbox": {
+      "description": "South, west, north, east in degrees, the order Overpass uses.",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

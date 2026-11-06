@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openwalk.app/schemas/graph.schema.json",
+  "title": "Pedestrian graph",
+  "description": "The generated graph.json: an undirected weighted graph over the site's walkways, with one node per place where directions end. Arrays rather than objects keep the file small for phones.",
+  "type": "object",
+  "required": ["nodes", "edges", "places"],
+  "properties": {
+    "nodes": {
+      "description": "Node coordinates; a node's id is its index here.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/position"
+      }
+    },
+    "edges": {
+      "description": "Each edge is [from, to, metres, kind]; edges are undirected. An aisle runs through a parking lot and a road along a street; a router may penalise both, roads more.",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          {
+            "enum": ["walkway", "steps", "area", "aisle", "road", "connector"]
+          }
+        ],
+        "minItems": 4,
+        "maxItems": 4
+      }
+    },
+    "places": {
+      "description": "Place id to the node where directions to that place end.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9]+(-[a-z0-9]+)*$": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "position": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

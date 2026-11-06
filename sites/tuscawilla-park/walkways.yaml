@@ -1,0 +1,10 @@
+# Paved ways OpenStreetMap lacks, drawn from satellite imagery through the debug page.
+# Schema: packages/schema/schemas/walkways-yaml.schema.json.
+walkways:
+  - id: arts-center-drive
+    highway: footway
+    note: The drive from the arts center's parking lot east to the park road.
+    verified: false
+    coordinates:
+      - [-82.132054, 29.19484]
+      - [-82.131195, 29.194847]

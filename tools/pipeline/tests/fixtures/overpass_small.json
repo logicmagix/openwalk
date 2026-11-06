@@ -1,0 +1,132 @@
+{
+  "version": 0.6,
+  "generator": "fixture",
+  "elements": [
+    {
+      "type": "node",
+      "id": 1,
+      "lat": 10.0005,
+      "lon": 20.0005,
+      "tags": { "amenity": "drinking_water" }
+    },
+    {
+      "type": "node",
+      "id": 2,
+      "lat": 10.001,
+      "lon": 20.0,
+      "tags": { "entrance": "main" }
+    },
+    {
+      "type": "way",
+      "id": 10,
+      "nodes": [100, 101, 102],
+      "geometry": [
+        { "lat": 10.0, "lon": 20.0 },
+        { "lat": 10.001, "lon": 20.0 },
+        { "lat": 10.002, "lon": 20.0005 }
+      ],
+      "tags": { "highway": "footway", "surface": "paving_stones", "lit": "yes" }
+    },
+    {
+      "type": "way",
+      "id": 11,
+      "nodes": [102, 103],
+      "geometry": [
+        { "lat": 10.002, "lon": 20.0005 },
+        { "lat": 10.0022, "lon": 20.0008 }
+      ],
+      "tags": { "highway": "steps", "step_count": "12", "incline": "up" }
+    },
+    {
+      "type": "way",
+      "id": 12,
+      "nodes": [104, 105, 106, 107, 104],
+      "geometry": [
+        { "lat": 10.001, "lon": 20.001 },
+        { "lat": 10.001, "lon": 20.002 },
+        { "lat": 10.002, "lon": 20.002 },
+        { "lat": 10.002, "lon": 20.001 },
+        { "lat": 10.001, "lon": 20.001 }
+      ],
+      "tags": { "building": "yes", "name": "Hall", "ref": "7" }
+    },
+    {
+      "type": "way",
+      "id": 13,
+      "nodes": [108, 109, 110, 111, 108],
+      "geometry": [
+        { "lat": 10.003, "lon": 20.001 },
+        { "lat": 10.003, "lon": 20.002 },
+        { "lat": 10.004, "lon": 20.002 },
+        { "lat": 10.004, "lon": 20.001 },
+        { "lat": 10.003, "lon": 20.001 }
+      ],
+      "tags": { "highway": "pedestrian", "area": "yes", "name": "Plaza" }
+    },
+    {
+      "type": "way",
+      "id": 14,
+      "nodes": [112, 113, 114, 115, 112],
+      "geometry": [
+        { "lat": 10.005, "lon": 20.0 },
+        { "lat": 10.005, "lon": 20.001 },
+        { "lat": 10.006, "lon": 20.001 },
+        { "lat": 10.006, "lon": 20.0 },
+        { "lat": 10.005, "lon": 20.0 }
+      ],
+      "tags": { "highway": "service", "service": "driveway" }
+    },
+    {
+      "type": "way",
+      "id": 15,
+      "nodes": [116],
+      "geometry": [{ "lat": 10.007, "lon": 20.0 }],
+      "tags": { "highway": "footway" }
+    },
+    {
+      "type": "relation",
+      "id": 20,
+      "members": [
+        {
+          "type": "way",
+          "ref": 30,
+          "role": "outer",
+          "geometry": [
+            { "lat": 10.008, "lon": 20.0 },
+            { "lat": 10.008, "lon": 20.001 },
+            { "lat": 10.009, "lon": 20.001 },
+            { "lat": 10.008, "lon": 20.0 }
+          ]
+        },
+        {
+          "type": "way",
+          "ref": 31,
+          "role": "outer",
+          "geometry": [
+            { "lat": 10.01, "lon": 20.0 },
+            { "lat": 10.01, "lon": 20.001 },
+            { "lat": 10.011, "lon": 20.001 },
+            { "lat": 10.01, "lon": 20.0 }
+          ]
+        }
+      ],
+      "tags": { "type": "multipolygon", "building": "yes", "name": "Two Wings" }
+    },
+    {
+      "type": "relation",
+      "id": 21,
+      "members": [
+        {
+          "type": "way",
+          "ref": 32,
+          "role": "outer",
+          "geometry": [
+            { "lat": 10.012, "lon": 20.0 },
+            { "lat": 10.012, "lon": 20.001 }
+          ]
+        }
+      ],
+      "tags": { "type": "multipolygon", "building": "yes" }
+    }
+  ]
+}

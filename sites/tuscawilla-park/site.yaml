@@ -1,0 +1,11 @@
+# The example site: a public park, used to demonstrate and test the pipeline.
+# Schema: packages/schema/schemas/site.schema.json.
+id: tuscawilla-park
+name: Tuscawilla Park
+boundary:
+  # The park's grounds as mapped in OpenStreetMap (leisure=park).
+  osm_way: 462341602
+view:
+  center: [-82.1322, 29.1927]
+  zoom: 17
+attribution: Map data © OpenStreetMap contributors (ODbL)

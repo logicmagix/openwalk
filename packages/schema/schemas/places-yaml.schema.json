@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openwalk.app/schemas/places-yaml.schema.json",
+  "title": "Curated places",
+  "description": "The hand-written places.yaml of a site: every destination a user can search for or be directed to. Each place takes its position from an OpenStreetMap element, a hand-placed location, or a hand-placed entrance, in that order of preference.",
+  "type": "object",
+  "required": ["places"],
+  "properties": {
+    "places": { "type": "array", "items": { "$ref": "#/$defs/place" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "position": {
+      "description": "Longitude then latitude, as GeoJSON orders them.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "place": {
+      "type": "object",
+      "required": ["id", "name", "category"],
+      "properties": {
+        "id": {
+          "description": "Stable identifier used in share URLs; unique within the site.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "number": {
+          "description": "The number the site's own signage and map use, if any.",
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "description": "One word the app groups and filters by, for example building or plaza.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "annotation": {
+          "description": "A short note shown beside the name, such as the services inside.",
+          "type": "string"
+        },
+        "keywords": {
+          "description": "Plain words a visitor might search for that are not in the name.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "osm": {
+          "description": "OpenStreetMap element whose geometry places this feature, for example way/123.",
+          "type": "string",
+          "pattern": "^(node|way|relation)/[0-9]+$"
+        },
+        "location": {
+          "description": "Hand-placed position, used when no OpenStreetMap element fits.",
+          "$ref": "#/$defs/position"
+        },
+        "entrance": {
+          "description": "Hand-placed entrance, where directions end; overrides the derived position.",
+          "$ref": "#/$defs/position"
+        },
+        "verified": {
+          "description": "True once the position and name have been checked on foot.",
+          "type": "boolean"
+        }
+      },
+      "anyOf": [
+        { "required": ["osm"] },
+        { "required": ["location"] },
+        { "required": ["entrance"] }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

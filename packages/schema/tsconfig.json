@@ -1,4 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"]
+  // The schema files are JSON; this lets TypeScript type them on import.
+  "compilerOptions": { "resolveJsonModule": true },
+  "include": ["src", "schemas"]
 }

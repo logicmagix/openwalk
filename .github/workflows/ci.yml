@@ -44,3 +44,30 @@ jobs:
           tags: openwalk/web:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  pipeline:
+    name: Pipeline typecheck and test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/pipeline
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: tools/pipeline/pyproject.toml
+
+      - run: pip install -e '.[dev]'
+
+      - run: pyright
+
+      - run: pytest
+
+      # The example site is built from its committed OpenStreetMap snapshot; the
+      # generated files must match what is committed.
+      - run: openwalk-pipeline build ../../sites/tuscawilla-park
+
+      - run: git diff --exit-code -- ../../sites
