@@ -120,6 +120,9 @@ PAGE = Template(
 <script src="https://unpkg.com/leaflet-imageoverlay-rotated@$rotated/Leaflet.ImageOverlay.Rotated.js"></script>
 <script>
 const DATA = $data;
+// ?hide=overlay,places,... starts the named layers switched off.
+const hidden = new Set((new URLSearchParams(location.search).get('hide') || '').split(',').filter(Boolean));
+const show = (name, layer) => hidden.has(name) ? layer : layer.addTo(map);
 const map = L.map('map');
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
   maxZoom: 20, maxNativeZoom: 19, attribution: 'Imagery © Esri'
@@ -136,10 +139,10 @@ const walkwayStyle = f => {
   if (f.properties.source === 'hand') return { color: '#00e5ff', weight: 4, dashArray: f.properties.verified ? null : '6 4' };
   return { color: steps ? '#f5a623' : area ? '#41ab5d' : '#2c7fb8', weight: steps ? 4 : 3, fillOpacity: area ? 0.2 : 0 };
 };
-const walkways = L.geoJSON(DATA.walkways, {
+const walkways = show('walkways', L.geoJSON(DATA.walkways, {
   style: walkwayStyle,
   onEachFeature: (f, layer) => layer.bindTooltip(Object.entries(f.properties).map(([k, v]) => k + '=' + v).join('<br>'))
-}).addTo(map);
+}));
 
 // Graph edges and nodes.
 const nodes = DATA.graph.nodes;
@@ -154,8 +157,8 @@ DATA.graph.edges.forEach(([a, b, m, kind], index) => {
   if (islands.has(index)) islandLines.push(L.polyline([latlng(a), latlng(b)], { color: '#e31a1c', weight: 7, opacity: 0.8 }).bindTooltip('island: ' + kind + ' ' + m + ' m'));
 });
 const graphEdges = L.layerGroup(edgeLines);
-const connectors = L.layerGroup(connectorLines).addTo(map);
-const islandLayer = L.layerGroup(islandLines).addTo(map);
+const connectors = show('connectors', L.layerGroup(connectorLines));
+const islandLayer = show('islands', L.layerGroup(islandLines));
 const graphNodes = L.layerGroup(nodes.map((n, i) => L.circleMarker([n[1], n[0]], { radius: 2, color: '#fff', weight: 1, fillOpacity: 1 }).bindTooltip('node ' + i)));
 
 // Places: numbered buildings get a label, call boxes a yellow dot, the rest a white dot.
@@ -167,7 +170,8 @@ const places = L.geoJSON(DATA.places, {
     return L.circleMarker(ll, { radius: 5, color: '#000', weight: 1, fillColor: '#fff', fillOpacity: 1 });
   },
   onEachFeature: (f, layer) => layer.bindPopup('<b>' + f.id + '</b><br>' + Object.entries(f.properties).map(([k, v]) => k + ': ' + JSON.stringify(v)).join('<br>'))
-}).addTo(map);
+});
+show('places', places);
 
 // Overlays as rotated images: top-left, top-right, bottom-left corners.
 const overlayLayers = {};
@@ -177,7 +181,7 @@ DATA.overlays.forEach(o => {
   const layer = L.imageOverlay.rotated(o.image, tl, tr, bl, { opacity: 0.6, attribution: o.attribution || '' });
   overlayLayers[o.name + ' (rms ' + o.fit.rms_m + ' m)'] = layer;
   overlayObjects.push(layer);
-  layer.addTo(map);
+  show('overlay', layer);
 });
 document.getElementById('opacity').addEventListener('input', e => overlayObjects.forEach(l => l.setOpacity(e.target.value / 100)));
 
