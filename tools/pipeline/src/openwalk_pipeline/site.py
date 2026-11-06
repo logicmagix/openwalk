@@ -45,8 +45,16 @@ class Site:
         return self.directory / "raw"
 
     @property
+    def places_yaml_path(self) -> Path:
+        return self.directory / "places.yaml"
+
+    @property
     def walkways_path(self) -> Path:
         return self.directory / "walkways.geojson"
+
+    @property
+    def places_path(self) -> Path:
+        return self.directory / "places.geojson"
 
 
 def parse_boundary(config: dict[str, Any]) -> Boundary:

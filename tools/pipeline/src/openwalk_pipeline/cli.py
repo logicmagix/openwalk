@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from openwalk_pipeline import __version__, osm, overpass, walkways
+from openwalk_pipeline import __version__, osm, overpass, places, walkways
 from openwalk_pipeline.site import Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -60,6 +60,13 @@ def run_build(site: Site) -> int:
     validate(collection, "walkways")
     write_json(site.walkways_path, collection)
     print(f"{site.id}: {len(collection['features'])} walkways in {site.walkways_path}")
+
+    if site.places_yaml_path.exists():
+        curated = places.load_places_yaml(site.places_yaml_path)
+        collection = places.build_places(curated, conversion.features)
+        validate(collection, "places")
+        write_json(site.places_path, collection)
+        print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
     return 0
 
 

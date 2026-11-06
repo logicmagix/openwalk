@@ -1,0 +1,22 @@
+places:
+  - id: hall
+    number: '7'
+    name: Hall
+    category: building
+    annotation: Main office
+    keywords: [office, admin]
+    osm: way/12
+  - id: water
+    name: Drinking water
+    category: amenity
+    osm: node/1
+    verified: true
+  - id: plaza
+    name: Plaza
+    category: plaza
+    osm: way/13
+    entrance: [20.0015, 10.0030]
+  - id: memorial
+    name: Memorial
+    category: landmark
+    location: [20.0, 10.0]
