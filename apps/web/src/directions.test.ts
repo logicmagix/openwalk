@@ -109,11 +109,34 @@ describe('guidance', () => {
 });
 
 describe('formatting', () => {
-  it('rounds distances sensibly', () => {
+  it('rounds metric distances sensibly', () => {
     expect(formatDistance(0.4)).toBe('1 m');
     expect(formatDistance(349.6)).toBe('350 m');
     expect(formatDistance(1234)).toBe('1.2 km');
     expect(formatDistance(12_345)).toBe('12 km');
+  });
+
+  it('shows feet then miles for imperial sites', () => {
+    expect(formatDistance(1, 'imperial')).toBe('10 ft');
+    expect(formatDistance(100, 'imperial')).toBe('330 ft');
+    expect(formatDistance(160, 'imperial')).toBe('520 ft');
+    expect(formatDistance(161, 'imperial')).toBe('0.1 mi');
+    expect(formatDistance(2000, 'imperial')).toBe('1.2 mi');
+    expect(formatDistance(20_000, 'imperial')).toBe('12 mi');
+  });
+
+  it('describes in the site units', () => {
+    const start = fix(0.0005, -0.0001);
+    const found = planRoute(router, start, 'corner');
+    if (found === null) throw new Error('expected a route');
+    expect(describeRoute(found, start, 'imperial').distance).toBe('0.1 mi');
+    const imperial = makeRouter(tiny as unknown as GraphDocument, {
+      id: 'a',
+      name: 'A',
+      units: 'imperial',
+    });
+    expect(imperial.units).toBe('imperial');
+    expect(router.units).toBe('metric');
   });
 
   it('rounds durations up to whole minutes', () => {

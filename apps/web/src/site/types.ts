@@ -14,6 +14,8 @@ export interface SiteConfig {
   readonly name: string;
   /** Where the map opens before a position is known. */
   readonly view?: { readonly center: Position; readonly zoom: number };
+  /** How distances are shown; metric when absent. */
+  readonly units?: 'metric' | 'imperial';
   readonly attribution?: string;
   readonly routing?: {
     readonly weights?: Partial<Record<string, number>>;

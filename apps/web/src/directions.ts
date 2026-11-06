@@ -17,10 +17,13 @@ import type { PlaceFeature } from '@openwalk/search';
 import type { PositionFix } from './position/provider';
 import type { SiteConfig } from './site/types';
 
+export type Units = 'metric' | 'imperial';
+
 export interface Router {
   readonly graph: Graph;
   readonly weights: ReturnType<typeof resolveWeights>;
   readonly walkingSpeedMps: number | undefined;
+  readonly units: Units;
 }
 
 /** The routing graph and the site's weights, prepared once per site. */
@@ -29,6 +32,7 @@ export function makeRouter(document: GraphDocument, config: SiteConfig): Router 
     graph: loadGraph(document),
     weights: resolveWeights(config.routing?.weights ?? {}),
     walkingSpeedMps: config.routing?.walking_speed,
+    units: config.units ?? 'metric',
   };
 }
 
@@ -104,8 +108,23 @@ export function compassPoint(bearing: number): string {
   return POINTS[index] as string;
 }
 
-/** Metres as a short distance: whole metres below a kilometre, otherwise km. */
-export function formatDistance(metres: number): string {
+const FEET_PER_METRE = 3.28084;
+const METRES_PER_MILE = 1609.344;
+
+/**
+ * Metres as a short distance in the site's units. Metric: whole metres below a
+ * kilometre, then kilometres. Imperial: feet in steps of ten below a tenth of a
+ * mile, then miles with one decimal.
+ */
+export function formatDistance(metres: number, units: Units = 'metric'): string {
+  if (units === 'imperial') {
+    const miles = metres / METRES_PER_MILE;
+    if (miles < 0.1) {
+      const feet = Math.max(10, Math.round((metres * FEET_PER_METRE) / 10) * 10);
+      return `${feet} ft`;
+    }
+    return `${miles.toFixed(miles < 10 ? 1 : 0)} mi`;
+  }
   if (metres < 1000) return `${Math.max(1, Math.round(metres))} m`;
   return `${(metres / 1000).toFixed(metres < 10_000 ? 1 : 0)} km`;
 }
@@ -126,10 +145,10 @@ export interface Guidance {
 }
 
 /** What the panel says about a route from the current fix. */
-export function describe(found: Route, fix: PositionFix): Guidance {
+export function describe(found: Route, fix: PositionFix, units: Units = 'metric'): Guidance {
   const bearing = bearingAlong(fix, found);
   return {
-    distance: formatDistance(found.distanceM),
+    distance: formatDistance(found.distanceM, units),
     duration: formatDuration(found.durationS),
     bearing,
     instruction: bearing === null ? '' : `Head ${compassPoint(bearing)}`,

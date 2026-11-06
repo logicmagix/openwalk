@@ -68,6 +68,11 @@
       },
       "additionalProperties": false
     },
+    "units": {
+      "description": "How distances are shown: metres and kilometres, or feet and miles.",
+      "enum": ["metric", "imperial"],
+      "default": "metric"
+    },
     "walkways": {
       "description": "Which OpenStreetMap highway values count as walkways for this site.",
       "type": "object",

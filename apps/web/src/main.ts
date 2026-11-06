@@ -157,7 +157,7 @@ async function start(): Promise<void> {
     }
     panel.update({
       kind: 'guiding',
-      guidance: describe(found, lastFix),
+      guidance: describe(found, lastFix, router.units),
       mapBearing: map.getBearing(),
     });
     if (!fitted) {
