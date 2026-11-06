@@ -24,19 +24,22 @@ describe('paths', () => {
 });
 
 describe('loadSite', () => {
-  it('fetches the three files from the site directory', async () => {
+  it('fetches the four files from the site directory', async () => {
     const requested: string[] = [];
     const fake = async (url: string) => {
       requested.push(url);
       if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo' };
+      if (url.endsWith('graph.json')) return { nodes: [], edges: [], places: {} };
       return { type: 'FeatureCollection', features: [] };
     };
     const data = await loadSite('demo-site', fake);
     expect(requested.sort()).toEqual([
+      '/sites/demo-site/graph.json',
       '/sites/demo-site/places.geojson',
       '/sites/demo-site/site.json',
       '/sites/demo-site/walkways.geojson',
     ]);
+    expect(data.graph.nodes).toEqual([]);
     expect(data.config.name).toBe('Demo');
     expect(data.basemapUrl).toBe('/sites/demo-site/basemap.pmtiles');
   });

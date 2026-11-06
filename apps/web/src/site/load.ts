@@ -1,6 +1,7 @@
 // Finding which site the page is for and loading its files. Sites are served under
 // /sites/<site-id>/ and the map page for a site is /s/<site-id>/.
 
+import type { GraphDocument } from '@openwalk/routing';
 import type { PlacesDocument, SiteConfig, SiteData, WalkwaysDocument } from './types';
 
 const SITE_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -32,17 +33,18 @@ export async function fetchJson(url: string): Promise<unknown> {
   return response.json();
 }
 
-/** Loads a site's configuration, places and walkways in parallel. */
+/** Loads a site's configuration, places, walkways and routing graph in parallel. */
 export async function loadSite(
   siteId: string,
   fetchFn: JsonFetcher = fetchJson,
 ): Promise<SiteData> {
   if (!SITE_ID.test(siteId)) throw new Error(`invalid site id: ${siteId}`);
   const base = siteBaseUrl(siteId);
-  const [config, places, walkways] = await Promise.all([
+  const [config, places, walkways, graph] = await Promise.all([
     fetchFn(`${base}site.json`) as Promise<SiteConfig>,
     fetchFn(`${base}places.geojson`) as Promise<PlacesDocument>,
     fetchFn(`${base}walkways.geojson`) as Promise<WalkwaysDocument>,
+    fetchFn(`${base}graph.json`) as Promise<GraphDocument>,
   ]);
-  return { config, places, walkways, basemapUrl: `${base}basemap.pmtiles` };
+  return { config, places, walkways, graph, basemapUrl: `${base}basemap.pmtiles` };
 }

@@ -2,6 +2,7 @@
 // schemas in packages/schema/schemas/; the app trusts the files and does not
 // validate them at runtime.
 
+import type { GraphDocument } from '@openwalk/routing';
 import type { PlacesDocument } from '@openwalk/search';
 
 /** A longitude and latitude pair in degrees, in GeoJSON order. */
@@ -50,6 +51,7 @@ export interface SiteData {
   readonly config: SiteConfig;
   readonly places: PlacesDocument;
   readonly walkways: WalkwaysDocument;
+  readonly graph: GraphDocument;
   /** URL of the site's base map archive. */
   readonly basemapUrl: string;
 }
