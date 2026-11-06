@@ -113,6 +113,56 @@
       },
       "additionalProperties": false
     },
+    "routing": {
+      "description": "How the router weighs the network. Omitted values take the defaults given here.",
+      "type": "object",
+      "properties": {
+        "weights": {
+          "description": "Cost multiplier per edge kind: a route's cost is metres times the kind's weight, so a weight of 3 makes a road worth walking only when every alternative is more than three times longer. Weights are at least 1.",
+          "type": "object",
+          "properties": {
+            "walkway": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1
+            },
+            "area": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1
+            },
+            "connector": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1
+            },
+            "steps": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1.2
+            },
+            "aisle": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1.5
+            },
+            "road": {
+              "type": "number",
+              "minimum": 1,
+              "default": 3
+            }
+          },
+          "additionalProperties": false
+        },
+        "walking_speed": {
+          "description": "Metres per second, used for the time estimate shown with a route.",
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1.3
+        }
+      },
+      "additionalProperties": false
+    },
     "attribution": {
       "type": "string"
     },
