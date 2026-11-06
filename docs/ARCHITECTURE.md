@@ -77,7 +77,7 @@ apps/web/        frontend (Vite + TypeScript + MapLibre GL JS)
 apps/api/        Fastify service
 packages/routing/  graph building, Dijkstra, A*, snapping, haversine; pure, tested
 packages/search/   fuzzy search over places; pure, tested
-packages/schema/   zod schemas shared by pipeline output, api, and web
+packages/schema/   JSON Schema files shared by pipeline output, api, and web
 sites/           per-site config and data (see Site configuration layout)
 tools/pipeline/  Python data preparation
 deploy/          Dockerfiles, compose file for local dev, swarm stack file, nginx conf
