@@ -108,6 +108,7 @@ PAGE = Template(
     <span style="background:#2c7fb8"></span>walkway
     <span style="background:#f5a623"></span>steps
     <span style="background:#41ab5d"></span>area
+    <span style="background:#bdbdbd"></span>aisle
     <span style="background:#00e5ff"></span>hand-drawn
     <span style="background:#d53ef2"></span>connector
     <span style="background:#e31a1c;height:6px"></span>island
@@ -137,6 +138,7 @@ const walkwayStyle = f => {
   const steps = f.properties.highway === 'steps';
   const area = f.geometry.type === 'Polygon';
   if (f.properties.source === 'hand') return { color: '#00e5ff', weight: 4, dashArray: f.properties.verified ? null : '6 4' };
+  if (f.properties.highway === 'service') return { color: '#bdbdbd', weight: 2, opacity: 0.9 };
   return { color: steps ? '#f5a623' : area ? '#41ab5d' : '#2c7fb8', weight: steps ? 4 : 3, fillOpacity: area ? 0.2 : 0 };
 };
 const walkways = show('walkways', L.geoJSON(DATA.walkways, {
@@ -159,7 +161,8 @@ DATA.graph.edges.forEach(([a, b, m, kind], index) => {
 const graphEdges = L.layerGroup(edgeLines);
 const connectors = show('connectors', L.layerGroup(connectorLines));
 const islandLayer = show('islands', L.layerGroup(islandLines));
-const graphNodes = L.layerGroup(nodes.map((n, i) => L.circleMarker([n[1], n[0]], { radius: 2, color: '#fff', weight: 1, fillOpacity: 1 }).bindTooltip('node ' + i)));
+const graphNodes = L.layerGroup(nodes.map((n, i) => L.circleMarker([n[1], n[0]], { radius: 2, color: '#fff', weight: 1, fillOpacity: 1 })
+  .bindTooltip('node ' + i + ' [' + n[0] + ', ' + n[1] + ']')));
 
 // Places: numbered buildings get a label, call boxes a yellow dot, the rest a white dot.
 const places = L.geoJSON(DATA.places, {

@@ -49,6 +49,7 @@ class Site:
     unpaved: tuple[str, ...]
     max_connector_m: float
     snap_m: float
+    parking_aisles: bool
     config: dict[str, Any]
 
     @property
@@ -110,5 +111,6 @@ def load_site(directory: Path) -> Site:
         unpaved=tuple(walkways.get("unpaved", DEFAULT_UNPAVED)),
         max_connector_m=float(walkways.get("max_connector_m", DEFAULT_MAX_CONNECTOR_M)),
         snap_m=float(walkways.get("snap_m", DEFAULT_SNAP_M)),
+        parking_aisles=bool(walkways.get("parking_aisles", True)),
         config=config,
     )

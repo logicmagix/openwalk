@@ -62,7 +62,9 @@ def run_build(site: Site) -> int:
 
     by_osm_id = {feature["id"]: feature for feature in conversion.features}
 
-    selection = walkways.select_walkways(conversion.features, site.walkway_highways, site.unpaved)
+    selection = walkways.select_walkways(
+        conversion.features, site.walkway_highways, site.unpaved, site.parking_aisles
+    )
     for excluded in selection.excluded:
         print(f"{site.id}: excluded {excluded}", file=sys.stderr)
     walkway_collection = selection.collection

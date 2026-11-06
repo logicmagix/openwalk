@@ -15,7 +15,7 @@ JsonObject = dict[str, Any]
 
 # Tags carried through to the output, and the type each is coerced to. Everything else
 # in OpenStreetMap is dropped so the app loads only what it uses.
-STRING_TAGS = ("name", "surface", "lit", "incline", "wheelchair", "covered", "level")
+STRING_TAGS = ("name", "surface", "lit", "incline", "wheelchair", "covered", "level", "service")
 INTEGER_TAGS = ("step_count",)
 
 # Surface values that mean "not a paved walkway", unless a site says otherwise. A way
@@ -67,15 +67,21 @@ def exclusion_reason(tags: dict[str, Any], unpaved: Iterable[str]) -> str | None
     return None
 
 
+def is_parking_aisle(tags: dict[str, Any]) -> bool:
+    return tags.get("highway") == "service" and tags.get("service") == "parking_aisle"
+
+
 def select_walkways(
     features: Iterable[JsonObject],
     highways: Iterable[str],
     unpaved: Iterable[str] = DEFAULT_UNPAVED,
+    parking_aisles: bool = True,
 ) -> Selection:
     """Select the features whose highway tag is in ``highways`` and that are paved.
 
-    Only linear ways and pedestrian areas qualify; points and multipolygons never do.
-    Ways excluded for being informal or unpaved are listed with the reason.
+    Parking aisles are included too unless ``parking_aisles`` is off. Only linear ways
+    and pedestrian areas qualify; points and multipolygons never do. Ways excluded for
+    being informal or unpaved are listed with the reason.
     """
     wanted = set(highways)
     unpaved_set = set(unpaved)
@@ -83,7 +89,7 @@ def select_walkways(
     excluded: list[str] = []
     for feature in features:
         tags: dict[str, Any] = feature["properties"]
-        if tags.get("highway") not in wanted:
+        if tags.get("highway") not in wanted and not (parking_aisles and is_parking_aisle(tags)):
             continue
         if feature["geometry"]["type"] not in ("LineString", "Polygon"):
             continue

@@ -110,3 +110,19 @@ def test_hand_drawn_duplicate_ids_are_rejected(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="duplicate"):
         walkways.load_walkways_yaml(path)
+
+
+def test_parking_aisles_are_walkways_unless_the_site_says_otherwise() -> None:
+    def service(osm_id: str, **tags: str) -> dict[str, Any]:
+        return {
+            "type": "Feature",
+            "id": osm_id,
+            "geometry": {"type": "LineString", "coordinates": [[0, 0], [0, 1]]},
+            "properties": {"osm_id": osm_id, "highway": "service", **tags},
+        }
+
+    features = [service("way/1", service="parking_aisle"), service("way/2", service="driveway"), service("way/3")]
+    with_aisles = walkways.select_walkways(features, ("footway",)).collection["features"]
+    assert [f["id"] for f in with_aisles] == ["way/1"]
+    assert with_aisles[0]["properties"]["service"] == "parking_aisle"
+    assert walkways.select_walkways(features, ("footway",), parking_aisles=False).collection["features"] == []

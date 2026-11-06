@@ -22,7 +22,7 @@ from shapely.geometry import LineString, Point, Polygon, shape
 from shapely.ops import nearest_points
 
 JsonObject = dict[str, Any]
-Kind = Literal["walkway", "steps", "area", "connector"]
+Kind = Literal["walkway", "steps", "area", "aisle", "connector"]
 XY = tuple[float, float]
 
 # Points closer than this, in metres, are the same node.
@@ -155,6 +155,15 @@ def _plane_transformers(features: Iterable[JsonObject]) -> tuple[Transformer, Tr
     )
 
 
+def edge_kind(properties: JsonObject) -> Kind:
+    highway = properties.get("highway")
+    if highway == "steps":
+        return "steps"
+    if highway == "service":
+        return "aisle"
+    return "walkway"
+
+
 def add_walkway(graph: Graph, feature: JsonObject, snap_m: float = 0.0) -> None:
     """Add a walkway's vertices and segments.
 
@@ -163,7 +172,7 @@ def add_walkway(graph: Graph, feature: JsonObject, snap_m: float = 0.0) -> None:
     this so a line drawn to roughly the right spot connects to the mapped network.
     """
     geometry = feature["geometry"]
-    kind: Kind = "steps" if feature["properties"].get("highway") == "steps" else "walkway"
+    kind: Kind = edge_kind(feature["properties"])
     if geometry["type"] == "LineString":
         points = [graph.project(lon, lat) for lon, lat in geometry["coordinates"]]
         ids: list[int] = []

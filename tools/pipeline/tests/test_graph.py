@@ -133,3 +133,9 @@ def test_hand_drawn_end_too_far_from_the_network_is_reported(overpass_small: dic
     built = graph.build_graph(walkways.merge(collection, [stray]), curated, by_osm_id, snap_m=5.0)
     assert len([w for w in built.warnings if w.startswith("hand/stray:")]) == 2
     assert built.component_count == 3
+
+
+def test_parking_aisles_get_their_own_edge_kind() -> None:
+    assert graph.edge_kind({"highway": "service", "service": "parking_aisle"}) == "aisle"
+    assert graph.edge_kind({"highway": "steps"}) == "steps"
+    assert graph.edge_kind({"highway": "footway"}) == "walkway"
