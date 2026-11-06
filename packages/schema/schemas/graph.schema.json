@@ -14,7 +14,7 @@
       }
     },
     "edges": {
-      "description": "Each edge is [from, to, metres, kind]; edges are undirected. An aisle runs through a parking lot and a router may penalise it.",
+      "description": "Each edge is [from, to, metres, kind]; edges are undirected. An aisle runs through a parking lot and a road along a street; a router may penalise both, roads more.",
       "type": "array",
       "items": {
         "type": "array",
@@ -32,7 +32,7 @@
             "exclusiveMinimum": 0
           },
           {
-            "enum": ["walkway", "steps", "area", "aisle", "connector"]
+            "enum": ["walkway", "steps", "area", "aisle", "road", "connector"]
           }
         ],
         "minItems": 4,

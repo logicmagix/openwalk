@@ -101,6 +101,14 @@
         "parking_aisles": {
           "description": "Whether the aisles of parking lots count as walkways. On by default: people walk through lots, and the router can still prefer sidewalks.",
           "type": "boolean"
+        },
+        "roads": {
+          "description": "Highway values of roads a pedestrian may walk along when nothing better exists; they join sidewalks and parking aisles into one network. Replaces the default list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         }
       },
       "additionalProperties": false
