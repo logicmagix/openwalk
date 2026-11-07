@@ -13,6 +13,7 @@ import {
   planRoute,
 } from './directions';
 import { Locator } from './locate';
+import { setupOffline } from './offline';
 import { MapView } from './map/adapter';
 import {
   buildStyle,
@@ -335,6 +336,29 @@ async function start(): Promise<void> {
       chooseDestination(place);
     }
   }
+
+  // --- offline support -----------------------------------------------------------
+  // After the first online visit the app keeps working with no network. The page
+  // tells the worker which same-origin files to keep: its own bundles and assets,
+  // this site's data, and the whole basemap.
+  function collectOfflineUrls(): string[] {
+    const origin = location.origin;
+    const loaded = performance
+      .getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .filter((name) => name.startsWith(origin));
+    const extras = [
+      location.href,
+      new URL('/index.html', origin).href, // the shell any route falls back to
+      new URL('/manifest.webmanifest', origin).href,
+      new URL('/favicon.svg', origin).href,
+      new URL('/icons/icon-192.png', origin).href,
+      new URL('/icons/icon-512.png', origin).href,
+      inputs.current.basemapUrl,
+    ];
+    return [...new Set([...loaded, ...extras])];
+  }
+  setupOffline(collectOfflineUrls);
 }
 
 start().catch((error: unknown) => {

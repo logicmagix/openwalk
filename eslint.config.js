@@ -16,6 +16,11 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
+    // The service worker runs in its own global scope (self, caches, clients).
+    files: ['apps/web/public/sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker, ...globals.browser } },
+  },
+  {
     files: ['**/*.config.{js,ts}'],
     languageOptions: { globals: globals.node },
   },

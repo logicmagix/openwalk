@@ -37,10 +37,23 @@ const serveSites: Plugin = {
   },
 };
 
+// Vite marks its built <script> and <link> tags `crossorigin`, which makes the
+// browser request them in CORS mode. For this same-origin app that is needless,
+// and a CORS subresource is not served from the service worker's cache the way a
+// same-origin one is — so the app shell fails to load with no network. Dropping
+// the attribute lets the worker serve the whole shell offline.
+const sameOriginAssets: Plugin = {
+  name: 'same-origin-assets',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html) => html.replace(/ crossorigin/g, ''),
+  },
+};
+
 // Vite builds and serves the app; the `test` block configures Vitest for this
 // workspace (it is read when `npm test` runs from the repository root).
 export default defineConfig({
-  plugins: [serveSites],
+  plugins: [serveSites, sameOriginAssets],
   server: {
     // Listen on every interface so a phone on the same network can connect.
     host: true,
