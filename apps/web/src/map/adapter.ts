@@ -37,6 +37,8 @@ export interface MapViewOptions {
   readonly style: StyleSpecification;
   readonly center: Position;
   readonly zoom: number;
+  /** Holds panning and zoom-out to the site: [[west, south], [east, north]]. */
+  readonly maxBounds?: readonly [readonly [number, number], readonly [number, number]];
 }
 
 export class MapView {
@@ -49,6 +51,14 @@ export class MapView {
       style: options.style,
       center: [options.center[0], options.center[1]],
       zoom: options.zoom,
+      ...(options.maxBounds
+        ? {
+            maxBounds: [
+              [options.maxBounds[0][0], options.maxBounds[0][1]],
+              [options.maxBounds[1][0], options.maxBounds[1][1]],
+            ] as [[number, number], [number, number]],
+          }
+        : {}),
       // Attribution stays expanded so the OpenStreetMap credit is always visible.
       attributionControl: { compact: false },
       // Keep the map pinned to the ground on a phone: no tilt, rotation only by code.

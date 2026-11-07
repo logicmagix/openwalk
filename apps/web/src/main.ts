@@ -3,7 +3,7 @@
 
 import './style.css';
 import { buildIndex, type PlaceFeature } from '@openwalk/search';
-import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle } from './app';
+import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle, siteBounds } from './app';
 import {
   describe,
   destinationOf,
@@ -137,7 +137,12 @@ async function start(): Promise<void> {
   inputs.current = { ...inputs.current, theme: watchTheme((theme) => restyle({ theme })) };
 
   const view = initialView(site.config, site.places);
-  const map = new MapView(element('map'), { style: buildStyle(inputs.current), ...view });
+  const bounds = siteBounds(site.places);
+  const map = new MapView(element('map'), {
+    style: buildStyle(inputs.current),
+    ...view,
+    ...(bounds ? { maxBounds: bounds } : {}),
+  });
 
   function restyle(change: Partial<StyleInputs>): void {
     inputs.current = { ...inputs.current, ...change };
