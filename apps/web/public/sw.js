@@ -13,8 +13,10 @@
  * slicing the cached bytes into a 206 Partial Content response.
  */
 
-// Bump when this worker's logic changes; activation then drops older caches.
-const VERSION = 'v1';
+// Filled in at build time with the build's content hash, so each deployment
+// changes this file and the browser notices the new worker. In development the
+// worker is not registered, so the literal placeholder never runs.
+const VERSION = '__BUILD_ID__';
 const CACHE = `openwalk-${VERSION}`;
 
 self.addEventListener('activate', (event) => {
