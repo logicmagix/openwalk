@@ -17,6 +17,8 @@ export interface SiteConfig {
   /** How distances are shown; metric when absent. */
   readonly units?: 'metric' | 'imperial';
   readonly attribution?: string;
+  /** Categories offered as one-tap "nearest" buttons, each with the label it shows. */
+  readonly nearest?: readonly { readonly category: string; readonly label: string }[];
   readonly routing?: {
     readonly weights?: Partial<Record<string, number>>;
     readonly walking_speed?: number;
@@ -48,12 +50,31 @@ export interface WalkwaysDocument {
 
 export type { PlacesDocument };
 
+/** One georeferenced image a site offers as a map layer (overlays.json). */
+export interface OverlayEntry {
+  readonly id: string;
+  readonly name: string;
+  /** Image file, relative to the site directory. */
+  readonly image: string;
+  readonly width: number;
+  readonly height: number;
+  /** Top-left, top-right, bottom-right, bottom-left corners, in GeoJSON order. */
+  readonly corners: readonly Position[];
+  readonly attribution?: string;
+}
+
+export interface OverlaysDocument {
+  readonly overlays: readonly OverlayEntry[];
+}
+
 /** Everything the app loads for one site. */
 export interface SiteData {
   readonly config: SiteConfig;
   readonly places: PlacesDocument;
   readonly walkways: WalkwaysDocument;
   readonly graph: GraphDocument;
+  /** The site's georeferenced map images, empty when it has none. */
+  readonly overlays: readonly OverlayEntry[];
   /** URL of the site's base map archive. */
   readonly basemapUrl: string;
 }

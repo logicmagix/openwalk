@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 
@@ -37,10 +37,41 @@ const serveSites: Plugin = {
   },
 };
 
+// Vite marks its built <script> and <link> tags `crossorigin`, which makes the
+// browser request them in CORS mode. For this same-origin app that is needless,
+// and a CORS subresource is not served from the service worker's cache the way a
+// same-origin one is — so the app shell fails to load with no network. Dropping
+// the attribute lets the worker serve the whole shell offline.
+const sameOriginAssets: Plugin = {
+  name: 'same-origin-assets',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html) => html.replace(/ crossorigin/g, ''),
+  },
+};
+
+// The service worker caches under a version name. Stamping that version with the
+// build's content hash means a new deployment changes sw.js, which is what makes
+// the browser notice a new worker and the page offer to reload into it. The
+// source keeps a `__BUILD_ID__` placeholder that this fills in at build time.
+const stampServiceWorker: Plugin = {
+  name: 'stamp-service-worker',
+  apply: 'build',
+  writeBundle(options, bundle) {
+    const entry = Object.values(bundle).find((chunk) => chunk.type === 'chunk' && chunk.isEntry);
+    const name = entry && entry.type === 'chunk' ? entry.fileName : '';
+    const buildId = /-([^.]+)\./.exec(name)?.[1] ?? String(Date.now());
+    const swPath = resolve(options.dir ?? 'dist', 'sw.js');
+    if (existsSync(swPath)) {
+      writeFileSync(swPath, readFileSync(swPath, 'utf8').replace('__BUILD_ID__', buildId));
+    }
+  },
+};
+
 // Vite builds and serves the app; the `test` block configures Vitest for this
 // workspace (it is read when `npm test` runs from the repository root).
 export default defineConfig({
-  plugins: [serveSites],
+  plugins: [serveSites, sameOriginAssets, stampServiceWorker],
   server: {
     // Listen on every interface so a phone on the same network can connect.
     host: true,

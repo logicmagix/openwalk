@@ -60,6 +60,36 @@ export function planRoute(router: Router, fix: PositionFix, placeId: string): Ro
   );
 }
 
+export interface NearestMatch {
+  readonly place: PlaceFeature;
+  readonly route: Route;
+}
+
+/**
+ * The place of a category reachable by the shortest walking route from the fix.
+ * "Nearest" is measured on foot over the network, not as the crow flies, so a lot
+ * on the far side of a fence is not chosen over one a short walk away. Routing is
+ * fast enough (a fraction of a millisecond per route) to try every candidate.
+ * Returns null when the category has no reachable place.
+ */
+export function nearestInCategory(
+  router: Router,
+  fix: PositionFix,
+  places: readonly PlaceFeature[],
+  category: string,
+): NearestMatch | null {
+  let best: NearestMatch | null = null;
+  for (const place of places) {
+    if (place.properties.category !== category) continue;
+    const found = planRoute(router, fix, place.id);
+    if (found === null) continue;
+    if (best === null || found.distanceM < best.route.distanceM) {
+      best = { place, route: found };
+    }
+  }
+  return best;
+}
+
 /**
  * How close counts as arrived. GPS on a phone is rarely better than ten metres,
  * and a poor fix should not need the person to stand on the exact spot, so the

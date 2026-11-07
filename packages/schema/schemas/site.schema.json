@@ -73,6 +73,28 @@
       "enum": ["metric", "imperial"],
       "default": "metric"
     },
+    "nearest": {
+      "description": "Place categories that get a one-tap \"nearest\" button. Each entry names a category used by this site's places and the label its button shows. Nearest is measured by walking distance over the network, not straight-line.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "label"],
+        "properties": {
+          "category": {
+            "description": "A category value as used in places.yaml.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "description": "The word shown on the button and read to a screen reader, for example \"Parking\" or \"Call box\".",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
     "walkways": {
       "description": "Which OpenStreetMap highway values count as walkways for this site.",
       "type": "object",

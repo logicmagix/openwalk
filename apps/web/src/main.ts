@@ -3,15 +3,25 @@
 
 import './style.css';
 import { buildIndex, type PlaceFeature } from '@openwalk/search';
-import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle } from './app';
-import { describe, destinationOf, hasArrived, makeRouter, planRoute } from './directions';
+import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle, siteBounds } from './app';
+import {
+  describe,
+  destinationOf,
+  hasArrived,
+  makeRouter,
+  nearestInCategory,
+  planRoute,
+} from './directions';
 import { Locator } from './locate';
+import { setupOffline } from './offline';
 import { MapView } from './map/adapter';
 import {
   buildStyle,
   destinationCollection,
   positionCollection,
   routeCollection,
+  type LayerPrefs,
+  type OverlaySpec,
   type StyleInputs,
 } from './map/style';
 import { FixedPositionProvider } from './position/fixed';
@@ -20,9 +30,17 @@ import { parseGpx } from './position/gpx';
 import { positionErrorMessage, type PositionFix, type PositionProvider } from './position/provider';
 import { ReplayProvider } from './position/replay';
 import { chooseProvider, replayAllowed, traceUrl } from './position/select';
-import { loadSite, siteBaseUrl, siteIdFromPath, sitePagePath } from './site/load';
+import {
+  loadSite,
+  placeLinkFromPath,
+  siteBaseUrl,
+  siteIdFromPath,
+  sitePagePath,
+} from './site/load';
 import { watchTheme } from './theme';
+import { setupLayers } from './ui/layers';
 import { listPlaces } from './ui/listing';
+import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { setupSearch } from './ui/search';
 
@@ -68,7 +86,10 @@ async function makeProvider(siteId: string): Promise<PositionProvider> {
 }
 
 async function start(): Promise<void> {
-  const siteId = siteIdFromPath(location.pathname);
+  // A page is reached either as the map (/s/<site>/) or as a share link to one
+  // place (/p/<site>/<place-id>); the latter opens the map on that place.
+  const link = placeLinkFromPath(location.pathname);
+  const siteId = link?.siteId ?? siteIdFromPath(location.pathname);
   if (siteId === null) {
     const fallback = import.meta.env.VITE_DEFAULT_SITE;
     if (fallback && location.pathname === '/') {
@@ -85,6 +106,17 @@ async function start(): Promise<void> {
   const index = buildIndex(site.places);
   const placesById = new Map(site.places.features.map((place) => [place.id, place]));
 
+  // Overlay images are addressed relative to the site directory; resolve each to an
+  // absolute, same-origin URL so the style can hand it to MapLibre.
+  const siteBase = siteBaseUrl(siteId);
+  const overlays: OverlaySpec[] = site.overlays.map((overlay) => ({
+    id: overlay.id,
+    name: overlay.name,
+    imageUrl: new URL(`${siteBase}${overlay.image}`, location.href).href,
+    corners: overlay.corners,
+    ...(overlay.attribution ? { attribution: overlay.attribution } : {}),
+  }));
+
   // --- the map ---------------------------------------------------------------
   const inputs: { current: StyleInputs } = {
     current: {
@@ -95,6 +127,8 @@ async function start(): Promise<void> {
       attribution: site.config.attribution,
       walkways: site.walkways,
       places: site.places,
+      overlays,
+      layerPrefs: { overlays: [], walkways: true, labels: true },
       position: null,
       route: null,
       destination: null,
@@ -103,7 +137,12 @@ async function start(): Promise<void> {
   inputs.current = { ...inputs.current, theme: watchTheme((theme) => restyle({ theme })) };
 
   const view = initialView(site.config, site.places);
-  const map = new MapView(element('map'), { style: buildStyle(inputs.current), ...view });
+  const bounds = siteBounds(site.places);
+  const map = new MapView(element('map'), {
+    style: buildStyle(inputs.current),
+    ...view,
+    ...(bounds ? { maxBounds: bounds } : {}),
+  });
 
   function restyle(change: Partial<StyleInputs>): void {
     inputs.current = { ...inputs.current, ...change };
@@ -114,6 +153,8 @@ async function start(): Promise<void> {
   let destination: PlaceFeature | null = null;
   let lastFix: PositionFix | null = null;
   let fitted = false;
+  // A "nearest" request made before a position was known, resolved on the next fix.
+  let pendingNearest: { category: string; label: string } | null = null;
 
   const panel = setupPanel(
     {
@@ -185,6 +226,28 @@ async function start(): Promise<void> {
     guide();
   }
 
+  /**
+   * Find the closest place of a category on foot and make it the destination.
+   * Needs a position, so without one it turns on location and resolves on the
+   * next fix.
+   */
+  function chooseNearest(category: string, label: string): void {
+    if (lastFix === null || !locator.on) {
+      pendingNearest = { category, label };
+      showStatus(`Finding the nearest ${label.toLowerCase()}…`);
+      if (!locator.on) toggleLocate();
+      return;
+    }
+    const match = nearestInCategory(router, lastFix, site.places.features, category);
+    if (match === null) {
+      showStatus(`No ${label.toLowerCase()} can be reached from here.`);
+      return;
+    }
+    showStatus(null);
+    searchInput.value = '';
+    chooseDestination(match.place);
+  }
+
   // --- position ------------------------------------------------------------------
   const locateButton = element<HTMLButtonElement>('locate');
   const locator = new Locator(await makeProvider(siteId), {
@@ -192,8 +255,15 @@ async function start(): Promise<void> {
       lastFix = fix;
       inputs.current = { ...inputs.current, position: fix };
       map.setPosition(positionCollection(fix));
-      if (first && destination === null) map.easeTo(fix.position, LOCATE_ZOOM);
+      if (first && destination === null && pendingNearest === null) {
+        map.easeTo(fix.position, LOCATE_ZOOM);
+      }
       guide();
+      if (pendingNearest !== null) {
+        const request = pendingNearest;
+        pendingNearest = null;
+        chooseNearest(request.category, request.label);
+      }
     },
     onError(error) {
       showStatus(positionErrorMessage(error));
@@ -222,7 +292,11 @@ async function start(): Promise<void> {
   // --- search and taps ----------------------------------------------------------
   const searchInput = element<HTMLInputElement>('search-input');
   setupSearch(
-    { input: searchInput, list: element('search-list') },
+    {
+      input: searchInput,
+      list: element('search-list'),
+      clear: element('search-clear'),
+    },
     {
       listFor: (query) => listPlaces(site.places, index, query),
       onChoose: (place) => chooseDestination(place),
@@ -240,6 +314,64 @@ async function start(): Promise<void> {
   map.onRotate(() => {
     if (destination !== null && inputs.current.route && lastFix !== null) guide();
   });
+
+  // --- layers control -----------------------------------------------------------
+  const initialPrefs: LayerPrefs = setupLayers(
+    { button: element<HTMLButtonElement>('layers'), panel: element('layers-panel') },
+    {
+      overlays: overlays.map(({ id, name, attribution }) => ({ id, name, attribution })),
+      onChange: (prefs) => restyle({ layerPrefs: prefs }),
+    },
+  );
+  inputs.current = { ...inputs.current, layerPrefs: initialPrefs };
+
+  // --- "nearest" chips ----------------------------------------------------------
+  // One button per category the site configures; hidden when it configures none.
+  const nearest = element('nearest');
+  for (const { category, label } of site.config.nearest ?? []) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `Nearest ${label.toLowerCase()}`;
+    button.addEventListener('click', () => chooseNearest(category, label));
+    nearest.append(button);
+  }
+  nearest.hidden = nearest.childElementCount === 0;
+
+  // A share link opens straight onto its place, with the panel ready.
+  if (link !== null) {
+    const place = placesById.get(link.placeId);
+    if (place === undefined) {
+      showStatus('That place is not on this map.');
+    } else {
+      chooseDestination(place);
+    }
+  }
+
+  // --- offline support -----------------------------------------------------------
+  // After the first online visit the app keeps working with no network. The page
+  // tells the worker which same-origin files to keep: its own bundles and assets,
+  // this site's data, and the whole basemap.
+  function collectOfflineUrls(): string[] {
+    const origin = location.origin;
+    const loaded = performance
+      .getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .filter((name) => name.startsWith(origin));
+    const extras = [
+      location.href,
+      new URL('/index.html', origin).href, // the shell any route falls back to
+      new URL('/manifest.webmanifest', origin).href,
+      new URL('/favicon.svg', origin).href,
+      new URL('/icons/icon-192.png', origin).href,
+      new URL('/icons/icon-512.png', origin).href,
+      inputs.current.basemapUrl,
+      // Overlay images load only when their layer is turned on, so add them
+      // explicitly or an overlay toggled on offline would have nothing to draw.
+      ...overlays.map((overlay) => overlay.imageUrl),
+    ];
+    return [...new Set([...loaded, ...extras])];
+  }
+  setupOffline(collectOfflineUrls, setupOfflineStatus());
 }
 
 start().catch((error: unknown) => {

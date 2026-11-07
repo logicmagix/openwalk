@@ -1,12 +1,28 @@
+import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec';
 import { describe, expect, it } from 'vitest';
 import {
   BASEMAP_SOURCE,
   POSITION_SOURCE,
   buildStyle,
   destinationCollection,
+  overlayLayerId,
+  overlaySourceId,
   positionCollection,
   routeCollection,
 } from './style';
+
+const overlay = {
+  id: 'map',
+  name: 'Official map',
+  imageUrl: 'https://example.test/sites/demo/overlay/map.png',
+  corners: [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [0, 0],
+  ] as const,
+  attribution: '© Someone',
+};
 
 const origin = 'https://example.test';
 const base = {
@@ -46,7 +62,8 @@ describe('buildStyle', () => {
       'route-casing',
       'route-path',
       'route-offpath',
-      'destination-ring',
+      'destination-glow',
+      'destination-mark',
       'position-accuracy',
       'places-dot',
       'places-label',
@@ -64,10 +81,83 @@ describe('buildStyle', () => {
   });
 
   it('never references a host other than the page origin', () => {
-    const style = buildStyle({ ...base, theme: 'dark' });
+    const style = buildStyle({
+      ...base,
+      theme: 'dark',
+      overlays: [overlay],
+      layerPrefs: { overlays: ['map'] },
+    });
     const urls = JSON.stringify(style).match(/https?:\/\/[^"\s]+/g) ?? [];
     expect(urls.length).toBeGreaterThan(0);
     for (const url of urls) expect(url.startsWith(`${origin}/`)).toBe(true);
+  });
+});
+
+describe('overlay layers', () => {
+  it('draws no overlay until it is switched on', () => {
+    const style = buildStyle({ ...base, theme: 'light', overlays: [overlay] });
+    expect(style.sources[overlaySourceId('map')]).toBeUndefined();
+    expect(style.layers.some((l) => l.id === overlayLayerId('map'))).toBe(false);
+  });
+
+  it('adds an image source and raster layer for a shown overlay', () => {
+    const style = buildStyle({
+      ...base,
+      theme: 'light',
+      overlays: [overlay],
+      layerPrefs: { overlays: ['map'] },
+    });
+    expect(style.sources[overlaySourceId('map')]).toEqual({
+      type: 'image',
+      url: overlay.imageUrl,
+      coordinates: [
+        [0, 1],
+        [1, 1],
+        [1, 0],
+        [0, 0],
+      ],
+    });
+    const ids = style.layers.map((l) => l.id);
+    const rasterAt = ids.indexOf(overlayLayerId('map'));
+    expect(rasterAt).toBeGreaterThan(0);
+    // The overlay sits above the base map but below the walkways and places.
+    expect(rasterAt).toBeLessThan(ids.indexOf('walkways-line'));
+  });
+});
+
+describe('style validity', () => {
+  it('builds a style MapLibre accepts, in every layer combination', () => {
+    const combinations = [
+      undefined,
+      { overlays: ['map'] },
+      { walkways: false },
+      { labels: false },
+      { overlays: ['map'], walkways: false, labels: false },
+    ];
+    for (const layerPrefs of combinations) {
+      const style = buildStyle({ ...base, theme: 'light', overlays: [overlay], layerPrefs });
+      expect(validateStyleMin(style)).toEqual([]);
+    }
+  });
+});
+
+describe('layer visibility', () => {
+  const layout = (prefs: Parameters<typeof buildStyle>[0]['layerPrefs'], id: string) => {
+    const layer = buildStyle({ ...base, theme: 'light', layerPrefs: prefs }).layers.find(
+      (l) => l.id === id,
+    );
+    return (layer?.layout ?? {}) as { visibility?: string };
+  };
+
+  it('shows walkways and labels by default', () => {
+    expect(layout(undefined, 'walkways-line').visibility).toBe('visible');
+    expect(layout(undefined, 'places-label').visibility).toBe('visible');
+  });
+
+  it('hides walkways and labels when switched off', () => {
+    expect(layout({ walkways: false }, 'walkways-line').visibility).toBe('none');
+    expect(layout({ walkways: false }, 'walkways-area').visibility).toBe('none');
+    expect(layout({ labels: false }, 'places-label').visibility).toBe('none');
   });
 });
 

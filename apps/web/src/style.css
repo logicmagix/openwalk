@@ -62,6 +62,93 @@ body {
   fill: currentColor;
 }
 
+/* Layers button, below the locate button and the compass, same round shape. */
+#layers {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 104px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#layers[aria-expanded='true'] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+#layers:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#layers svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.layers-panel {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 104px);
+  right: calc(env(safe-area-inset-right, 0px) + 64px);
+  min-width: 170px;
+  max-width: calc(100vw - 88px);
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.layers-panel[hidden] {
+  display: none;
+}
+
+.layers-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.layers-row:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.layers-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.layers-credit {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.layers-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.layers-row input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 #status {
   position: fixed;
   left: 50%;
@@ -101,6 +188,44 @@ body {
   font-size: 11px;
 }
 
+/* "Nearest" chips, directly under the search box. A short horizontal row that
+   scrolls sideways when a site offers several categories. */
+.nearest {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 68px);
+  max-width: 420px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nearest[hidden] {
+  display: none;
+}
+
+.nearest button {
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nearest button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Search box, top left, leaving room for the locate button. */
 .search {
   position: fixed;
@@ -114,7 +239,7 @@ body {
   box-sizing: border-box;
   width: 100%;
   height: 44px;
-  padding: 0 14px;
+  padding: 0 44px 0 14px;
   border: 0;
   border-radius: 22px;
   background: var(--surface);
@@ -129,12 +254,54 @@ body {
   outline-offset: 2px;
 }
 
+/* Hide the native search clear control (absent on iOS, inconsistent elsewhere);
+   the app draws its own so it behaves the same on every device. */
+#search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* The clear button sits over the right end of the field, shown only when there
+   is text to clear. */
+.search-clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink);
+  opacity: 0.55;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.search-clear[hidden] {
+  display: none;
+}
+
+.search-clear svg {
+  width: 20px;
+  height: 20px;
+}
+
+.search-clear:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
 #search-list {
   margin: 8px 0 0;
   padding: 4px 0;
   list-style: none;
   max-height: min(50vh, 360px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   border-radius: 12px;
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -266,4 +433,46 @@ body {
 /* While the directions panel is open, notices sit above it. */
 body:has(.panel:not([hidden])) #status {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 130px);
+}
+
+/* Offline cues: the brief "ready offline" confirmation and the "update
+   available" prompt share this accent banner, bottom-centre, above the map. */
+.offline-note {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  transform: translateX(-50%);
+  z-index: 5;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+}
+
+.offline-note[hidden] {
+  display: none;
+}
+
+.offline-note button {
+  flex: none;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.offline-note button:focus-visible {
+  outline: 3px solid var(--surface);
+  outline-offset: 2px;
 }

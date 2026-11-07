@@ -6,12 +6,31 @@
 
 import type { Position, Route } from '@openwalk/routing';
 import type { PlacesDocument } from '@openwalk/search';
-import type { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
+import type { SourceSpecification, StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
 import type { PositionFix } from '../position/provider';
 import type { WalkwaysDocument } from '../site/types';
 import type { Theme } from '../theme';
 import { circlePolygon } from './circle';
+
+/** A georeferenced image, resolved to a same-origin URL, ready to draw. */
+export interface OverlaySpec {
+  readonly id: string;
+  readonly name: string;
+  /** Absolute, same-origin URL of the image file. */
+  readonly imageUrl: string;
+  /** Top-left, top-right, bottom-right, bottom-left corners. */
+  readonly corners: readonly Position[];
+  readonly attribution?: string;
+}
+
+/** Which optional layers are drawn. Overlays off, walkways and labels on by default. */
+export interface LayerPrefs {
+  /** Ids of the overlays currently shown; none by default. */
+  readonly overlays?: readonly string[];
+  readonly walkways?: boolean;
+  readonly labels?: boolean;
+}
 
 export interface StyleInputs {
   readonly theme: Theme;
@@ -25,6 +44,9 @@ export interface StyleInputs {
   readonly attribution?: string;
   readonly walkways?: WalkwaysDocument | null;
   readonly places?: PlacesDocument | null;
+  /** The site's georeferenced images; those in layerPrefs.overlays are drawn. */
+  readonly overlays?: readonly OverlaySpec[];
+  readonly layerPrefs?: LayerPrefs;
   readonly position?: PositionFix | null;
   readonly route?: Route | null;
   /** The chosen destination, ringed on the map. */
@@ -38,6 +60,13 @@ export const PLACES_SOURCE = 'places';
 export const POSITION_SOURCE = 'position';
 export const ROUTE_SOURCE = 'route';
 export const DESTINATION_SOURCE = 'destination';
+/** The source and layer that draw one overlay image. */
+export function overlaySourceId(id: string): string {
+  return `overlay-${id}`;
+}
+export function overlayLayerId(id: string): string {
+  return `overlay-${id}-raster`;
+}
 /** Layers a tap on selects a place; the feature's `id` property is the place id. */
 export const PLACE_LAYERS = ['places-dot', 'places-label'] as const;
 
@@ -68,6 +97,15 @@ const COLOURS = {
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
+/**
+ * MapLibre's layout.visibility must be exactly 'visible' or 'none'; it rejects a
+ * key present with value undefined, so a shown layer is spelled 'visible', not left
+ * out.
+ */
+function visibility(shown: boolean): 'visible' | 'none' {
+  return shown ? 'visible' : 'none';
+}
+
 export function buildStyle(inputs: StyleInputs): StyleSpecification {
   const colours = COLOURS[inputs.theme];
   const position = positionCollection(inputs.position ?? null);
@@ -75,6 +113,39 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
   const places = withIdProperty(inputs.places ?? EMPTY);
   const routeData = routeCollection(inputs.route ?? null);
   const destination = destinationCollection(inputs.destination ?? null);
+
+  // Optional layers: overlays off, walkways and labels on, unless told otherwise.
+  const prefs = inputs.layerPrefs;
+  const showWalkways = prefs?.walkways ?? true;
+  const showLabels = prefs?.labels ?? true;
+  const shownOverlayIds = prefs?.overlays ?? [];
+  const shownOverlays = (inputs.overlays ?? []).filter((o) => shownOverlayIds.includes(o.id));
+
+  // Each shown overlay is an image source positioned by its four corners, drawn as
+  // a raster layer just above the base map. The site data and position stay on top.
+  // An image source carries only a url and its four corners; the style spec has no
+  // place for attribution on it, so an overlay's credit is shown by the layers
+  // control instead, beside the switch that turns the overlay on.
+  const overlaySources: Record<string, SourceSpecification> = {};
+  for (const overlay of shownOverlays) {
+    overlaySources[overlaySourceId(overlay.id)] = {
+      type: 'image',
+      url: overlay.imageUrl,
+      coordinates: overlay.corners.map((corner) => [corner[0], corner[1]]) as [
+        [number, number],
+        [number, number],
+        [number, number],
+        [number, number],
+      ],
+    };
+  }
+  const overlayLayers = shownOverlays.map((overlay) => ({
+    id: overlayLayerId(overlay.id),
+    type: 'raster' as const,
+    source: overlaySourceId(overlay.id),
+    // Kept a touch transparent so the base map is never fully hidden beneath it.
+    paint: { 'raster-opacity': 0.9 },
+  }));
 
   return {
     version: 8,
@@ -94,15 +165,17 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
       [POSITION_SOURCE]: { type: 'geojson', data: position },
       [ROUTE_SOURCE]: { type: 'geojson', data: routeData },
       [DESTINATION_SOURCE]: { type: 'geojson', data: destination },
+      ...overlaySources,
     },
     layers: [
       ...basemapLayers(BASEMAP_SOURCE, namedFlavor(inputs.theme), { lang: inputs.lang }),
+      ...overlayLayers,
       {
         id: 'walkways-line',
         type: 'line',
         source: WALKWAYS_SOURCE,
         filter: ['==', ['geometry-type'], 'LineString'],
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        layout: { 'line-cap': 'round', 'line-join': 'round', visibility: visibility(showWalkways) },
         paint: {
           'line-color': [
             'case',
@@ -119,6 +192,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         type: 'line',
         source: WALKWAYS_SOURCE,
         filter: ['==', ['geometry-type'], 'Polygon'],
+        layout: { visibility: visibility(showWalkways) },
         paint: { 'line-color': colours.walkway, 'line-width': 1, 'line-opacity': 0.6 },
       },
       {
@@ -146,14 +220,26 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         paint: { 'line-color': colours.route, 'line-width': 4, 'line-dasharray': [1, 2] },
       },
       {
-        id: 'destination-ring',
+        // A soft glow so the chosen place is unmistakable even before a route or
+        // a position is on the map.
+        id: 'destination-glow',
         type: 'circle',
         source: DESTINATION_SOURCE,
         paint: {
-          'circle-radius': 14,
+          'circle-radius': 24,
           'circle-color': colours.route,
-          'circle-opacity': 0.25,
-          'circle-stroke-color': colours.route,
+          'circle-opacity': 0.22,
+        },
+      },
+      {
+        // A bold, white-edged marker at its centre.
+        id: 'destination-mark',
+        type: 'circle',
+        source: DESTINATION_SOURCE,
+        paint: {
+          'circle-radius': 9,
+          'circle-color': colours.route,
+          'circle-stroke-color': colours.routeCasing,
           'circle-stroke-width': 3,
         },
       },
@@ -181,6 +267,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: PLACES_SOURCE,
         minzoom: 15,
         layout: {
+          visibility: visibility(showLabels),
           'text-field': [
             'case',
             ['has', 'number'],

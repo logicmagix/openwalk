@@ -4,10 +4,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#1a73e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#202124" media="(prefers-color-scheme: dark)" />
     <title>OpenWalk</title>
+
+    <!-- Installable web app: the manifest names the app and its icons; the
+         apple-* tags and touch icon cover iPhone, which installs from Safari
+         and ignores the manifest for the home-screen name and icon. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
   <body>
     <div id="map" role="application" aria-label="Map"></div>
+
+    <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>
 
     <div id="search" class="search">
       <input
@@ -22,6 +36,17 @@
         autocomplete="off"
         disabled
       />
+      <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            d="M6 6l12 12M18 6 6 18"
+          />
+        </svg>
+      </button>
       <ul id="search-list" role="listbox" aria-label="Places" hidden></ul>
     </div>
 
@@ -32,6 +57,24 @@
         />
       </svg>
     </button>
+
+    <button
+      id="layers"
+      type="button"
+      aria-label="Map layers"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-controls="layers-panel"
+      disabled
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"
+        />
+      </svg>
+    </button>
+
+    <div id="layers-panel" class="layers-panel" role="group" aria-label="Map layers" hidden></div>
 
     <section id="panel" class="panel" aria-label="Directions" aria-live="polite" hidden>
       <div id="panel-arrow" class="panel-arrow" aria-hidden="true" hidden>
