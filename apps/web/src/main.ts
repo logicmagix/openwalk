@@ -360,6 +360,9 @@ async function start(): Promise<void> {
       new URL('/icons/icon-192.png', origin).href,
       new URL('/icons/icon-512.png', origin).href,
       inputs.current.basemapUrl,
+      // Overlay images load only when their layer is turned on, so add them
+      // explicitly or an overlay toggled on offline would have nothing to draw.
+      ...overlays.map((overlay) => overlay.imageUrl),
     ];
     return [...new Set([...loaded, ...extras])];
   }
