@@ -5,8 +5,8 @@
 // cues are wired by the caller through the hooks below.
 
 export interface OfflineHooks {
-  /** The offline set finished caching; the app is now usable with no network. */
-  readonly onReady?: () => void;
+  /** The offline set finished caching; `ok` is true when every file was stored. */
+  readonly onReady?: (ok: boolean) => void;
   /** A new version installed and is waiting; call apply() to switch to it. */
   readonly onUpdate?: (apply: () => void) => void;
 }
@@ -21,7 +21,7 @@ export function setupOffline(collectUrls: () => string[], hooks: OfflineHooks = 
   const sw = navigator.serviceWorker;
 
   sw.addEventListener('message', (event) => {
-    if (event.data?.type === 'OFFLINE_READY') hooks.onReady?.();
+    if (event.data?.type === 'OFFLINE_READY') hooks.onReady?.(event.data.ok === true);
   });
 
   // Reload once the replacement worker takes over, but only after the person

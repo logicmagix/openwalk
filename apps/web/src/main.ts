@@ -40,6 +40,7 @@ import {
 import { watchTheme } from './theme';
 import { setupLayers } from './ui/layers';
 import { listPlaces } from './ui/listing';
+import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { setupSearch } from './ui/search';
 
@@ -358,7 +359,7 @@ async function start(): Promise<void> {
     ];
     return [...new Set([...loaded, ...extras])];
   }
-  setupOffline(collectOfflineUrls);
+  setupOffline(collectOfflineUrls, setupOfflineStatus());
 }
 
 start().catch((error: unknown) => {
