@@ -220,14 +220,26 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         paint: { 'line-color': colours.route, 'line-width': 4, 'line-dasharray': [1, 2] },
       },
       {
-        id: 'destination-ring',
+        // A soft glow so the chosen place is unmistakable even before a route or
+        // a position is on the map.
+        id: 'destination-glow',
         type: 'circle',
         source: DESTINATION_SOURCE,
         paint: {
-          'circle-radius': 14,
+          'circle-radius': 24,
           'circle-color': colours.route,
-          'circle-opacity': 0.25,
-          'circle-stroke-color': colours.route,
+          'circle-opacity': 0.22,
+        },
+      },
+      {
+        // A bold, white-edged marker at its centre.
+        id: 'destination-mark',
+        type: 'circle',
+        source: DESTINATION_SOURCE,
+        paint: {
+          'circle-radius': 9,
+          'circle-color': colours.route,
+          'circle-stroke-color': colours.routeCasing,
           'circle-stroke-width': 3,
         },
       },
