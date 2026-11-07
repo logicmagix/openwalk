@@ -287,7 +287,11 @@ async function start(): Promise<void> {
   // --- search and taps ----------------------------------------------------------
   const searchInput = element<HTMLInputElement>('search-input');
   setupSearch(
-    { input: searchInput, list: element('search-list') },
+    {
+      input: searchInput,
+      list: element('search-list'),
+      clear: element('search-clear'),
+    },
     {
       listFor: (query) => listPlaces(site.places, index, query),
       onChoose: (place) => chooseDestination(place),

@@ -9,6 +9,7 @@ import type { Listing } from './listing';
 export interface SearchElements {
   readonly input: HTMLInputElement;
   readonly list: HTMLUListElement;
+  readonly clear: HTMLButtonElement;
 }
 
 export interface SearchHandlers {
@@ -17,7 +18,7 @@ export interface SearchHandlers {
 }
 
 export function setupSearch(elements: SearchElements, handlers: SearchHandlers): void {
-  const { input, list } = elements;
+  const { input, list, clear } = elements;
   let items: Listing[] = [];
   let active = -1;
 
@@ -39,12 +40,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
           detail.textContent = item.detail;
           option.append(detail);
         }
-        // pointerdown fires before the input loses focus, so the choice wins
-        // over the blur that would close the list.
-        option.addEventListener('pointerdown', (event) => {
-          event.preventDefault();
-          choose(index);
-        });
+        // click (not pointerdown) so dragging a finger scrolls the list instead
+        // of selecting; the list is kept open through the drag by the handlers
+        // further down.
+        option.addEventListener('click', () => choose(index));
         return option;
       }),
     );
@@ -55,6 +54,7 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
     if (current) input.setAttribute('aria-activedescendant', current);
     else input.removeAttribute('aria-activedescendant');
     list.querySelector('.active')?.scrollIntoView({ block: 'nearest' });
+    clear.hidden = input.value === '';
   }
 
   function open(): void {
@@ -80,7 +80,46 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
 
   input.addEventListener('focus', open);
   input.addEventListener('input', open);
-  input.addEventListener('blur', close);
+
+  // The list closes on an outside tap, Escape, or a choice — not on the input's
+  // blur by itself, so a finger can scroll the list (which blurs the input)
+  // without it vanishing. A keyboard tab-away still closes it, through the
+  // guarded blur, since no pointer is on the list then.
+  let pointerInList = false;
+  list.addEventListener('pointerdown', () => {
+    pointerInList = true;
+  });
+  window.addEventListener(
+    'pointerup',
+    () => {
+      pointerInList = false;
+    },
+    true,
+  );
+  input.addEventListener('blur', () => {
+    if (!pointerInList) close();
+  });
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target as Node;
+    if (
+      items.length > 0 &&
+      !input.contains(target) &&
+      !list.contains(target) &&
+      !clear.contains(target)
+    ) {
+      close();
+    }
+  });
+
+  // The clear button empties the field and reopens the full list. pointerdown +
+  // preventDefault keeps the input focused, so there is no blur-close race.
+  clear.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    input.value = '';
+    input.focus();
+    open();
+  });
+
   input.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       if (items.length === 0) open();
