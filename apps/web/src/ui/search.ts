@@ -41,9 +41,9 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
           option.append(detail);
         }
         // click (not pointerdown) so dragging a finger scrolls the list instead
-        // of selecting; the list is kept open through the drag by the handlers
-        // further down.
-        option.addEventListener('click', () => choose(index));
+        // of selecting. The item is captured here, not looked up by index later,
+        // so the choice holds even if the list has since changed.
+        option.addEventListener('click', () => choose(item));
         return option;
       }),
     );
@@ -69,8 +69,7 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
     render();
   }
 
-  function choose(index: number): void {
-    const item = items[index];
+  function choose(item: Listing | undefined): void {
     if (item === undefined) return;
     input.value = item.label;
     close();
@@ -81,24 +80,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
   input.addEventListener('focus', open);
   input.addEventListener('input', open);
 
-  // The list closes on an outside tap, Escape, or a choice — not on the input's
-  // blur by itself, so a finger can scroll the list (which blurs the input)
-  // without it vanishing. A keyboard tab-away still closes it, through the
-  // guarded blur, since no pointer is on the list then.
-  let pointerInList = false;
-  list.addEventListener('pointerdown', () => {
-    pointerInList = true;
-  });
-  window.addEventListener(
-    'pointerup',
-    () => {
-      pointerInList = false;
-    },
-    true,
-  );
-  input.addEventListener('blur', () => {
-    if (!pointerInList) close();
-  });
+  // The list closes on an outside tap, on Escape, or when a row is chosen — never
+  // on the input losing focus. Tapping a row blurs the input, and so does a finger
+  // scrolling the list; closing on blur would remove the row before the tap landed
+  // (which silently broke selecting a new place) and cut a scroll short.
   document.addEventListener('pointerdown', (event) => {
     const target = event.target as Node;
     if (
@@ -128,8 +113,8 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       render();
       event.preventDefault();
     } else if (event.key === 'Enter') {
-      if (active >= 0) choose(active);
-      else if (items.length > 0) choose(0);
+      if (active >= 0) choose(items[active]);
+      else if (items.length > 0) choose(items[0]);
       event.preventDefault();
     } else if (event.key === 'Escape') {
       close();
