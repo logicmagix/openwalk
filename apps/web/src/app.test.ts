@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlacesDocument } from '@openwalk/search';
-import { initialView, labelLanguage, pageTitle, siteBounds } from './app';
+import { initialView, labelLanguage, pageTitle } from './app';
 
 const places = (coords: [number, number][]): PlacesDocument => ({
   type: 'FeatureCollection',
@@ -34,37 +34,6 @@ describe('initialView', () => {
 
   it('shows the world when there is nothing to centre on', () => {
     expect(initialView({ id: 'a', name: 'A' }, places([])).zoom).toBe(2);
-  });
-});
-
-describe('siteBounds', () => {
-  it('is null when there are no places', () => {
-    expect(siteBounds(places([]))).toBeNull();
-  });
-
-  it('wraps the places in a square with room to rotate', () => {
-    // Half-spans are 1 (lon) and 2 (lat); the larger, 2, sizes both sides at 1.5x.
-    expect(
-      siteBounds(
-        places([
-          [0, 0],
-          [2, 4],
-        ]),
-      ),
-    ).toEqual([
-      [-2, -1],
-      [4, 5],
-    ]);
-  });
-
-  it('keeps a small margin around a single point', () => {
-    const box = siteBounds(places([[1, 2]]));
-    expect(box).not.toBeNull();
-    if (box === null) return;
-    expect(box[0][0]).toBeLessThan(1);
-    expect(box[1][0]).toBeGreaterThan(1);
-    expect(box[0][1]).toBeLessThan(2);
-    expect(box[1][1]).toBeGreaterThan(2);
   });
 });
 

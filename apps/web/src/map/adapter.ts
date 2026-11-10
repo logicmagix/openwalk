@@ -7,6 +7,7 @@
 // server is all the map needs.
 
 import {
+  LngLat,
   Map as MapLibreMap,
   NavigationControl,
   addProtocol,
@@ -22,6 +23,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // suffix asks Vite for the file's address rather than its contents.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { Position } from '../site/types';
+import { clampToExtent, minZoomFor, type Extent } from './extent';
 import { DESTINATION_SOURCE, PLACE_LAYERS, POSITION_SOURCE, ROUTE_SOURCE } from './style';
 
 let configured = false;
@@ -37,26 +39,46 @@ export interface MapViewOptions {
   readonly style: StyleSpecification;
   readonly center: Position;
   readonly zoom: number;
-  /** Holds panning and zoom-out to the site: [[west, south], [east, north]]. */
-  readonly maxBounds?: readonly [readonly [number, number], readonly [number, number]];
+  /** The site's extent; the centre of the map is held inside it. */
+  readonly extent?: Extent;
 }
+
+/** The closest zoom MapLibre offers; the limit applied when zooming in. */
+const MAX_ZOOM = 22;
 
 export class MapView {
   private readonly map: MapLibreMap;
+  /** The furthest out the map may zoom; follows the screen size. */
+  private minZoom = 0;
 
   constructor(container: HTMLElement, options: MapViewOptions) {
     configureOnce();
+    const { extent } = options;
+    const fitMinZoom = (): void => {
+      if (extent === undefined) return;
+      this.minZoom = minZoomFor(extent, container.clientWidth, container.clientHeight);
+    };
+    fitMinZoom();
     this.map = new MapLibreMap({
       container,
       style: options.style,
       center: [options.center[0], options.center[1]],
       zoom: options.zoom,
-      ...(options.maxBounds
+      maxZoom: MAX_ZOOM,
+      // MapLibre's own bounds limit keeps the screen inside a box, measuring the
+      // screen as if the map always faced north; turned sideways it stops short
+      // of the box's edges. This replaces that rule: only the centre is held
+      // inside the site's extent, which is the same at every rotation. MapLibre
+      // runs the function on every camera change and uses what it returns.
+      ...(extent
         ? {
-            maxBounds: [
-              [options.maxBounds[0][0], options.maxBounds[0][1]],
-              [options.maxBounds[1][0], options.maxBounds[1][1]],
-            ] as [[number, number], [number, number]],
+            transformConstrain: (lngLat: LngLat, zoom: number) => {
+              const [lon, lat] = clampToExtent([lngLat.lng, lngLat.lat], extent);
+              return {
+                center: new LngLat(lon, lat),
+                zoom: Math.min(Math.max(zoom, this.minZoom), MAX_ZOOM),
+              };
+            },
           }
         : {}),
       // Attribution stays expanded so the OpenStreetMap credit is always visible.
@@ -66,6 +88,12 @@ export class MapView {
       maxPitch: 0,
     });
     this.map.addControl(new NavigationControl({ showCompass: true, showZoom: false }));
+    // Turning the phone changes the screen's shorter side, and with it how far
+    // out the site still fills the view.
+    this.map.on('resize', () => {
+      fitMinZoom();
+      if (this.map.getZoom() < this.minZoom) this.map.setZoom(this.minZoom);
+    });
   }
 
   /** Replace the whole style; MapLibre applies only what differs. */
