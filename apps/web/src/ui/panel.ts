@@ -23,6 +23,8 @@ export interface PanelHandlers {
 
 export type PanelState =
   | { readonly kind: 'needs-location' }
+  /** The person's position is known and is not at the site. */
+  | { readonly kind: 'away'; readonly siteName: string }
   | { readonly kind: 'waiting' }
   | { readonly kind: 'guiding'; readonly guidance: Guidance; readonly mapBearing: number }
   | { readonly kind: 'arrived' }
@@ -54,12 +56,17 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
       elements.root.hidden = false;
     },
     update(state) {
-      elements.action.hidden = state.kind !== 'needs-location';
+      // Location can be tried again once the person has reached the site.
+      elements.action.hidden = state.kind !== 'needs-location' && state.kind !== 'away';
       elements.root.classList.toggle('arrived', state.kind === 'arrived');
       switch (state.kind) {
         case 'needs-location':
           setArrow(null, 0);
           elements.status.textContent = 'Turn on location to get directions.';
+          break;
+        case 'away':
+          setArrow(null, 0);
+          elements.status.textContent = `Directions start when you are at ${state.siteName}.`;
           break;
         case 'waiting':
           setArrow(null, 0);

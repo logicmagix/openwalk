@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { PlacesDocument, WalkwaysDocument } from '../site/types';
-import { clampToExtent, minZoomFor, siteExtent, type Extent } from './extent';
+import {
+  clampToExtent,
+  distanceOutsideM,
+  isOnSite,
+  minZoomFor,
+  siteExtent,
+  type Extent,
+} from './extent';
 
 const places = (coords: [number, number][]): PlacesDocument => ({
   type: 'FeatureCollection',
@@ -131,5 +138,42 @@ describe('minZoomFor', () => {
 
   it('allows a closer limit on a bigger screen', () => {
     expect(minZoomFor(square, 800, 1600)).toBeGreaterThan(minZoomFor(square, 400, 800));
+  });
+});
+
+describe('being on site', () => {
+  // About 1.1 km on a side at the equator.
+  const extent: Extent = [
+    [0, 0],
+    [0.01, 0.01],
+  ];
+
+  it('measures nothing for a position inside', () => {
+    expect(distanceOutsideM([0.005, 0.005], extent)).toBe(0);
+  });
+
+  it('measures the gap to the nearest edge or corner', () => {
+    // 0.001 degrees is about 111 m.
+    expect(distanceOutsideM([0.005, 0.011], extent)).toBeCloseTo(111.32, 0);
+    expect(distanceOutsideM([0.011, 0.011], extent)).toBeCloseTo(111.32 * Math.SQRT2, 0);
+  });
+
+  it('counts a position inside, or just outside, as on site', () => {
+    expect(isOnSite([0.005, 0.005], 10, extent)).toBe(true);
+    expect(isOnSite([0.005, 0.0105], 10, extent)).toBe(true); // about 56 m out
+  });
+
+  it('turns away an accurate position well outside', () => {
+    expect(isOnSite([0.005, 0.02], 10, extent)).toBe(false); // about 1.1 km out
+  });
+
+  it('gives a rough reading near the site the benefit of the doubt', () => {
+    // About 330 m out: off site if the reading is sharp, possible if it is rough.
+    expect(isOnSite([0.005, 0.013], 10, extent)).toBe(false);
+    expect(isOnSite([0.005, 0.013], 400, extent)).toBe(true);
+  });
+
+  it('does not let a very rough reading from far away count', () => {
+    expect(isOnSite([0.005, 0.1], 5000, extent)).toBe(false); // about 10 km out
   });
 });
