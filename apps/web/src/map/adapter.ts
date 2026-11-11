@@ -23,7 +23,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // suffix asks Vite for the file's address rather than its contents.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { Position } from '../site/types';
-import { clampToExtent, minZoomFor, type Extent } from './extent';
+import { clampToExtent, minZoomFor, zoomRoom, type Extent } from './extent';
 import { DESTINATION_SOURCE, PLACE_LAYERS, POSITION_SOURCE, ROUTE_SOURCE } from './style';
 
 let configured = false;
@@ -133,6 +133,22 @@ export class MapView {
         this.map.getCanvas().style.cursor = '';
       });
     }
+  }
+
+  /** Zoom in (+1) or out (-1) by one level, about the middle of the screen. */
+  zoomBy(direction: 1 | -1): void {
+    this.map.easeTo({ zoom: this.map.getZoom() + direction, duration: 250 });
+  }
+
+  /**
+   * Calls back, now and whenever the zoom or the screen size changes, with
+   * whether the map can still zoom in and out.
+   */
+  onZoomRoom(callback: (room: { canZoomIn: boolean; canZoomOut: boolean }) => void): void {
+    const report = (): void => callback(zoomRoom(this.map.getZoom(), this.minZoom, MAX_ZOOM));
+    this.map.on('zoom', report);
+    this.map.on('resize', report);
+    report();
   }
 
   /** The map's rotation in degrees, for drawing arrows relative to the screen. */
