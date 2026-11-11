@@ -197,7 +197,7 @@
       "additionalProperties": false
     },
     "tiles": {
-      "description": "Where the site's base map tiles are extracted from. The pipeline's tiles command reads only the tiles covering the site's data, plus a margin, from a planet-wide PMTiles archive and writes basemap.pmtiles into the site directory.",
+      "description": "Where the site's base map tiles are extracted from. The pipeline's tiles command reads only the tiles covering the site's data, plus a margin and, at the zoom levels the map can show, a ring of neighbouring tiles, from a planet-wide PMTiles archive and writes basemap.pmtiles into the site directory.",
       "type": "object",
       "required": ["source"],
       "properties": {
