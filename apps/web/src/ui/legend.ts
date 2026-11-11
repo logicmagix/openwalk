@@ -37,7 +37,7 @@ function row(category: Category, onToggle: (shown: boolean) => void): HTMLElemen
   input.addEventListener('change', () => onToggle(input.checked));
   // The swatch carries both shades; the stylesheet shows the one for the theme.
   const swatch = document.createElement('span');
-  swatch.className = 'legend-swatch';
+  swatch.className = 'kind-swatch';
   swatch.setAttribute('aria-hidden', 'true');
   swatch.style.setProperty('--swatch-light', category.colour.light);
   swatch.style.setProperty('--swatch-dark', category.colour.dark);

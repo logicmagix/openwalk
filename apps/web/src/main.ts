@@ -44,7 +44,7 @@ import { SITE_INDEX_PATH, type SiteIndex } from './site/pages';
 import { watchTheme } from './theme';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
-import { listPlaces } from './ui/listing';
+import { listFor } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
@@ -237,11 +237,12 @@ async function start(): Promise<void> {
   function chooseDestination(place: PlaceFeature | null): void {
     destination = place;
     fitted = false;
-    inputs.current = {
-      ...inputs.current,
+    // Restyling keeps the chosen place on the map when its kind is hidden.
+    restyle({
       destination: place === null ? null : place.geometry.coordinates,
+      destinationId: place === null ? null : place.id,
       route: null,
-    };
+    });
     map.setDestination(destinationCollection(inputs.current.destination ?? null));
     map.setRoute(routeCollection(null));
     if (place === null) {
@@ -350,7 +351,8 @@ async function start(): Promise<void> {
       clear: element('search-clear'),
     },
     {
-      listFor: (query) => listPlaces(site.places, index, query),
+      listFor: (query, browsing) =>
+        listFor({ places: site.places, index, categories }, query, browsing),
       onChoose: (place) => chooseDestination(place),
     },
   );

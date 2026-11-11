@@ -61,6 +61,8 @@ export interface StyleInputs {
   readonly categories?: readonly Category[];
   /** Kinds of place left off the map for now. */
   readonly hiddenCategories?: readonly string[];
+  /** The place chosen as the destination; it is drawn even if its kind is hidden. */
+  readonly destinationId?: string | null;
 }
 
 /** Layer and source ids the app refers to. */
@@ -138,12 +140,18 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
           ...categories.flatMap((category) => [category.id, category.colour[inputs.theme]]),
           fallback,
         ] as unknown as ExpressionSpecification);
-  // Places of a hidden kind are left out of both the dots and the labels.
+  // Places of a hidden kind are left out of both the dots and the labels, except
+  // the place someone has chosen to go to: hiding a kind thins out the map, it
+  // does not take a destination off it.
   const hidden = inputs.hiddenCategories ?? [];
-  const placeFilter: FilterSpecification = [
+  const shownKind: FilterSpecification = [
     '!',
     ['in', ['get', 'category'], ['literal', [...hidden]]],
   ];
+  const placeFilter: FilterSpecification =
+    inputs.destinationId == null
+      ? shownKind
+      : ['any', shownKind, ['==', ['get', 'id'], inputs.destinationId]];
   const destination = destinationCollection(inputs.destination ?? null);
 
   // Optional layers: overlays off, walkways and labels on, unless told otherwise.

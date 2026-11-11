@@ -387,6 +387,44 @@ li {
   opacity: 0.75;
 }
 
+/* A kind of place is one line: its dot, its name, and how many it holds. */
+#search-list li.category,
+#search-list li.all {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+#search-list li.category .label,
+#search-list li.all .label {
+  flex: 1;
+}
+
+/* "All places" heads the kinds and is set apart from them. */
+#search-list li.all {
+  font-weight: 600;
+  border-bottom: 1px solid rgb(128 128 128 / 0.3);
+}
+
+/* The way back out of a kind, with the kind's name beside it. */
+#search-list li.back {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--accent);
+  border-bottom: 1px solid rgb(128 128 128 / 0.3);
+}
+
+#search-list li.back .label::before {
+  content: '\2039\00a0';
+}
+
+#search-list li.back .detail {
+  color: var(--ink);
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* Directions panel, bottom, above the attribution. */
 .panel {
   position: fixed;
@@ -683,8 +721,9 @@ body.picking .zoom {
   outline-offset: 2px;
 }
 
-/* A dot like the ones on the map: the kind's colour with a contrasting outline. */
-.legend-swatch {
+/* A dot like the ones on the map: the kind's colour with a contrasting outline.
+   Used in the legend and in the search list. */
+.kind-swatch {
   flex: none;
   width: 12px;
   height: 12px;
@@ -694,7 +733,7 @@ body.picking .zoom {
 }
 
 @media (prefers-color-scheme: dark) {
-  .legend-swatch {
+  .kind-swatch {
     background: var(--swatch-dark);
   }
 }
