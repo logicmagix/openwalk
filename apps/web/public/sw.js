@@ -13,9 +13,10 @@
  * slicing the cached bytes into a 206 Partial Content response.
  */
 
-// Filled in at build time with the build's content hash, so each deployment
-// changes this file and the browser notices the new worker. In development the
-// worker is not registered, so the literal placeholder never runs.
+// Filled in at build time with a fingerprint of everything the app serves: its
+// code and pages and each site's data. Any change to those changes this file,
+// which is how the browser notices a new worker. In development the worker is
+// not registered, so the literal placeholder never runs.
 const VERSION = '__BUILD_ID__';
 const CACHE = `openwalk-${VERSION}`;
 

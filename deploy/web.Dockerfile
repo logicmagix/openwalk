@@ -43,6 +43,11 @@ RUN set -eu; mkdir -p /out/sites; \
 # installs to a phone as an app named after the site.
 RUN node apps/web/scripts/site-pages.mjs apps/web/dist /out/sites
 
+# Stamp the service worker with a fingerprint of the app and the sites'
+# data together, so a phone that has the app saved is offered the new version
+# when either changes. This comes after everything that writes those files.
+RUN node apps/web/scripts/stamp-worker.mjs apps/web/dist /out/sites
+
 # The content security policy the pages carry as a tag is also sent as a
 # header; nginx's lines for it are written from the same source.
 RUN node apps/web/scripts/security-headers.mjs /out/security-headers.conf
