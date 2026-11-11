@@ -15,6 +15,12 @@
       "type": "string",
       "minLength": 1
     },
+    "short_name": {
+      "description": "A brief name shown under the icon when the site is installed to a phone's home screen, where long names are cut off. Around 12 characters fit. Defaults to the name.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30
+    },
     "boundary": {
       "description": "The area OpenStreetMap data is fetched for. Exactly one of the three forms.",
       "oneOf": [

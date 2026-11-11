@@ -49,7 +49,9 @@ described here. Paths below are relative to the repository root.
 1. **Create the site directory.** A real site is its own repository cloned to
    `sites/<site-id>/`; the id is lowercase words joined by hyphens.
 2. **Write `site.yaml`.** The id, a display name, the boundary as an OpenStreetMap way
-   or relation id or a south-west-north-east bounding box, and the default view.
+   or relation id or a south-west-north-east bounding box, and the default view. Each
+   site installs to a phone's home screen as its own app; a long name is cut off under
+   the icon, so give it a `short_name` of about 12 characters.
    `packages/schema/schemas/site.schema.json` lists every setting.
 3. **Fetch OpenStreetMap data.** `openwalk-pipeline fetch sites/<site-id>` queries the
    Overpass API for everything inside the boundary and caches the result in `raw/`.
@@ -118,8 +120,9 @@ The dev server serves every directory under `sites/` at `/sites/<site-id>/`, and
 map for a site is at `/s/<site-id>/`, for example
 `https://localhost:5173/s/tuscawilla-park/`. The root path redirects to the site named
 by `VITE_DEFAULT_SITE` at build time (set in `apps/web/.env.local` for development);
-the Docker image sets it to the site it is built for, chosen with
-`--build-arg SITE=<site-id>` and defaulting to the example site.
+the Docker image sets it to the first site it is built with. An image carries one
+site or several, chosen with `--build-arg SITES="<site-id> <site-id>"` and defaulting
+to the example site.
 
 The base map's fonts and icons are served by the app itself from
 `apps/web/public/basemap/`, so no third-party host is contacted. They cover Latin,
