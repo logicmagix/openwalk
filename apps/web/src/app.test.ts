@@ -46,5 +46,5 @@ describe('labelLanguage', () => {
 });
 
 it('titles the page after the site', () => {
-  expect(pageTitle({ id: 'a', name: 'Somewhere' })).toBe('Somewhere · OpenWalk');
+  expect(pageTitle({ name: 'Somewhere' })).toBe('Somewhere · OpenWalk');
 });

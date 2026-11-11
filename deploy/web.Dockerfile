@@ -41,6 +41,10 @@ RUN set -eu; mkdir -p /out/sites; \
       cp -rL "sites/$site" "/out/sites/$site"; \
     done
 
+# Give each site its own copy of the page and its own web app manifest, so it
+# installs to a phone as an app named after the site.
+RUN node apps/web/scripts/site-pages.mjs apps/web/dist /out/sites
+
 # ---- stage 2: serve it with nginx as a non-root user -----------------------
 # The "unprivileged" variant of the official image runs as uid 101 (nginx)
 # and listens on 8080, so no root is needed to bind a port.

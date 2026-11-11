@@ -361,7 +361,9 @@ async function start(): Promise<void> {
     const extras = [
       location.href,
       new URL('/index.html', origin).href, // the shell any route falls back to
-      new URL('/manifest.webmanifest', origin).href,
+      // The manifest this page links: the site's own when it has one.
+      document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href ??
+        new URL('/manifest.webmanifest', origin).href,
       new URL('/favicon.svg', origin).href,
       new URL('/icons/icon-192.png', origin).href,
       new URL('/icons/icon-512.png', origin).href,

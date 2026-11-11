@@ -3,7 +3,7 @@
 import type { PlacesDocument } from '@openwalk/search';
 import type { Position, SiteConfig } from './site/types';
 
-export const APP_NAME = 'OpenWalk';
+export { APP_NAME, pageTitle } from './site/pages';
 
 /** Zoom used when centring on the person; close enough to tell paths apart. */
 export const LOCATE_ZOOM = 17;
@@ -31,9 +31,4 @@ export function initialView(
 export function labelLanguage(locale: string): string {
   const primary = locale.split('-')[0]?.toLowerCase() ?? '';
   return /^[a-z]{2,3}$/.test(primary) ? primary : 'en';
-}
-
-/** The page title for a site. */
-export function pageTitle(config: SiteConfig): string {
-  return `${config.name} · ${APP_NAME}`;
 }
