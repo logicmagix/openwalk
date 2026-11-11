@@ -472,13 +472,11 @@ body {
   outline-offset: 2px;
 }
 
+/* Notices sit above the row at the bottom that holds the legend button. While
+   the directions panel is open, that row and the notices move up by the panel's
+   height, which the page keeps in --panel-space as the panel's contents change. */
 #status {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
-}
-
-/* While the directions panel is open, notices sit above it. */
-body:has(.panel:not([hidden])) #status {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 130px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px + var(--panel-space, 0px));
 }
 
 /* Offline cues: the brief "ready offline" confirmation and the "update
@@ -486,7 +484,7 @@ body:has(.panel:not([hidden])) #status {
 .offline-note {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px + var(--panel-space, 0px));
   transform: translateX(-50%);
   z-index: 5;
   max-width: calc(100vw - 32px);
@@ -529,6 +527,7 @@ body.picking #map,
 body.picking .search,
 body.picking #locate,
 body.picking #layers,
+body.picking #legend,
 body.picking .zoom {
   display: none;
 }
@@ -580,6 +579,143 @@ body.picking .zoom {
 }
 
 .picker a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Legend button, bottom left, the same round shape as the other controls. */
+#legend {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px + var(--panel-space, 0px));
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+#legend[hidden] {
+  display: none;
+}
+
+#legend[aria-expanded='true'] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+#legend:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#legend svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* The legend opens upwards from its button and scrolls if a site has many kinds. */
+.legend-panel {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 80px + var(--panel-space, 0px));
+  min-width: 220px;
+  max-width: calc(100vw - 24px);
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.legend-panel[hidden] {
+  display: none;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.legend-row:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.legend-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.legend-row input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A dot like the ones on the map: the kind's colour with a contrasting outline. */
+.legend-swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--swatch-light);
+  border: 1.5px solid var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .legend-swatch {
+    background: var(--swatch-dark);
+  }
+}
+
+.legend-name {
+  flex: 1;
+}
+
+.legend-count {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.legend-links {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(128 128 128 / 0.3);
+  display: grid;
+}
+
+.legend-links[hidden] {
+  display: none;
+}
+
+.legend-links a {
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.legend-links a:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.legend-links a:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }

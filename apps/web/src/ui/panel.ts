@@ -37,6 +37,16 @@ export interface Panel {
 }
 
 export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Panel {
+  // The controls along the bottom of the screen move up to stay clear of the
+  // panel. Its height changes with what it says, so the page is told the space it
+  // takes whenever that changes. A ResizeObserver calls back when an element's
+  // size changes, including when it is hidden (size zero) or shown again.
+  const GAP_PX = 12;
+  new ResizeObserver(() => {
+    const height = elements.root.hidden ? 0 : elements.root.offsetHeight;
+    document.body.style.setProperty('--panel-space', height > 0 ? `${height + GAP_PX}px` : '0px');
+  }).observe(elements.root);
+
   elements.close.addEventListener('click', handlers.onClose);
   elements.action.addEventListener('click', handlers.onAction);
 

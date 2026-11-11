@@ -12,6 +12,7 @@ import {
   nearestInCategory,
   planRoute,
 } from './directions';
+import { siteCategories } from './categories';
 import { Locator } from './locate';
 import { setupOffline } from './offline';
 import { MapView } from './map/adapter';
@@ -42,6 +43,7 @@ import {
 import { SITE_INDEX_PATH, type SiteIndex } from './site/pages';
 import { watchTheme } from './theme';
 import { setupLayers } from './ui/layers';
+import { setupLegend } from './ui/legend';
 import { listPlaces } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
@@ -134,6 +136,8 @@ async function start(): Promise<void> {
     ...(overlay.attribution ? { attribution: overlay.attribution } : {}),
   }));
 
+  const categories = siteCategories(site.config, site.places);
+
   // --- the map ---------------------------------------------------------------
   const inputs: { current: StyleInputs } = {
     current: {
@@ -146,6 +150,8 @@ async function start(): Promise<void> {
       places: site.places,
       overlays,
       layerPrefs: { overlays: [], walkways: true, labels: true },
+      categories,
+      hiddenCategories: [],
       position: null,
       route: null,
       destination: null,
@@ -381,6 +387,21 @@ async function start(): Promise<void> {
     },
   );
   inputs.current = { ...inputs.current, layerPrefs: initialPrefs };
+
+  // --- legend -------------------------------------------------------------------
+  const legend = setupLegend(
+    { button: element<HTMLButtonElement>('legend'), panel: element('legend-panel') },
+    { categories, onChange: (hidden) => restyle({ hiddenCategories: hidden }) },
+  );
+  // On a host with more than one site, the legend's foot leads to the others.
+  // The list is not needed for anything else, so its absence is not an error.
+  fetchJson(SITE_INDEX_PATH)
+    .then((list) => {
+      if ((list as SiteIndex).sites.length > 1) {
+        legend.addLink({ label: 'Other locations', path: '/' });
+      }
+    })
+    .catch(() => undefined);
 
   // --- "nearest" chips ----------------------------------------------------------
   // One button per category the site configures; hidden when it configures none.

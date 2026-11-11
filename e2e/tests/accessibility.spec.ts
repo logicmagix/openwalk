@@ -39,6 +39,13 @@ for (const scheme of ['light', 'dark'] as const) {
       expect(await violations(page)).toEqual([]);
     });
 
+    test('the legend open', async ({ page }) => {
+      await openMap(page);
+      await page.getByRole('button', { name: 'Map legend' }).click();
+      await expect(page.getByRole('group', { name: 'Map legend' })).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
+
     test('the layers panel open', async ({ page }) => {
       await openMap(page);
       await page.getByRole('button', { name: 'Map layers' }).click();
