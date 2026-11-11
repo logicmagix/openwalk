@@ -97,6 +97,12 @@ worker keeps each site's page under its own key. Sites share the application's i
 and are told apart by name; a site with a long name sets a `short_name` for the label
 under its icon.
 
+The worker answers from its saved copy first, so a phone needs a signal that the
+server has something newer. That signal is the worker's own file: the build stamps it
+with a fingerprint of everything the image serves, the application's files and every
+site's data together. A changed walkway is therefore a new version just as a changed
+script is, and the app offers to reload into it.
+
 The root address is for someone who arrives at the bare host: it lists the sites,
 read from a small index the image build writes beside them, and opens the site
 directly when there is only one. There is no control for changing site inside a map.
