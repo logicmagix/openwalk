@@ -20,9 +20,25 @@ html,
 body {
   margin: 0;
   height: 100%;
+  /* A phone browser zooms the whole page when it is tapped twice quickly, which
+     is what tapping a button twice looks like to it: the controls would swell
+     and stay that way. This turns that gesture off across the page and leaves
+     panning and pinching alone, so the page can still be enlarged by pinching.
+     The map handles its own gestures. */
+  touch-action: manipulation;
   font-family: system-ui, sans-serif;
   background: var(--surface);
   color: var(--ink);
+}
+
+/* The same for the controls themselves: the setting is not handed down from the
+   page to what is in it, and a browser may consult the element that was tapped. */
+button,
+input,
+a,
+label,
+li {
+  touch-action: manipulation;
 }
 
 #map {
