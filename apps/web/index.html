@@ -84,6 +84,25 @@
 
     <div id="layers-panel" class="layers-panel" role="group" aria-label="Map layers" hidden></div>
 
+    <button
+      id="legend"
+      type="button"
+      aria-label="Map legend"
+      aria-expanded="false"
+      aria-controls="legend-panel"
+      disabled
+      hidden
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="6" r="2.2" />
+        <circle cx="5" cy="12" r="2.2" />
+        <circle cx="5" cy="18" r="2.2" />
+        <path d="M10 5h11v2H10zM10 11h11v2H10zM10 17h11v2H10z" />
+      </svg>
+    </button>
+
+    <div id="legend-panel" class="legend-panel" role="group" aria-label="Map legend" hidden></div>
+
     <div id="zoom" class="zoom" role="group" aria-label="Zoom">
       <button id="zoom-in" type="button" aria-label="Zoom in" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -66,7 +66,10 @@ described here. Paths below are relative to the repository root.
    or a hand-placed entrance. Mark each `verified: true` only after checking it on
    foot. Rebuild. To give a category a one-tap "nearest" button on the map, list it
    under `nearest` in `site.yaml` with the label the button should show; nearest is
-   measured by walking distance over the network.
+   measured by walking distance over the network. The map colours each place by
+   its category and its legend lists them; list the categories under `categories` in
+   `site.yaml` to give each a readable name and set their order, which also decides
+   their colours.
 6. **Check it on a map.** `openwalk-pipeline debug sites/<site-id>` writes
    `debug.html`, a page that draws everything over satellite imagery. Clicking the map
    prints coordinates in the order the YAML files use; the view is kept in the URL
