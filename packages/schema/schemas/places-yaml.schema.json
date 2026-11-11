@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://openwalk.app/schemas/places-yaml.schema.json",
   "title": "Curated places",
-  "description": "The hand-written places.yaml of a site: every destination a user can search for or be directed to. Each place takes its position from an OpenStreetMap element, a hand-placed location, or a hand-placed entrance, in that order of preference.",
+  "description": "The hand-written places.yaml of a site: every destination a user can search for or be directed to. A place's marker is drawn at its hand-placed location, else at its OpenStreetMap element, else at its first entrance. Directions end at its hand-placed entrances when it has any.",
   "type": "object",
   "required": ["places"],
   "properties": {
@@ -60,8 +60,14 @@
           "$ref": "#/$defs/position"
         },
         "entrance": {
-          "description": "Hand-placed entrance, where directions end; overrides the derived position.",
+          "description": "Hand-placed entrance, where directions end, for a place with one door worth naming.",
           "$ref": "#/$defs/position"
+        },
+        "entrances": {
+          "description": "Hand-placed entrances, for a place with several. Directions end at whichever is the shortest walk from where the person is. Give this or entrance, not both.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/position" },
+          "minItems": 1
         },
         "verified": {
           "description": "True once the position and name have been checked on foot.",
@@ -71,8 +77,10 @@
       "anyOf": [
         { "required": ["osm"] },
         { "required": ["location"] },
-        { "required": ["entrance"] }
+        { "required": ["entrance"] },
+        { "required": ["entrances"] }
       ],
+      "not": { "required": ["entrance", "entrances"] },
       "additionalProperties": false
     }
   }

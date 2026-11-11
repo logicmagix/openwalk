@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://openwalk.app/schemas/graph.schema.json",
   "title": "Pedestrian graph",
-  "description": "The generated graph.json: an undirected weighted graph over the site's walkways, with one node per place where directions end. Arrays rather than objects keep the file small for phones.",
+  "description": "The generated graph.json: an undirected weighted graph over the site's walkways, with a node for each entrance of a place, where directions end. Arrays rather than objects keep the file small for phones.",
   "type": "object",
   "required": ["nodes", "edges", "places"],
   "properties": {
@@ -40,12 +40,25 @@
       }
     },
     "places": {
-      "description": "Place id to the node where directions to that place end.",
+      "description": "Place id to the node where directions to that place end, or to a list of nodes for a place with several entrances.",
       "type": "object",
       "patternProperties": {
         "^[a-z0-9]+(-[a-z0-9]+)*$": {
-          "type": "integer",
-          "minimum": 0
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          ]
         }
       },
       "additionalProperties": false

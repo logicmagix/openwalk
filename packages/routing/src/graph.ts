@@ -23,8 +23,11 @@ export type EdgeRecord = readonly [from: number, to: number, metres: number, kin
 export interface GraphDocument {
   readonly nodes: readonly Position[];
   readonly edges: readonly EdgeRecord[];
-  /** Place id to the node where directions to that place end. */
-  readonly places: Readonly<Record<string, number>>;
+  /**
+   * Place id to the node where directions to that place end, or to several
+   * nodes for a place with more than one entrance.
+   */
+  readonly places: Readonly<Record<string, number | readonly number[]>>;
 }
 
 /**
@@ -72,7 +75,8 @@ export interface Neighbour {
 export interface Graph {
   readonly nodes: readonly Position[];
   readonly neighbours: readonly (readonly Neighbour[])[];
-  readonly places: Readonly<Record<string, number>>;
+  /** Place id to its entrance nodes: always a list here, often of one. */
+  readonly places: Readonly<Record<string, readonly number[]>>;
 }
 
 /**
@@ -90,12 +94,17 @@ export function loadGraph(document: GraphDocument): Graph {
     neighbours[from]?.push({ node: to, metres, kind });
     neighbours[to]?.push({ node: from, metres, kind });
   }
-  for (const [place, node] of Object.entries(document.places)) {
-    if (!isNode(node, nodeCount)) {
-      throw new RangeError(`place ${place} refers to node ${node} outside 0..${nodeCount - 1}`);
+  const places: Record<string, readonly number[]> = {};
+  for (const [place, found] of Object.entries(document.places)) {
+    const entrances = typeof found === 'number' ? [found] : found;
+    for (const node of entrances) {
+      if (!isNode(node, nodeCount)) {
+        throw new RangeError(`place ${place} refers to node ${node} outside 0..${nodeCount - 1}`);
+      }
     }
+    places[place] = entrances;
   }
-  return { nodes: document.nodes, neighbours, places: document.places };
+  return { nodes: document.nodes, neighbours, places };
 }
 
 function isNode(index: number, nodeCount: number): boolean {

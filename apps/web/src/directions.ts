@@ -37,14 +37,16 @@ export function makeRouter(document: GraphDocument, config: SiteConfig): Router 
 }
 
 /**
- * Where directions to a place end: the node the pipeline joined it to the network
- * at, usually its entrance, which can be some way from the point that marks the
- * place itself. Falls back to that point for a place the graph does not know.
+ * Where directions to a place can end: the nodes the pipeline joined it to the
+ * network at, one for each entrance, which can be some way from the point that
+ * marks the place itself. Falls back to that point for a place the graph does
+ * not know.
  */
-export function destinationOf(router: Router, place: PlaceFeature): Position {
-  const node = router.graph.places[place.id];
-  const position = node === undefined ? undefined : router.graph.nodes[node];
-  return position ?? place.geometry.coordinates;
+export function entrancesOf(router: Router, place: PlaceFeature): readonly Position[] {
+  const entrances = (router.graph.places[place.id] ?? [])
+    .map((node) => router.graph.nodes[node])
+    .filter((position): position is Position => position !== undefined);
+  return entrances.length > 0 ? entrances : [place.geometry.coordinates];
 }
 
 /** The walking route from a fix to a place, or null when none exists. */
@@ -99,8 +101,10 @@ export function arrivalRadius(accuracyM: number): number {
   return Math.min(Math.max(15, accuracyM), 30);
 }
 
-export function hasArrived(fix: PositionFix, destination: Position): boolean {
-  return haversineDistance(fix.position, destination) <= arrivalRadius(fix.accuracyM);
+/** Whether the person is at the place: close enough to any one of its entrances. */
+export function hasArrived(fix: PositionFix, entrances: readonly Position[]): boolean {
+  const radius = arrivalRadius(fix.accuracyM);
+  return entrances.some((entrance) => haversineDistance(fix.position, entrance) <= radius);
 }
 
 /** How far ahead along the route the arrow points, so it does not spin on the spot. */

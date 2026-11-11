@@ -1,9 +1,10 @@
 """Turning the curated ``places.yaml`` into ``places.geojson``.
 
-A place's position comes from, in order: its hand-placed ``entrance``, its hand-placed
-``location``, or the OpenStreetMap element named by ``osm`` (the node itself, or the
-centroid of a way or relation). The OpenStreetMap reference is kept in the output so
-later steps can find the footprint again.
+A place's position is where its marker is drawn: its hand-placed ``location``, else the
+OpenStreetMap element named by ``osm`` (the node itself, or the centroid of a way or
+relation), else its first hand-placed entrance. Entrances are where directions end, and
+belong to the routing graph; a marker sits on the place itself. The OpenStreetMap
+reference is kept in the output so later steps can find the footprint again.
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ def load_places_yaml(path: Path) -> list[JsonObject]:
     places: list[JsonObject] = document["places"]
     seen: set[str] = set()
     for place in places:
+        if "entrance" in place and "entrances" in place:
+            raise PlaceError(f"place {place['id']!r} has both entrance and entrances; keep one")
         if place["id"] in seen:
             raise PlaceError(f"duplicate place id {place['id']!r}")
         seen.add(place["id"])
@@ -48,15 +51,24 @@ def _centroid(feature: JsonObject) -> list[float]:
     return [point.x, point.y]
 
 
-def resolve_position(place: JsonObject, by_osm_id: dict[str, JsonObject]) -> list[float]:
+def hand_placed_entrances(place: JsonObject) -> list[list[float]]:
+    """The entrances written for a place, in the order given: ``entrances`` or the single ``entrance``."""
+    if "entrances" in place:
+        return [[float(v) for v in entrance] for entrance in place["entrances"]]
     if "entrance" in place:
-        return [float(v) for v in place["entrance"]]
+        return [[float(v) for v in place["entrance"]]]
+    return []
+
+
+def resolve_position(place: JsonObject, by_osm_id: dict[str, JsonObject]) -> list[float]:
     if "location" in place:
         return [float(v) for v in place["location"]]
-    feature = by_osm_id.get(place["osm"])
-    if feature is None:
-        raise PlaceError(f"place {place['id']!r} refers to {place['osm']}, which is not in the fetched data")
-    return _centroid(feature)
+    if "osm" in place:
+        feature = by_osm_id.get(place["osm"])
+        if feature is None:
+            raise PlaceError(f"place {place['id']!r} refers to {place['osm']}, which is not in the fetched data")
+        return _centroid(feature)
+    return hand_placed_entrances(place)[0]
 
 
 def build_places(places: Iterable[JsonObject], features: Iterable[JsonObject]) -> JsonObject:

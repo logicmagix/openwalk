@@ -27,7 +27,7 @@ export interface Place {
 
 interface Graph {
   readonly nodes: readonly LonLat[];
-  readonly places: Readonly<Record<string, number>>;
+  readonly places: Readonly<Record<string, number | readonly number[]>>;
 }
 
 export const config = readJson<{
@@ -43,9 +43,13 @@ const graph = readJson<Graph>('graph.json');
 /** The map page for the site. */
 export const MAP_PATH = `/s/${SITE_ID}/`;
 
-/** Where directions to a place end: the point on the network it is joined at. */
+/**
+ * Where directions to a place end: the point on the network it is joined at,
+ * or the first of them for a place with several entrances.
+ */
 export function arrivalPoint(place: Place): LonLat {
-  const node = graph.places[place.id];
+  const found = graph.places[place.id];
+  const node = typeof found === 'number' ? found : found?.[0];
   const position = node === undefined ? undefined : graph.nodes[node];
   if (position === undefined) throw new Error(`${place.id} is not in the graph`);
   return position;

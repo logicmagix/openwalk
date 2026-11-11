@@ -14,7 +14,7 @@ describe('loadGraph', () => {
       { node: 3, metres: 159, kind: 'area' },
     ]);
     expect(graph.neighbours[7]).toEqual([{ node: 6, metres: 112, kind: 'walkway' }]);
-    expect(graph.places).toEqual({ corner: 2, top: 4, island: 7 });
+    expect(graph.places).toEqual({ corner: [2], top: [4], island: [7] });
   });
 
   it('rejects an edge that points outside the node list', () => {
@@ -24,6 +24,13 @@ describe('loadGraph', () => {
 
   it('rejects a place that points outside the node list', () => {
     const broken: GraphDocument = { ...document, places: { nowhere: 42 } };
+    expect(() => loadGraph(broken)).toThrow(RangeError);
+  });
+
+  it('keeps every entrance of a place that has several', () => {
+    const graph = loadGraph({ ...document, places: { hall: [2, 5], gate: 4 } });
+    expect(graph.places).toEqual({ hall: [2, 5], gate: [4] });
+    const broken: GraphDocument = { ...document, places: { hall: [2, 42] } };
     expect(() => loadGraph(broken)).toThrow(RangeError);
   });
 });

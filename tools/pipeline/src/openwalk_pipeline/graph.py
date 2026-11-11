@@ -22,6 +22,8 @@ from shapely import STRtree
 from shapely.geometry import LineString, Point, Polygon, shape
 from shapely.ops import nearest_points
 
+from openwalk_pipeline.places import hand_placed_entrances
+
 JsonObject = dict[str, Any]
 Kind = Literal["walkway", "steps", "area", "aisle", "road", "connector"]
 
@@ -58,7 +60,8 @@ class Graph:
     nodes: list[XY] = field(default_factory=list[XY])
     index: dict[XY, int] = field(default_factory=dict[XY, int])
     edges: dict[tuple[int, int], tuple[float, Kind]] = field(default_factory=dict[tuple[int, int], tuple[float, Kind]])
-    places: dict[str, int] = field(default_factory=dict[str, int])
+    #: Place id to the nodes where directions to it may end, one per entrance.
+    places: dict[str, list[int]] = field(default_factory=dict[str, list[int]])
     warnings: list[str] = field(default_factory=list[str])
     #: Edges of ways that pass over or under what they cross: bridges, tunnels, layers.
     separated: set[tuple[int, int]] = field(default_factory=set[tuple[int, int]])
@@ -162,21 +165,27 @@ class Graph:
         return joined
 
     def connect(self, place_id: str, entrance: XY, max_connector_m: float) -> None:
-        """Join a place's entrance to the network with a connector edge."""
+        """Join one of a place's entrances to the network with a connector edge."""
+        nodes = self.places.setdefault(place_id, [])
+
+        def record(node: int) -> None:
+            if node not in nodes:
+                nodes.append(node)
+
         found = self.nearest_edge(entrance)
         if found is None:
             self.warnings.append(f"{place_id}: no walkways to connect to")
-            self.places[place_id] = self.node(entrance)
+            record(self.node(entrance))
             return
         key, closest, distance = found
         on_network = self.split_edge(key, closest)
         if distance < SNAP_M:
             # The entrance is already on a walkway: no connector needed.
-            self.places[place_id] = on_network
+            record(on_network)
             return
         entrance_node = self.node(entrance)
         self.add_edge(entrance_node, on_network, "connector")
-        self.places[place_id] = entrance_node
+        record(entrance_node)
         if distance > max_connector_m:
             self.warnings.append(
                 f"{place_id}: entrance is {distance:.0f} m from the nearest walkway; place an entrance by hand"
@@ -207,7 +216,9 @@ class Graph:
             [[a, b, round(length, 2), kind] for (a, b), (length, kind) in self.edges.items()],
             key=lambda item: (item[0], item[1]),
         )
-        return {"nodes": nodes, "edges": edges, "places": dict(sorted(self.places.items()))}
+        # A place with one entrance is written as that node alone, the common case.
+        places = {pid: found[0] if len(found) == 1 else found for pid, found in sorted(self.places.items())}
+        return {"nodes": nodes, "edges": edges, "places": places}
 
 
 def _plane_transformers(features: Iterable[JsonObject]) -> tuple[Transformer, Transformer]:
@@ -279,16 +290,23 @@ def add_walkway(graph: Graph, feature: JsonObject, snap_m: float = 0.0) -> None:
                 graph.add_edge(a, b, "area")
 
 
-def entrance_of(place: JsonObject, by_osm_id: dict[str, JsonObject], graph: Graph) -> XY:
-    """Where directions to a curated place end, on the plane.
+def entrances_of(place: JsonObject, by_osm_id: dict[str, JsonObject], graph: Graph) -> list[XY]:
+    """Where directions to a curated place may end, on the plane.
 
-    A hand-placed entrance or location is used as given. Otherwise the place's
-    OpenStreetMap element is used: a node as it is, a footprint at the point on its
-    outline nearest to the walkway network, so the connector never crosses the building.
+    Hand-placed entrances are used as given, every one of them; failing those, a
+    hand-placed location. Otherwise the place's OpenStreetMap element is used: a node
+    as it is, a footprint at the point on its outline nearest to the walkway network,
+    so the connector never crosses the building.
     """
-    for key in ("entrance", "location"):
-        if key in place:
-            return graph.project(float(place[key][0]), float(place[key][1]))
+    written = hand_placed_entrances(place)
+    if written:
+        return [graph.project(lon, lat) for lon, lat in written]
+    return [_derived_entrance(place, by_osm_id, graph)]
+
+
+def _derived_entrance(place: JsonObject, by_osm_id: dict[str, JsonObject], graph: Graph) -> XY:
+    if "location" in place:
+        return graph.project(float(place["location"][0]), float(place["location"][1]))
     feature = by_osm_id.get(place["osm"])
     if feature is None:
         raise ValueError(f"place {place['id']!r} refers to {place['osm']}, which is not in the fetched data")
@@ -353,9 +371,11 @@ def build_graph(
         add_walkway(graph, feature, snap_m)
     joined = graph.join_crossings() if join_crossings else 0
     for place in places:
-        graph.connect(place["id"], entrance_of(place, by_osm_id, graph), max_connector_m)
+        for entrance in entrances_of(place, by_osm_id, graph):
+            graph.connect(place["id"], entrance, max_connector_m)
 
     components = graph.components()
     largest: set[int] = components[0] if components else set()
-    unreachable = sorted(pid for pid, node in graph.places.items() if node not in largest)
+    # Every entrance counts: one that cannot be reached would send people nowhere.
+    unreachable = sorted(pid for pid, nodes in graph.places.items() if any(node not in largest for node in nodes))
     return GraphBuild(graph.document(), graph.warnings, len(components), unreachable, joined)
