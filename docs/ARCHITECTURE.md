@@ -160,6 +160,22 @@ npm workspaces, one lockfile, one `npm test` at the root.
 - Logging: structured, no request bodies, no coordinates, no IP addresses beyond what
   nginx needs for rate limiting (and those truncated).
 
+## Content security policy
+
+The app needs nothing from any host but its own, and it tells the browser so (R18,
+R19): a content security policy that takes scripts, styles, images, fonts and
+connections from its own origin only, allows no inline or generated code, and refuses
+everything it does not name. A script added to a page by anyone else, including a
+network between the server and the phone, is not run.
+
+The policy has one source, `apps/web/src/policy.ts`. The build writes it into the page
+as a tag, which travels with the page to any host, and the image build writes the
+same policy as an nginx header, which also forbids showing the page in a frame on
+another site. The development server's page carries no policy, because Vite's live
+reload works by adding scripts and styles to the page. A browser test adds a script
+from another host, and one written into the page, and checks neither runs; another
+checks the app itself asks for nothing the policy refuses.
+
 ## Position provider abstraction
 
 All position reads pass through one interface with three implementations: the browser

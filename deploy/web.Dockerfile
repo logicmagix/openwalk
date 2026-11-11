@@ -43,12 +43,17 @@ RUN set -eu; mkdir -p /out/sites; \
 # installs to a phone as an app named after the site.
 RUN node apps/web/scripts/site-pages.mjs apps/web/dist /out/sites
 
+# The content security policy the pages carry as a tag is also sent as a
+# header; nginx's lines for it are written from the same source.
+RUN node apps/web/scripts/security-headers.mjs /out/security-headers.conf
+
 # ---- stage 2: serve it with nginx as a non-root user -----------------------
 # The "unprivileged" variant of the official image runs as uid 101 (nginx)
 # and listens on 8080, so no root is needed to bind a port.
 FROM nginxinc/nginx-unprivileged:1.31-alpine
 
 COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /out/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /src/apps/web/dist /usr/share/nginx/html
 COPY --from=build /out/sites /usr/share/nginx/html/sites
 
