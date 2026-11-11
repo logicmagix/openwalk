@@ -142,6 +142,7 @@ def run_tiles(site: Site, *, source: str | None, max_zoom: int | None, session: 
     if extent is None:
         print(f"{site.id}: nothing to cover; run 'openwalk-pipeline build' first", file=sys.stderr)
         return 1
+    view_extent = extent.expand(tiles.VIEW_MARGIN_M)
     extent = extent.expand(margin)
 
     view = site.view
@@ -153,6 +154,7 @@ def run_tiles(site: Site, *, source: str | None, max_zoom: int | None, session: 
         name=f"{site.name} base map",
         source=url,
         max_zoom=max_zoom,
+        view=view_extent,
         center=view[0] if view else None,
         center_zoom=round(view[1]) if view else None,
     )

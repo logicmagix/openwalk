@@ -84,7 +84,8 @@ def test_tiles_extracts_around_the_built_data(site_dir: Path, capsys: pytest.Cap
     )
     session = FakeSession(planet_archive())
     assert run_tiles(load_site(site_dir), source=None, max_zoom=None, session=session) == 0
-    assert "4 tiles" in capsys.readouterr().out
+    # One tile at each of zooms 0 to 2, and the ringed five by five at zoom 3.
+    assert "28 tiles" in capsys.readouterr().out
 
     reader = Reader(MemorySource((site_dir / "basemap.pmtiles").read_bytes()))
     assert reader.metadata()["name"] == "Demo Site base map"
