@@ -192,6 +192,16 @@ export class MapView {
     });
   }
 
+  /** Glide to a position without changing the zoom, to keep a walker in view. */
+  centreOn(center: Position): void {
+    this.map.easeTo({ center: [center[0], center[1]], duration: 400 });
+  }
+
+  /** Calls back when the person starts dragging the map, not when code moves it. */
+  onUserPan(callback: () => void): void {
+    this.map.on('dragstart', callback);
+  }
+
   destroy(): void {
     this.map.remove();
   }
