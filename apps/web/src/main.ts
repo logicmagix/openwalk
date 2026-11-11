@@ -12,6 +12,7 @@ import {
   nearestInCategory,
   planRoute,
 } from './directions';
+import { siteCategories } from './categories';
 import { Locator } from './locate';
 import { setupOffline } from './offline';
 import { MapView } from './map/adapter';
@@ -134,6 +135,8 @@ async function start(): Promise<void> {
     ...(overlay.attribution ? { attribution: overlay.attribution } : {}),
   }));
 
+  const categories = siteCategories(site.config, site.places);
+
   // --- the map ---------------------------------------------------------------
   const inputs: { current: StyleInputs } = {
     current: {
@@ -146,6 +149,8 @@ async function start(): Promise<void> {
       places: site.places,
       overlays,
       layerPrefs: { overlays: [], walkways: true, labels: true },
+      categories,
+      hiddenCategories: [],
       position: null,
       route: null,
       destination: null,

@@ -141,6 +141,57 @@ describe('style validity', () => {
   });
 });
 
+describe('kinds of place', () => {
+  const categories = [
+    { id: 'building', label: 'Buildings', count: 2, colour: { light: '#111111', dark: '#eeeeee' } },
+    {
+      id: 'call_box',
+      label: 'Call boxes',
+      count: 1,
+      colour: { light: '#222222', dark: '#dddddd' },
+    },
+  ];
+  const layer = (inputs: Partial<Parameters<typeof buildStyle>[0]>, id: string) =>
+    buildStyle({ ...base, theme: 'light', ...inputs }).layers.find((l) => l.id === id) as {
+      paint?: Record<string, unknown>;
+      filter?: unknown;
+    };
+
+  it("colours each dot by its kind, in the theme's shade", () => {
+    expect(layer({ categories }, 'places-dot').paint?.['circle-color']).toEqual([
+      'match',
+      ['get', 'category'],
+      'building',
+      '#111111',
+      'call_box',
+      '#222222',
+      expect.any(String),
+    ]);
+    const dark = layer({ categories, theme: 'dark' }, 'places-dot').paint?.['circle-color'];
+    expect(dark).toContain('#eeeeee');
+  });
+
+  it('uses one plain colour when no kinds are given', () => {
+    expect(typeof layer({}, 'places-dot').paint?.['circle-color']).toBe('string');
+  });
+
+  it('leaves hidden kinds out of the dots and the labels', () => {
+    const hidden = { categories, hiddenCategories: ['call_box'] };
+    const expected = ['!', ['in', ['get', 'category'], ['literal', ['call_box']]]];
+    expect(layer(hidden, 'places-dot').filter).toEqual(expected);
+    expect(layer(hidden, 'places-label').filter).toEqual(expected);
+  });
+
+  it('builds a style MapLibre accepts, with kinds coloured and hidden', () => {
+    for (const theme of ['light', 'dark'] as const) {
+      for (const hiddenCategories of [[], ['call_box'], ['building', 'call_box']]) {
+        const style = buildStyle({ ...base, theme, categories, hiddenCategories });
+        expect(validateStyleMin(style)).toEqual([]);
+      }
+    }
+  });
+});
+
 describe('layer visibility', () => {
   const layout = (prefs: Parameters<typeof buildStyle>[0]['layerPrefs'], id: string) => {
     const layer = buildStyle({ ...base, theme: 'light', layerPrefs: prefs }).layers.find(

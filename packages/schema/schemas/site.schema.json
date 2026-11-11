@@ -79,6 +79,28 @@
       "enum": ["metric", "imperial"],
       "default": "metric"
     },
+    "categories": {
+      "description": "The kinds of place this site has, in the order the map legend lists them, each with the name people read. A kind's position in the list also decides its colour on the map. Kinds the site's places use but this list leaves out are added after it, named from their value.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": {
+            "description": "The category value places carry, such as call_box.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "description": "The name shown in the legend, such as Call boxes.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
     "nearest": {
       "description": "Place categories that get a one-tap \"nearest\" button. Each entry names a category used by this site's places and the label its button shows. Nearest is measured by walking distance over the network, not straight-line.",
       "type": "array",

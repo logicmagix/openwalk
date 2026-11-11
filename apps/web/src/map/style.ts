@@ -6,8 +6,14 @@
 
 import type { Position, Route } from '@openwalk/routing';
 import type { PlacesDocument } from '@openwalk/search';
-import type { SourceSpecification, StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
+import type {
+  ExpressionSpecification,
+  FilterSpecification,
+  SourceSpecification,
+  StyleSpecification,
+} from '@maplibre/maplibre-gl-style-spec';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
+import { FALLBACK_COLOUR, type Category } from '../categories';
 import type { PositionFix } from '../position/provider';
 import type { WalkwaysDocument } from '../site/types';
 import type { Theme } from '../theme';
@@ -51,6 +57,10 @@ export interface StyleInputs {
   readonly route?: Route | null;
   /** The chosen destination, ringed on the map. */
   readonly destination?: Position | null;
+  /** The site's kinds of place; each place's dot takes its kind's colour. */
+  readonly categories?: readonly Category[];
+  /** Kinds of place left off the map for now. */
+  readonly hiddenCategories?: readonly string[];
 }
 
 /** Layer and source ids the app refers to. */
@@ -74,7 +84,7 @@ const COLOURS = {
   light: {
     walkway: '#2b6cb0',
     walkwayHand: '#b7791f',
-    place: '#c53030',
+    placeOutline: '#1a202c',
     placeText: '#1a202c',
     placeHalo: '#ffffff',
     position: '#1a73e8',
@@ -85,7 +95,7 @@ const COLOURS = {
   dark: {
     walkway: '#90cdf4',
     walkwayHand: '#f6e05e',
-    place: '#fc8181',
+    placeOutline: '#f7fafc',
     placeText: '#f7fafc',
     placeHalo: '#1a202c',
     position: '#8ab4f8',
@@ -112,6 +122,28 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
   const walkways = asGeoJson(inputs.walkways ?? EMPTY);
   const places = withIdProperty(inputs.places ?? EMPTY);
   const routeData = routeCollection(inputs.route ?? null);
+
+  // A place's dot takes the colour of its kind. `match` is the style language's
+  // switch statement: the value, then pairs of case and result, then the default.
+  const categories = inputs.categories ?? [];
+  const fallback = FALLBACK_COLOUR[inputs.theme];
+  // The spec types a `match` as a tuple of fixed shape, which a list built from
+  // data cannot satisfy, hence the cast.
+  const placeColour: ExpressionSpecification | string =
+    categories.length === 0
+      ? fallback
+      : ([
+          'match',
+          ['get', 'category'],
+          ...categories.flatMap((category) => [category.id, category.colour[inputs.theme]]),
+          fallback,
+        ] as unknown as ExpressionSpecification);
+  // Places of a hidden kind are left out of both the dots and the labels.
+  const hidden = inputs.hiddenCategories ?? [];
+  const placeFilter: FilterSpecification = [
+    '!',
+    ['in', ['get', 'category'], ['literal', [...hidden]]],
+  ];
   const destination = destinationCollection(inputs.destination ?? null);
 
   // Optional layers: overlays off, walkways and labels on, unless told otherwise.
@@ -254,10 +286,13 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         id: 'places-dot',
         type: 'circle',
         source: PLACES_SOURCE,
+        filter: placeFilter,
         paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 3, 18, 6],
-          'circle-color': colours.place,
-          'circle-stroke-color': colours.placeHalo,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 3.5, 18, 7],
+          'circle-color': placeColour,
+          // The outline contrasts with the map in each theme, so a dot is seen
+          // whatever its fill and whatever it lies on.
+          'circle-stroke-color': colours.placeOutline,
           'circle-stroke-width': 1.5,
         },
       },
@@ -265,6 +300,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         id: 'places-label',
         type: 'symbol',
         source: PLACES_SOURCE,
+        filter: placeFilter,
         minzoom: 15,
         layout: {
           visibility: visibility(showLabels),

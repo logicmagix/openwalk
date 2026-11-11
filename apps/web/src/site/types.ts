@@ -19,6 +19,11 @@ export interface SiteConfig {
   /** How distances are shown; metric when absent. */
   readonly units?: 'metric' | 'imperial';
   readonly attribution?: string;
+  /**
+   * The site's kinds of place, in legend order, each with the name people read.
+   * Kinds its places use but it does not list are added after these.
+   */
+  readonly categories?: readonly { readonly id: string; readonly label: string }[];
   /** Categories offered as one-tap "nearest" buttons, each with the label it shows. */
   readonly nearest?: readonly { readonly category: string; readonly label: string }[];
   readonly routing?: {
