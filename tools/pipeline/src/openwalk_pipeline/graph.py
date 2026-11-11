@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from pyproj import Transformer
+from shapely import STRtree
 from shapely.geometry import LineString, Point, Polygon, shape
 from shapely.ops import nearest_points
 
@@ -31,8 +32,21 @@ ROAD_HIGHWAYS = frozenset(
 )
 XY = tuple[float, float]
 
-# Points closer than this, in metres, are the same node.
-SNAP_M = 1e-3
+
+def _key(a: int, b: int) -> tuple[int, int]:
+    return (a, b) if a < b else (b, a)
+
+
+def is_grade_separated(properties: JsonObject) -> bool:
+    """Whether a way passes over or under what it crosses instead of meeting it."""
+    if str(properties.get("bridge", "no")) != "no" or str(properties.get("tunnel", "no")) != "no":
+        return True
+    return str(properties.get("layer", "0")).strip() not in ("", "0")
+
+# Points closer than this, in metres, are the same node. Coordinates are written to
+# seven decimal places of a degree, about a centimetre, so anything nearer than that
+# cannot be told apart once saved and would leave an edge of no length.
+SNAP_M = 0.02
 
 
 @dataclass
@@ -46,6 +60,8 @@ class Graph:
     edges: dict[tuple[int, int], tuple[float, Kind]] = field(default_factory=dict[tuple[int, int], tuple[float, Kind]])
     places: dict[str, int] = field(default_factory=dict[str, int])
     warnings: list[str] = field(default_factory=list[str])
+    #: Edges of ways that pass over or under what they cross: bridges, tunnels, layers.
+    separated: set[tuple[int, int]] = field(default_factory=set[tuple[int, int]])
 
     def node(self, xy: XY) -> int:
         """The node at these plane coordinates, created if new."""
@@ -92,7 +108,58 @@ class Graph:
         middle = self.node(at)
         self.add_edge(a, middle, kind)
         self.add_edge(middle, b, kind)
+        if key in self.separated:
+            self.separated.discard(key)
+            self.separated.update({_key(a, middle), _key(middle, b)})
         return middle
+
+    def join_crossings(self) -> int:
+        """Join edges that cross at ground level without sharing a node; return how many.
+
+        Both edges are split where they cross and share the new node. Edges of
+        bridges, tunnels and other layers are left alone, and so are the lines drawn
+        across the inside of an open area, which cross each other by design.
+        """
+        keys = list(self.edges)
+        segments = [LineString([self.nodes[a], self.nodes[b]]) for a, b in keys]
+        tree = STRtree(segments)
+        cuts: dict[tuple[int, int], list[XY]] = {}
+        chosen: list[XY] = []
+        joined = 0
+        for first, segment in enumerate(segments):
+            for index in tree.query(segment, predicate="crosses"):
+                second = int(index)
+                if second <= first:
+                    continue
+                one, two = keys[first], keys[second]
+                if one in self.separated or two in self.separated or len({*one, *two}) < 4:
+                    continue
+                if self.edges[one][1] == "area" and self.edges[two][1] == "area":
+                    continue
+                crossing = segment.intersection(segments[second])
+                if not isinstance(crossing, Point):
+                    continue
+                at: XY = (float(crossing.x), float(crossing.y))
+                # A crossing right at the end of one of the edges joins at that end,
+                # and one right beside another crossing (three paths meeting at
+                # nearly one point) joins at the same point as that one.
+                nearby = [self.nodes[end] for end in (*one, *two)] + chosen
+                for ex, ey in nearby:
+                    if abs(ex - at[0]) < SNAP_M and abs(ey - at[1]) < SNAP_M:
+                        at = (ex, ey)
+                        break
+                chosen.append(at)
+                cuts.setdefault(one, []).append(at)
+                cuts.setdefault(two, []).append(at)
+                joined += 1
+        for (a, b), points in cuts.items():
+            _, kind = self.edges.pop((a, b))
+            start = self.nodes[a]
+            points.sort(key=lambda p: (p[0] - start[0]) ** 2 + (p[1] - start[1]) ** 2)
+            chain = [a, *(self.node(point) for point in points), b]
+            for left, right in zip(chain, chain[1:]):
+                self.add_edge(left, right, kind)
+        return joined
 
     def connect(self, place_id: str, entrance: XY, max_connector_m: float) -> None:
         """Join a place's entrance to the network with a connector edge."""
@@ -196,8 +263,11 @@ def add_walkway(graph: Graph, feature: JsonObject, snap_m: float = 0.0) -> None:
                         f" {snap_m:g} m of a mapped walkway"
                     )
                 ids.append(graph.node(point))
+        separated = is_grade_separated(feature["properties"])
         for a, b in zip(ids, ids[1:]):
             graph.add_edge(a, b, kind)
+            if separated and a != b:
+                graph.separated.add(_key(a, b))
         return
     ring = [graph.project(lon, lat) for lon, lat in geometry["coordinates"][0]]
     polygon = Polygon(ring)
@@ -256,6 +326,8 @@ class GraphBuild:
     warnings: list[str]
     component_count: int
     unreachable: list[str]
+    #: How many ground-level crossings were joined, when the site asks for that.
+    joined_crossings: int = 0
 
 
 def build_graph(
@@ -264,6 +336,7 @@ def build_graph(
     by_osm_id: dict[str, JsonObject],
     max_connector_m: float = 30.0,
     snap_m: float = 5.0,
+    join_crossings: bool = False,
 ) -> GraphBuild:
     """Build the graph from the walkways collection and the curated places.
 
@@ -278,10 +351,11 @@ def build_graph(
             add_walkway(graph, feature)
     for feature in hand:
         add_walkway(graph, feature, snap_m)
+    joined = graph.join_crossings() if join_crossings else 0
     for place in places:
         graph.connect(place["id"], entrance_of(place, by_osm_id, graph), max_connector_m)
 
     components = graph.components()
     largest: set[int] = components[0] if components else set()
     unreachable = sorted(pid for pid, node in graph.places.items() if node not in largest)
-    return GraphBuild(graph.document(), graph.warnings, len(components), unreachable)
+    return GraphBuild(graph.document(), graph.warnings, len(components), unreachable, joined)

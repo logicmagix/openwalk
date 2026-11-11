@@ -144,6 +144,16 @@
             "service": {
               "description": "For highway=service ways: the OpenStreetMap service value, such as parking_aisle.",
               "type": "string"
+            },
+            "bridge": {
+              "type": "string"
+            },
+            "tunnel": {
+              "type": "string"
+            },
+            "layer": {
+              "description": "OpenStreetMap's vertical ordering; anything but 0 means the way passes over or under what it crosses.",
+              "type": "string"
             }
           },
           "additionalProperties": false

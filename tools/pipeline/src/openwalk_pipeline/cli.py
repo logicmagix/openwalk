@@ -11,7 +11,7 @@ from typing import Any
 
 import requests
 
-from openwalk_pipeline import __version__, debug, graph, osm, overlay, overpass, places, tiles, walkways
+from openwalk_pipeline import __version__, debug, gaps, graph, osm, overlay, overpass, places, tiles, walkways
 from openwalk_pipeline.site import DEFAULT_MARGIN_M, Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -36,6 +36,23 @@ def build_parser() -> argparse.ArgumentParser:
     basemap.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
     basemap.add_argument("--source", help="PMTiles archive URL, overriding tiles.source in site.yaml")
     basemap.add_argument("--max-zoom", type=int, help="highest zoom level to extract")
+
+    breaks = commands.add_parser(
+        "gaps", help="list places where walkways nearly meet, or cross, without being joined"
+    )
+    breaks.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
+    breaks.add_argument(
+        "--max-gap",
+        type=float,
+        default=gaps.DEFAULT_MAX_GAP_M,
+        help="how close a dead end must be to another walkway to be listed, in metres",
+    )
+    breaks.add_argument(
+        "--min-detour",
+        type=float,
+        default=gaps.DEFAULT_MIN_DETOUR_M,
+        help="list a spot only when the walk round it today is at least this long, in metres",
+    )
 
     check = commands.add_parser("debug", help="write a map page for checking the generated files by eye")
     check.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
@@ -95,7 +112,9 @@ def run_build(site: Site) -> int:
         write_json(site.places_path, collection)
         print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
 
-    built = graph.build_graph(walkway_collection, curated, by_osm_id, site.max_connector_m, site.snap_m)
+    built = graph.build_graph(
+        walkway_collection, curated, by_osm_id, site.max_connector_m, site.snap_m, site.join_crossings
+    )
     for warning in built.warnings:
         print(f"{site.id}: {warning}", file=sys.stderr)
     validate(built.document, "graph")
@@ -105,6 +124,8 @@ def run_build(site: Site) -> int:
         f"{site.id}: graph with {len(document['nodes'])} nodes and {len(document['edges'])} edges"
         f" in {built.component_count} connected pieces, in {site.graph_path}"
     )
+    if built.joined_crossings:
+        print(f"{site.id}: joined {built.joined_crossings} places where walkways cross at ground level")
     if built.unreachable:
         print(f"{site.id}: unreachable from the main network: {', '.join(built.unreachable)}", file=sys.stderr)
 
@@ -168,6 +189,23 @@ def run_tiles(site: Site, *, source: str | None, max_zoom: int | None, session: 
     return 0
 
 
+def run_gaps(site: Site, *, max_gap_m: float, min_detour_m: float) -> int:
+    if not site.graph_path.exists():
+        print(f"{site.id}: no graph; run 'openwalk-pipeline build' first", file=sys.stderr)
+        return 1
+    with site.graph_path.open(encoding="utf-8") as handle:
+        document: dict[str, Any] = json.load(handle)
+    found = gaps.find_gaps(document, max_gap_m, min_detour_m)
+    if not found:
+        print(f"{site.id}: no suspected gaps in the walkway network")
+        return 0
+    print(f"{site.id}: {len(found)} suspected gaps in the walkway network, longest way round first")
+    for number, gap in enumerate(found, start=1):
+        print(gaps.describe(number, gap))
+    print("The debug page shows each one by its number.")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     site = load_site(args.site)
@@ -175,6 +213,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_fetch(site, refresh=args.refresh, endpoint=args.endpoint)
     if args.command == "tiles":
         return run_tiles(site, source=args.source, max_zoom=args.max_zoom)
+    if args.command == "gaps":
+        return run_gaps(site, max_gap_m=args.max_gap, min_detour_m=args.min_detour)
     if args.command == "debug":
         path = debug.write(site, args.out)
         print(f"{site.id}: wrote {path}; open it in a browser")

@@ -131,6 +131,10 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "join_crossings": {
+          "description": "Whether walkways that cross at ground level without sharing a point are joined where they cross. OpenStreetMap treats such a crossing as unconnected, which is right for a bridge and usually an omission elsewhere; ways tagged as a bridge, a tunnel, or on another layer are never joined. Off by default.",
+          "type": "boolean"
+        },
         "parking_aisles": {
           "description": "Whether the aisles of parking lots count as walkways. On by default: people walk through lots, and the router can still prefer sidewalks.",
           "type": "boolean"
