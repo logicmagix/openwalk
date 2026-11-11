@@ -31,3 +31,15 @@ test('the zoom buttons work from the keyboard', async ({ page }) => {
   }
   await expect(zoomOut).toBeDisabled();
 });
+
+test('tapping a control twice quickly does not zoom the whole page', async ({ page }) => {
+  await openMap(page);
+  // The page asks the browser not to treat a double tap as "zoom the page"; a
+  // real double-tap zoom cannot be produced here, so the request itself is checked.
+  for (const name of ['Zoom in', 'Zoom out', 'Show my location', 'Map layers', 'Map legend']) {
+    const action = await page
+      .getByRole('button', { name })
+      .evaluate((button) => getComputedStyle(button).touchAction);
+    expect(action, name).toBe('manipulation');
+  }
+});
