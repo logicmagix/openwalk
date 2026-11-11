@@ -1,7 +1,13 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
-import { siteManifest, sitePageHtml, type SiteIdentity } from './src/site/pages.ts';
+import {
+  SITE_INDEX_PATH,
+  siteIndex,
+  siteManifest,
+  sitePageHtml,
+  type SiteIdentity,
+} from './src/site/pages.ts';
 
 // Local HTTPS for testing on a phone (see docs/DEVICE_TESTING.md). The
 // certificate is issued by mkcert and lives in apps/web/certs/, which is
@@ -37,8 +43,16 @@ const serveSites: Plugin = {
   configureServer(server) {
     server.middlewares.use((request, response, next) => {
       const url = request.url ?? '';
-      // A site's web app manifest is written into the image when it is built;
-      // here it is produced on request from the same code.
+      // The list of sites, and each site's web app manifest below, are written
+      // into the image when it is built; here they are produced on request from
+      // the same code. Every directory under sites/ that has been built is listed.
+      if (url.split('?')[0] === SITE_INDEX_PATH) {
+        const all = existsSync(sitesDir) ? readdirSync(sitesDir) : [];
+        const configs = all.map(readSite).filter((config) => config !== null);
+        response.setHeader('Content-Type', 'application/json');
+        response.end(JSON.stringify(siteIndex(configs)));
+        return;
+      }
       const manifestFor = /^\/sites\/([^/]+)\/manifest\.webmanifest$/.exec(url.split('?')[0] ?? '');
       const site = manifestFor ? readSite(manifestFor[1] ?? '') : null;
       if (site) {

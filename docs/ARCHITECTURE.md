@@ -97,6 +97,13 @@ worker keeps each site's page under its own key. Sites share the application's i
 and are told apart by name; a site with a long name sets a `short_name` for the label
 under its icon.
 
+The root address is for someone who arrives at the bare host: it lists the sites,
+read from a small index the image build writes beside them, and opens the site
+directly when there is only one. There is no control for changing site inside a map.
+An installed app is one site's app, and a site that has not been visited is not
+available offline, so moving between sites is done from the root address or from the
+home screen.
+
 ## Repository layout
 
 ```

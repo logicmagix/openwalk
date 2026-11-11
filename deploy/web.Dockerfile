@@ -5,8 +5,8 @@
 # The sites baked into the image: one id, or several separated by spaces,
 # each a directory under sites/. The default is the example site; a real site
 # is cloned into sites/<its id>/ and named here, for example
-# --build-arg SITES="north-campus south-campus". The root path of the built
-# app opens the first one.
+# --build-arg SITES="north-campus south-campus". With one site the root path
+# opens it; with several it lists them.
 ARG SITES=tuscawilla-park
 
 # ---- stage 1: build the bundle with Node ----------------------------------
@@ -26,9 +26,7 @@ RUN npm ci --no-audit --no-fund
 COPY tsconfig.base.json ./
 COPY apps/web apps/web
 COPY packages packages
-# The root path of the built app redirects to the first site listed.
-# ${SITES%% *} is the shell's way of cutting a string at its first space.
-RUN VITE_DEFAULT_SITE="${SITES%% *}" npm run build
+RUN npm run build
 
 # Gather the chosen sites into one directory for the next stage, which can
 # copy a directory but cannot loop over a list. A site that has not been
