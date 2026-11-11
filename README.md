@@ -71,10 +71,15 @@ described here. Paths below are relative to the repository root.
    `debug.html`, a page that draws everything over satellite imagery. Clicking the map
    prints coordinates in the order the YAML files use; the view is kept in the URL
    hash so a spot can be linked to, and `?hide=overlay,places` opens with layers off.
-7. **Close gaps in the network.** Where OpenStreetMap lacks a paved connection, draw
-   it in `walkways.yaml` with coordinates taken from the page. Each end within a few
-   metres of a mapped walkway is joined to it. Mapping the connection in
-   OpenStreetMap afterwards is the lasting fix.
+7. **Close gaps in the network.** A network can be in one piece and still send people
+   a long way round, because two paths that meet on the ground do not meet in the
+   data. `openwalk-pipeline gaps sites/<site-id>` lists the likely spots: dead ends
+   that stop a few metres short of another walkway, and walkways that cross without
+   sharing a point. Each is given with its coordinates and the distance a person is
+   routed today to get round it, longest first, and the debug page shows each by its
+   number. Where a connection exists on the ground, draw it in `walkways.yaml` with
+   those coordinates. Each end within a few metres of a mapped walkway is joined to
+   it. Mapping the connection in OpenStreetMap afterwards is the lasting fix.
 8. **Extract the base map.** Set `tiles.source` in `site.yaml` to the URL of a
    planet-wide PMTiles archive, such as a dated Protomaps basemap build, and run
    `openwalk-pipeline tiles sites/<site-id>`. It writes `basemap.pmtiles` holding only

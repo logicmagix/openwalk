@@ -13,6 +13,7 @@ from pathlib import Path
 from string import Template
 from typing import Any
 
+from openwalk_pipeline import gaps
 from openwalk_pipeline.site import Site
 
 JsonObject = dict[str, Any]
@@ -66,6 +67,7 @@ def render(site: Site) -> str:
         "places": places,
         "graph": graph,
         "islands": island_edges(graph),
+        "gaps": gaps.as_geojson(gaps.find_gaps(graph)),
         "overlays": overlays,
     }
     return PAGE.substitute(
@@ -96,6 +98,7 @@ PAGE = Template(
            font: 13px/1.5 system-ui, sans-serif; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.4); max-width: 320px; }
   #panel code { user-select: all; }
   .num { background: #fff; border: 1px solid #333; border-radius: 3px; padding: 0 3px; font: bold 11px system-ui; white-space: nowrap; }
+  .gap { background: #ff7f00; color: #000; border: 1px solid #000; border-radius: 9px; padding: 0 5px; font: bold 11px system-ui; white-space: nowrap; }
   .legend span { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
 </style>
 </head>
@@ -113,6 +116,7 @@ PAGE = Template(
     <span style="background:#00e5ff"></span>hand-drawn
     <span style="background:#d53ef2"></span>connector
     <span style="background:#e31a1c;height:6px"></span>island
+    <span style="background:#ff7f00;height:6px"></span>suspected gap
   </div>
   <div>Overlay opacity <input id="opacity" type="range" min="0" max="100" value="60"></div>
   <div>Clicked: <code id="clicked">(click the map)</code></div>
@@ -166,6 +170,24 @@ const islandLayer = show('islands', L.layerGroup(islandLines));
 const graphNodes = L.layerGroup(nodes.map((n, i) => L.circleMarker([n[1], n[0]], { radius: 2, color: '#fff', weight: 1, fillOpacity: 1 })
   .bindTooltip('node ' + i + ' [' + n[0] + ', ' + n[1] + ']')));
 
+// Suspected gaps in the network: a dead end close to another walkway is a line
+// across the gap, two walkways crossing without a join is a ring. Each carries its
+// number from the pipeline's gaps list, longest way round first.
+const gapMarks = [];
+DATA.gaps.features.forEach(f => {
+  const p = f.properties;
+  const round = p.detour_m === null ? 'no way round' : Math.round(p.detour_m) + ' m round today';
+  const what = p.kind === 'crossing' ? p.kinds.join(' and ') + ' cross without joining'
+    : p.kinds[0] + ' ends ' + p.gap_m + ' m from a ' + p.kinds[1];
+  const tip = 'gap ' + p.number + ': ' + what + '; ' + round;
+  const first = f.geometry.type === 'Point' ? f.geometry.coordinates : f.geometry.coordinates[0];
+  const at = [first[1], first[0]];
+  if (f.geometry.type === 'Point') gapMarks.push(L.circleMarker(at, { radius: 9, color: '#ff7f00', weight: 4, fill: false }).bindTooltip(tip));
+  else gapMarks.push(L.polyline(f.geometry.coordinates.map(c => [c[1], c[0]]), { color: '#ff7f00', weight: 6 }).bindTooltip(tip));
+  gapMarks.push(L.marker(at, { icon: L.divIcon({ className: 'gap', html: p.number, iconSize: null, iconAnchor: [-8, 20] }) }).bindTooltip(tip));
+});
+const gapLayer = show('gaps', L.layerGroup(gapMarks));
+
 // Places: numbered buildings get a label, call boxes a yellow dot, the rest a white dot.
 const places = L.geoJSON(DATA.places, {
   pointToLayer: (f, ll) => {
@@ -192,7 +214,7 @@ document.getElementById('opacity').addEventListener('input', e => overlayObjects
 
 L.control.layers({ 'Satellite': satellite, 'Streets': streets }, Object.assign({
   'Walkways': walkways, 'Graph edges': graphEdges, 'Graph nodes': graphNodes, 'Connectors': connectors,
-  'Islands': islandLayer, 'Places': places
+  'Islands': islandLayer, 'Suspected gaps': gapLayer, 'Places': places
 }, overlayLayers), { collapsed: false }).addTo(map);
 
 map.on('click', e => {
@@ -213,7 +235,8 @@ map.on('moveend', () => {
 
 document.getElementById('stats').textContent =
   DATA.walkways.features.length + ' walkways, ' + DATA.places.features.length + ' places, ' +
-  nodes.length + ' nodes, ' + DATA.graph.edges.length + ' edges, ' + DATA.islands.length + ' island edges';
+  nodes.length + ' nodes, ' + DATA.graph.edges.length + ' edges, ' + DATA.islands.length + ' island edges, ' +
+  DATA.gaps.features.length + ' suspected gaps';
 </script>
 </body>
 </html>
