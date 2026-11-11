@@ -104,19 +104,33 @@ async function cacheFirst(request) {
 }
 
 /**
- * Every route (/s/..., /p/...) is served by the same shell document. Try the
- * network first so a fresh shell is picked up online, and fall back to the cached
- * shell when offline. The shell is stored under a stable key so any route reuses it.
+ * The cache key for a page. A site's map (/s/<site>/) and its share links
+ * (/p/<site>/<place>) are one document, served per site so that it carries the
+ * site's own name and manifest; any other route is the plain app shell.
+ */
+function pageKey(url) {
+  const match = /^\/(?:s|p)\/([a-z0-9-]+)(?:\/|$)/.exec(url.pathname);
+  return match ? `/s/${match[1]}/` : '/index.html';
+}
+
+/**
+ * Pages: try the network first so a fresh page is picked up online, and fall
+ * back to the stored copy when offline. Each site's page is stored under one
+ * stable key, so every route within the site reuses it.
  */
 async function serveNavigation(request) {
   const cache = await caches.open(CACHE);
+  const key = pageKey(new URL(request.url));
   try {
     const response = await fetch(request);
-    await put(cache, '/index.html', response.clone());
+    await put(cache, key, response.clone());
     return response;
   } catch (err) {
-    const shell = (await cache.match('/index.html')) || (await cache.match(request));
-    if (shell) return shell;
+    const page =
+      (await cache.match(key)) ||
+      (await cache.match('/index.html')) ||
+      (await cache.match(request));
+    if (page) return page;
     throw err;
   }
 }

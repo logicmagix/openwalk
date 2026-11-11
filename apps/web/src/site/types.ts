@@ -12,6 +12,8 @@ export type Position = readonly [lon: number, lat: number];
 export interface SiteConfig {
   readonly id: string;
   readonly name: string;
+  /** A brief name for the label under a home-screen icon; the name when absent. */
+  readonly short_name?: string;
   /** Where the map opens before a position is known. */
   readonly view?: { readonly center: Position; readonly zoom: number };
   /** How distances are shown; metric when absent. */

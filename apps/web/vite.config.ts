@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
+import { siteManifest, sitePageHtml, type SiteIdentity } from './src/site/pages.ts';
 
 // Local HTTPS for testing on a phone (see docs/DEVICE_TESTING.md). The
 // certificate is issued by mkcert and lives in apps/web/certs/, which is
@@ -24,16 +25,39 @@ const siteRealPaths = existsSync(sitesDir)
   ? readdirSync(sitesDir).map((entry) => realpathSync(resolve(sitesDir, entry)))
   : [];
 
+/** Reads a site's configuration from its directory, or null when it has none. */
+function readSite(siteId: string): SiteIdentity | null {
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(siteId)) return null;
+  const file = resolve(sitesDir, siteId, 'site.json');
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as SiteIdentity) : null;
+}
+
 const serveSites: Plugin = {
   name: 'serve-sites',
   configureServer(server) {
-    server.middlewares.use((request, _response, next) => {
+    server.middlewares.use((request, response, next) => {
       const url = request.url ?? '';
+      // A site's web app manifest is written into the image when it is built;
+      // here it is produced on request from the same code.
+      const manifestFor = /^\/sites\/([^/]+)\/manifest\.webmanifest$/.exec(url.split('?')[0] ?? '');
+      const site = manifestFor ? readSite(manifestFor[1] ?? '') : null;
+      if (site) {
+        response.setHeader('Content-Type', 'application/manifest+json');
+        response.end(JSON.stringify(siteManifest(site)));
+        return;
+      }
       if (url.startsWith('/sites/')) {
         request.url = `/@fs${sitesDir}${url.slice('/sites'.length)}`;
       }
       next();
     });
+  },
+  // The page for a site's map or share link is served named for that site, as
+  // the built image serves it. `originalUrl` is the address the browser asked for.
+  transformIndexHtml(html, context) {
+    const match = /^\/(?:s|p)\/([^/?]+)/.exec(context.originalUrl ?? '');
+    const site = match ? readSite(match[1] ?? '') : null;
+    return site ? sitePageHtml(html, site) : html;
   },
 };
 
