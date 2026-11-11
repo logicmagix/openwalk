@@ -666,7 +666,9 @@
     "source": "osm",
     "osm_id": "way/503133995",
     "highway": "footway",
-    "surface": "paved"
+    "surface": "paved",
+    "bridge": "yes",
+    "layer": "1"
    }
   },
   {

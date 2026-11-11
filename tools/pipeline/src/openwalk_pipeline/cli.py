@@ -112,7 +112,9 @@ def run_build(site: Site) -> int:
         write_json(site.places_path, collection)
         print(f"{site.id}: {len(collection['features'])} places in {site.places_path}")
 
-    built = graph.build_graph(walkway_collection, curated, by_osm_id, site.max_connector_m, site.snap_m)
+    built = graph.build_graph(
+        walkway_collection, curated, by_osm_id, site.max_connector_m, site.snap_m, site.join_crossings
+    )
     for warning in built.warnings:
         print(f"{site.id}: {warning}", file=sys.stderr)
     validate(built.document, "graph")
@@ -122,6 +124,8 @@ def run_build(site: Site) -> int:
         f"{site.id}: graph with {len(document['nodes'])} nodes and {len(document['edges'])} edges"
         f" in {built.component_count} connected pieces, in {site.graph_path}"
     )
+    if built.joined_crossings:
+        print(f"{site.id}: joined {built.joined_crossings} places where walkways cross at ground level")
     if built.unreachable:
         print(f"{site.id}: unreachable from the main network: {', '.join(built.unreachable)}", file=sys.stderr)
 

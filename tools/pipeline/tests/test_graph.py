@@ -142,3 +142,100 @@ def test_edge_kinds_by_highway() -> None:
     assert graph.edge_kind({"highway": "steps"}) == "steps"
     assert graph.edge_kind({"highway": "footway"}) == "walkway"
     assert graph.edge_kind({"highway": "living_street"}) == "walkway"
+
+
+def line(feature_id: str, coordinates: list[list[float]], **properties: Any) -> dict[str, Any]:
+    return {
+        "type": "Feature",
+        "id": feature_id,
+        "geometry": {"type": "LineString", "coordinates": coordinates},
+        "properties": {"source": "osm", "highway": "footway", **properties},
+    }
+
+
+def collection(*features: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "FeatureCollection", "features": list(features)}
+
+
+# Two paths in a plus shape that cross in the middle without sharing a vertex.
+EAST_WEST = [[0.0, 0.0005], [0.001, 0.0005]]
+NORTH_SOUTH = [[0.0005, 0.0], [0.0005, 0.001]]
+
+
+def test_crossing_walkways_stay_apart_unless_the_site_joins_them() -> None:
+    crossed = collection(line("way/1", EAST_WEST), line("way/2", NORTH_SOUTH))
+    apart = graph.build_graph(crossed, [], {})
+    assert apart.component_count == 2
+    assert apart.joined_crossings == 0
+
+    joined = graph.build_graph(crossed, [], {}, join_crossings=True)
+    assert joined.component_count == 1
+    assert joined.joined_crossings == 1
+    # One new node where they cross, and each path is now two edges of half its length.
+    assert len(joined.document["nodes"]) == 5
+    assert len(joined.document["edges"]) == 4
+    total = sum(e[2] for e in joined.document["edges"])
+    assert total == pytest.approx(sum(e[2] for e in apart.document["edges"]), abs=0.05)
+    validate(joined.document, "graph")
+
+
+@pytest.mark.parametrize("tags", [{"bridge": "yes"}, {"tunnel": "yes"}, {"layer": "1"}, {"layer": "-1"}])
+def test_bridges_tunnels_and_other_layers_are_never_joined(tags: dict[str, str]) -> None:
+    crossed = collection(line("way/1", EAST_WEST), line("way/2", NORTH_SOUTH, **tags))
+    built = graph.build_graph(crossed, [], {}, join_crossings=True)
+    assert built.joined_crossings == 0
+    assert built.component_count == 2
+
+
+def test_a_way_marked_as_ground_level_is_joined() -> None:
+    crossed = collection(line("way/1", EAST_WEST, layer="0", bridge="no"), line("way/2", NORTH_SOUTH))
+    assert graph.build_graph(crossed, [], {}, join_crossings=True).joined_crossings == 1
+
+
+def test_a_path_crossed_twice_is_cut_in_order() -> None:
+    long_path = line("way/1", [[0.0, 0.0005], [0.003, 0.0005]])
+    first = line("way/2", [[0.002, 0.0], [0.002, 0.001]])
+    second = line("way/3", [[0.001, 0.0], [0.001, 0.001]])
+    built = graph.build_graph(collection(long_path, first, second), [], {}, join_crossings=True)
+    assert built.joined_crossings == 2
+    assert built.component_count == 1
+    # The long path is three pieces of a third each, not one piece doubling back.
+    nodes = built.document["nodes"]
+    pieces = sorted(e[2] for e in built.document["edges"] if nodes[e[0]][1] == nodes[e[1]][1])
+    assert len(pieces) == 3
+    assert pieces[0] == pytest.approx(pieces[2], rel=0.01)
+
+
+def test_lines_across_an_open_area_are_not_joined_to_each_other() -> None:
+    square = {
+        "type": "Feature",
+        "id": "way/9",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[0.0, 0.0], [0.001, 0.0], [0.001, 0.001], [0.0, 0.001], [0.0, 0.0]]],
+        },
+        "properties": {"source": "osm", "highway": "pedestrian"},
+    }
+    plain = graph.build_graph(collection(square), [], {})
+    joined = graph.build_graph(collection(square), [], {}, join_crossings=True)
+    assert joined.joined_crossings == 0
+    assert joined.document == plain.document
+
+
+def test_grade_separation_is_read_from_the_tags() -> None:
+    assert graph.is_grade_separated({"bridge": "yes"})
+    assert graph.is_grade_separated({"tunnel": "building_passage"})
+    assert graph.is_grade_separated({"layer": "2"})
+    assert not graph.is_grade_separated({})
+    assert not graph.is_grade_separated({"layer": "0", "bridge": "no"})
+
+
+def test_three_paths_crossing_at_almost_one_point_share_a_single_join() -> None:
+    # The diagonal passes a few millimetres from where the other two cross.
+    diagonal = line("way/3", [[0.0, 0.0], [0.001, 0.00100000005]])
+    built = graph.build_graph(
+        collection(line("way/1", EAST_WEST), line("way/2", NORTH_SOUTH), diagonal), [], {}, join_crossings=True
+    )
+    assert built.component_count == 1
+    assert all(edge[2] > 0 for edge in built.document["edges"])
+    validate(built.document, "graph")

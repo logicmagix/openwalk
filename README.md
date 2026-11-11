@@ -79,7 +79,8 @@ described here. Paths below are relative to the repository root.
    routed today to get round it, longest first, and the debug page shows each by its
    number. Where a connection exists on the ground, draw it in `walkways.yaml` with
    those coordinates. Each end within a few metres of a mapped walkway is joined to
-   it. Mapping the connection in OpenStreetMap afterwards is the lasting fix.
+   it. Setting `walkways.join_crossings` in `site.yaml` joins every ground-level
+   crossing at once; bridges, tunnels and ways on another layer are left apart. Mapping the connection in OpenStreetMap afterwards is the lasting fix.
 8. **Extract the base map.** Set `tiles.source` in `site.yaml` to the URL of a
    planet-wide PMTiles archive, such as a dated Protomaps basemap build, and run
    `openwalk-pipeline tiles sites/<site-id>`. It writes `basemap.pmtiles` holding only

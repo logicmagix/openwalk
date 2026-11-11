@@ -15,7 +15,19 @@ JsonObject = dict[str, Any]
 
 # Tags carried through to the output, and the type each is coerced to. Everything else
 # in OpenStreetMap is dropped so the app loads only what it uses.
-STRING_TAGS = ("name", "surface", "lit", "incline", "wheelchair", "covered", "level", "service")
+STRING_TAGS = (
+    "name",
+    "surface",
+    "lit",
+    "incline",
+    "wheelchair",
+    "covered",
+    "level",
+    "service",
+    "bridge",
+    "tunnel",
+    "layer",
+)
 INTEGER_TAGS = ("step_count",)
 
 # Surface values that mean "not a paved walkway", unless a site says otherwise. A way

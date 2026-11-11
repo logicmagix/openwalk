@@ -62,6 +62,7 @@ class Site:
     max_connector_m: float
     snap_m: float
     parking_aisles: bool
+    join_crossings: bool
     roads: tuple[str, ...]
     tiles: Tiles | None
     config: dict[str, Any]
@@ -151,6 +152,7 @@ def load_site(directory: Path) -> Site:
         max_connector_m=float(walkways.get("max_connector_m", DEFAULT_MAX_CONNECTOR_M)),
         snap_m=float(walkways.get("snap_m", DEFAULT_SNAP_M)),
         parking_aisles=bool(walkways.get("parking_aisles", True)),
+        join_crossings=bool(walkways.get("join_crossings", False)),
         roads=tuple(walkways.get("roads", DEFAULT_ROADS)),
         tiles=tiles,
         config=config,
