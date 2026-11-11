@@ -237,11 +237,12 @@ async function start(): Promise<void> {
   function chooseDestination(place: PlaceFeature | null): void {
     destination = place;
     fitted = false;
-    inputs.current = {
-      ...inputs.current,
+    // Restyling keeps the chosen place on the map when its kind is hidden.
+    restyle({
       destination: place === null ? null : place.geometry.coordinates,
+      destinationId: place === null ? null : place.id,
       route: null,
-    };
+    });
     map.setDestination(destinationCollection(inputs.current.destination ?? null));
     map.setRoute(routeCollection(null));
     if (place === null) {

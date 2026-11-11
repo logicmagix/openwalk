@@ -182,6 +182,18 @@ describe('kinds of place', () => {
     expect(layer(hidden, 'places-label').filter).toEqual(expected);
   });
 
+  it('keeps the chosen destination on the map when its kind is hidden', () => {
+    const chosen = { categories, hiddenCategories: ['call_box'], destinationId: 'box-7' };
+    const expected = [
+      'any',
+      ['!', ['in', ['get', 'category'], ['literal', ['call_box']]]],
+      ['==', ['get', 'id'], 'box-7'],
+    ];
+    expect(layer(chosen, 'places-dot').filter).toEqual(expected);
+    expect(layer(chosen, 'places-label').filter).toEqual(expected);
+    expect(validateStyleMin(buildStyle({ ...base, theme: 'light', ...chosen }))).toEqual([]);
+  });
+
   it('builds a style MapLibre accepts, with kinds coloured and hidden', () => {
     for (const theme of ['light', 'dark'] as const) {
       for (const hiddenCategories of [[], ['call_box'], ['building', 'call_box']]) {
