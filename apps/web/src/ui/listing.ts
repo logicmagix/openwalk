@@ -26,6 +26,8 @@ export type Listing =
       /** How many places it holds, in words. */
       readonly detail: string;
     }
+  /** Every place in one list, for someone who would rather scroll than choose a kind. */
+  | { readonly kind: 'all'; readonly label: string; readonly detail: string }
   /** The way back from one kind's places to the list of kinds. */
   | { readonly kind: 'back'; readonly label: string; readonly detail: string };
 
@@ -33,6 +35,14 @@ export type Listing =
 export const GROUP_ABOVE = 12;
 
 export const BACK_LABEL = 'All categories';
+export const ALL_LABEL = 'All places';
+
+/** What is being browsed when it is every place and not one kind. */
+export const ALL_PLACES = '*';
+
+function countOf(places: number): string {
+  return places === 1 ? '1 place' : `${places} places`;
+}
 
 export function labelOf(place: PlaceFeature): string {
   const { number, name } = place.properties;
@@ -76,8 +86,8 @@ export interface ListingSource {
 }
 
 /**
- * The rows for the text typed and the kind being browsed, if any. Typing always
- * searches every place, whichever kind was open.
+ * The rows for the text typed and the kind being browsed, if any (or
+ * `ALL_PLACES`). Typing always searches every place, whichever kind was open.
  */
 export function listFor(
   source: ListingSource,
@@ -91,18 +101,25 @@ export function listFor(
       .map((result) => placeRow(result.place));
   }
   const all = [...source.places.features].sort(compareForDropdown);
+  const grouped = all.length > GROUP_ABOVE && source.categories.length > 1;
+  if (grouped && browsing === ALL_PLACES) {
+    return [{ kind: 'back', label: BACK_LABEL, detail: ALL_LABEL }, ...all.map(placeRow)];
+  }
   const open = source.categories.find((category) => category.id === browsing);
   if (open !== undefined) {
     const inside = all.filter((place) => place.properties.category === open.id);
     return [{ kind: 'back', label: BACK_LABEL, detail: open.label }, ...inside.map(placeRow)];
   }
-  if (all.length > GROUP_ABOVE && source.categories.length > 1) {
-    return source.categories.map((category) => ({
-      kind: 'category',
-      category,
-      label: category.label,
-      detail: category.count === 1 ? '1 place' : `${category.count} places`,
-    }));
+  if (grouped) {
+    return [
+      { kind: 'all', label: ALL_LABEL, detail: countOf(all.length) },
+      ...source.categories.map((category): Listing => ({
+        kind: 'category',
+        category,
+        label: category.label,
+        detail: countOf(category.count),
+      })),
+    ];
   }
   return all.map(placeRow);
 }

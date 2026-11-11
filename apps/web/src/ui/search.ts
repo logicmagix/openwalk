@@ -5,7 +5,7 @@
 // drive it.
 
 import type { PlaceFeature } from '@openwalk/search';
-import type { Listing } from './listing';
+import { ALL_PLACES, type Listing } from './listing';
 
 export interface SearchElements {
   readonly input: HTMLInputElement;
@@ -100,8 +100,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       handlers.onChoose(item.place);
       return;
     }
-    // A kind of place, or the way back: the list stays open on other rows.
-    browsing = item.kind === 'category' ? item.category.id : null;
+    // A kind of place, every place, or the way back: the list stays open on
+    // other rows.
+    if (item.kind === 'category') browsing = item.category.id;
+    else browsing = item.kind === 'all' ? ALL_PLACES : null;
     show();
     list.scrollTop = 0;
   }

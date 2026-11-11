@@ -388,14 +388,22 @@ li {
 }
 
 /* A kind of place is one line: its dot, its name, and how many it holds. */
-#search-list li.category {
+#search-list li.category,
+#search-list li.all {
   flex-direction: row;
   align-items: center;
   gap: 10px;
 }
 
-#search-list li.category .label {
+#search-list li.category .label,
+#search-list li.all .label {
   flex: 1;
+}
+
+/* "All places" heads the kinds and is set apart from them. */
+#search-list li.all {
+  font-weight: 600;
+  border-bottom: 1px solid rgb(128 128 128 / 0.3);
 }
 
 /* The way back out of a kind, with the kind's name beside it. */

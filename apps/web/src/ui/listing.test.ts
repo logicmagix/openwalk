@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildIndex } from '@openwalk/search';
 import type { PlacesDocument } from '../site/types';
 import { siteCategories } from '../categories';
-import { BACK_LABEL, GROUP_ABOVE, labelOf, listFor } from './listing';
+import { ALL_LABEL, ALL_PLACES, BACK_LABEL, GROUP_ABOVE, labelOf, listFor } from './listing';
 
 const places: PlacesDocument = {
   type: 'FeatureCollection',
@@ -91,9 +91,17 @@ describe('listFor on a site with many places', () => {
     expect(many.features.length).toBeGreaterThan(GROUP_ABOVE);
   });
 
-  it('lists the kinds of place, in the site order, when nothing is typed', () => {
+  it('lists every place under a way back when "all places" is opened', () => {
+    const rows = listFor(big, '', ALL_PLACES);
+    expect(rows[0]).toEqual({ kind: 'back', label: BACK_LABEL, detail: ALL_LABEL });
+    expect(rows).toHaveLength(24);
+    expect(ids(rows.slice(1, 3))).toEqual(['hall-1', 'hall-2']);
+  });
+
+  it('lists every place first, then the kinds in the site order, when nothing is typed', () => {
     const rows = listFor(big, '');
     expect(rows.map((row) => [row.kind, row.label, row.detail])).toEqual([
+      ['all', ALL_LABEL, '23 places'],
       ['category', 'Gates', '3 places'],
       ['category', 'Buildings', '20 places'],
     ]);
@@ -113,6 +121,7 @@ describe('listFor on a site with many places', () => {
 
   it('falls back to the kinds when the open kind is not one of the site', () => {
     expect(listFor(big, '', 'no-such-kind').map((row) => row.kind)).toEqual([
+      'all',
       'category',
       'category',
     ]);

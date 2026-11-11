@@ -31,7 +31,7 @@ test('with nothing typed, a large site lists its kinds of place', async ({ page 
   await openLargeSite(page);
   const { search, results } = controls(page);
   await search.click();
-  await expect(results.getByRole('option')).toHaveCount(kinds.length);
+  await expect(results.getByRole('option')).toHaveCount(kinds.length + 1);
   await expect(results.getByRole('option').filter({ hasText: 'Made up' })).toContainText(
     `${EXTRA} places`,
   );
@@ -57,6 +57,23 @@ test('a kind opens onto its places, and a place can be chosen from there', async
   await expect(results).toBeHidden();
 });
 
+test('"All places" lists every place in one list', async ({ page }) => {
+  await openLargeSite(page);
+  const { search, results, directions } = controls(page);
+  const place = places[0]!;
+  await search.click();
+  await expect(results.getByRole('option').first()).toContainText('All places');
+  await results.getByRole('option').filter({ hasText: 'All places' }).click();
+  await expect(results.getByRole('option').first()).toContainText('All categories');
+  await expect(results.getByRole('option')).toHaveCount(places.length + EXTRA + 1);
+  await results
+    .getByRole('option')
+    .filter({ hasText: labelOf(place) })
+    .first()
+    .click();
+  await expect(directions).toContainText(place.properties.name);
+});
+
 test('the way back returns to the kinds', async ({ page }) => {
   await openLargeSite(page);
   const { search, results } = controls(page);
@@ -64,7 +81,7 @@ test('the way back returns to the kinds', async ({ page }) => {
   await results.getByRole('option').filter({ hasText: 'Made up' }).click();
   await expect(results.getByRole('option')).toHaveCount(EXTRA + 1);
   await results.getByRole('option').filter({ hasText: 'All categories' }).click();
-  await expect(results.getByRole('option')).toHaveCount(kinds.length);
+  await expect(results.getByRole('option')).toHaveCount(kinds.length + 1);
 });
 
 test('typing searches every place, whichever kind is open', async ({ page }) => {
@@ -87,6 +104,8 @@ test('the keyboard can browse into a kind and back out', async ({ page }) => {
   await openLargeSite(page);
   const { search, results } = controls(page);
   await search.focus();
+  // Down past "All places" to the first kind.
+  await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(results.getByRole('option').first()).toContainText('All categories');
@@ -95,7 +114,7 @@ test('the keyboard can browse into a kind and back out', async ({ page }) => {
   await expect(results.getByRole('option').first()).toContainText('All categories');
   // Backspace in the empty field steps back out.
   await page.keyboard.press('Backspace');
-  await expect(results.getByRole('option')).toHaveCount(kinds.length);
+  await expect(results.getByRole('option')).toHaveCount(kinds.length + 1);
   await page.keyboard.press('Escape');
   await expect(results).toBeHidden();
 });
