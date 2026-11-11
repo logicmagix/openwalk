@@ -3,8 +3,11 @@
 # prove the Dockerfile still works. Nothing is published.
 name: CI
 
+# A pull request's branch is checked once, by the pull request; pushes are
+# checked only on main, so the same commit is not run twice.
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -48,6 +51,9 @@ jobs:
   e2e:
     name: Browser tests
     runs-on: ubuntu-latest
+    # The job normally takes about three minutes. A step that waits on the
+    # network can stall for hours; this makes it fail soon enough to be retried.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -62,11 +68,18 @@ jobs:
       # with the example site. --wait returns once the container reports healthy.
       - run: docker compose -f deploy/compose.yaml up --build --detach --wait
 
-      # The two browser engines the tests use, with the system libraries they need.
-      - run: npx playwright install --with-deps chromium webkit
-        working-directory: e2e
-
-      - run: npm run test:e2e
+      # The tests run inside Playwright's own image, which already holds the
+      # browser engines and the system libraries they need, so nothing is
+      # installed here. Its version must match @playwright/test in
+      # e2e/package.json. --network host lets the tests reach the app on
+      # localhost; --ipc=host gives the browsers the shared memory they expect.
+      - name: Run the browser tests
+        run: >
+          docker run --rm --network host --ipc=host
+          --volume "$PWD":/work --workdir /work
+          --env CI=true
+          mcr.microsoft.com/playwright:v1.65.0-noble
+          npm run test:e2e
 
       # On failure, keep the report and the recordings of what the browser did.
       - uses: actions/upload-artifact@v7
