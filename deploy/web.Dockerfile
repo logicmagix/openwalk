@@ -2,14 +2,16 @@
 # Builds the OpenWalk web bundle and packages it into an nginx image.
 # Build context is the repository root (see deploy/compose.yaml).
 
-# The site baked into the image. The default is the example site; a site
-# repository builds with --build-arg SITE=<its id> after cloning itself into
-# sites/<its id>/.
-ARG SITE=tuscawilla-park
+# The sites baked into the image: one id, or several separated by spaces,
+# each a directory under sites/. The default is the example site; a real site
+# is cloned into sites/<its id>/ and named here, for example
+# --build-arg SITES="north-campus south-campus". The root path of the built
+# app opens the first one.
+ARG SITES=tuscawilla-park
 
 # ---- stage 1: build the bundle with Node ----------------------------------
 FROM node:24-alpine AS build
-ARG SITE
+ARG SITES
 WORKDIR /src
 
 # Copy only the manifests first so the dependency layer is cached between
@@ -24,19 +26,29 @@ RUN npm ci --no-audit --no-fund
 COPY tsconfig.base.json ./
 COPY apps/web apps/web
 COPY packages packages
-# The root path of the built app redirects to this site.
-ENV VITE_DEFAULT_SITE=$SITE
-RUN npm run build
+# The root path of the built app redirects to the first site listed.
+# ${SITES%% *} is the shell's way of cutting a string at its first space.
+RUN VITE_DEFAULT_SITE="${SITES%% *}" npm run build
+
+# Gather the chosen sites into one directory for the next stage, which can
+# copy a directory but cannot loop over a list. A site that has not been
+# built by the pipeline stops the image build here, not at first use.
+COPY sites sites
+RUN set -eu; mkdir -p /out/sites; \
+    for site in $SITES; do \
+      test -f "sites/$site/site.json" \
+        || { echo "sites/$site has no site.json: run the pipeline build for it" >&2; exit 1; }; \
+      cp -rL "sites/$site" "/out/sites/$site"; \
+    done
 
 # ---- stage 2: serve it with nginx as a non-root user -----------------------
 # The "unprivileged" variant of the official image runs as uid 101 (nginx)
 # and listens on 8080, so no root is needed to bind a port.
 FROM nginxinc/nginx-unprivileged:1.31-alpine
-ARG SITE
 
 COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/apps/web/dist /usr/share/nginx/html
-COPY sites/$SITE /usr/share/nginx/html/sites/$SITE
+COPY --from=build /out/sites /usr/share/nginx/html/sites
 
 EXPOSE 8080
 
