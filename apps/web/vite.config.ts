@@ -8,6 +8,7 @@ import {
   sitePageHtml,
   type SiteIdentity,
 } from './src/site/pages.ts';
+import { withPolicy } from './src/policy.ts';
 
 // Local HTTPS for testing on a phone (see docs/DEVICE_TESTING.md). The
 // certificate is issued by mkcert and lives in apps/web/certs/, which is
@@ -88,6 +89,15 @@ const sameOriginAssets: Plugin = {
   },
 };
 
+// The built page carries the content security policy as a tag (see
+// src/policy.ts). The development server's page does not: Vite's live reload
+// works by adding scripts and styles to the page, which the policy would refuse.
+const contentSecurityPolicy: Plugin = {
+  name: 'content-security-policy',
+  apply: 'build',
+  transformIndexHtml: { order: 'post', handler: (html) => withPolicy(html) },
+};
+
 // The service worker caches under a version name. Stamping that version with the
 // build's content hash means a new deployment changes sw.js, which is what makes
 // the browser notice a new worker and the page offer to reload into it. The
@@ -109,7 +119,7 @@ const stampServiceWorker: Plugin = {
 // Vite builds and serves the app; the `test` block configures Vitest for this
 // workspace (it is read when `npm test` runs from the repository root).
 export default defineConfig({
-  plugins: [serveSites, sameOriginAssets, stampServiceWorker],
+  plugins: [serveSites, sameOriginAssets, contentSecurityPolicy, stampServiceWorker],
   server: {
     // Listen on every interface so a phone on the same network can connect.
     host: true,
