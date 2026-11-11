@@ -61,7 +61,7 @@ sites/
     site.yaml          name, boundary (OSM way id or bbox), default view, tile layers,
                        "nearest" categories, overlay image corners, attribution
     places.yaml        curated list: id, number, name, aliases/keywords, category,
-                       annotation, entrance coordinates, OSM id (if any)
+                       annotation, entrances, OSM id (if any)
     overlay/           the site's official map image + georeference metadata
     raw/               downloaded source files (treated as data only)
     places.geojson     generated

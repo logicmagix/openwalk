@@ -4,7 +4,7 @@
 
 import type { Position } from './geo';
 import { DEFAULT_WEIGHTS, type Graph, type KindWeights } from './graph';
-import { aStar } from './shortestPath';
+import { aStar, type PathResult } from './shortestPath';
 import { insertSnapPoint, snapToGraph } from './snap';
 
 /** Either a place from the site's list or any position, which is snapped. */
@@ -51,26 +51,33 @@ export function route(
   let working = insertSnapPoint(graph, startSnap);
   const start = working.node;
 
-  let goal: number;
+  // A place may be entered at several doors; a free destination has one end.
+  let goals: readonly number[];
   // The dashed leg at the far end, from the network to a free destination.
   let departure: readonly Position[] = [];
   let departureM = 0;
   if ('place' in to) {
-    const node = graph.places[to.place];
-    if (node === undefined) return null;
-    goal = node;
+    const entrances = graph.places[to.place];
+    if (entrances === undefined) return null;
+    goals = entrances;
   } else {
     const endSnap = snapToGraph(working.graph, to.position);
     if (endSnap === null) return null;
     working = insertSnapPoint(working.graph, endSnap);
-    goal = working.node;
+    goals = [working.node];
     if (endSnap.distanceM > 0) {
       departure = [endSnap.position, to.position];
       departureM = endSnap.distanceM;
     }
   }
 
-  const found = aStar(working.graph, start, goal, { weights });
+  // Try each entrance and keep the cheapest way in. A search takes a fraction of
+  // a millisecond and a place has a handful of doors at most.
+  let found: PathResult | null = null;
+  for (const goal of goals) {
+    const candidate = aStar(working.graph, start, goal, { weights });
+    if (candidate !== null && (found === null || candidate.cost < found.cost)) found = candidate;
+  }
   if (found === null) return null;
 
   const path = found.nodes.map((node) => working.graph.nodes[node] as Position);

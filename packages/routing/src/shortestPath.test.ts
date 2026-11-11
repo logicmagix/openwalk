@@ -75,7 +75,7 @@ function nodePairs(nodeCount: number, count: number, seed: number): [number, num
 }
 
 describe('Dijkstra and A* agree', () => {
-  const placeNodes = Object.values(siteGraph.places);
+  const placeNodes = Object.values(siteGraph.places).flat();
   const pairs: [number, number][] = [
     ...placeNodes.flatMap((a) => placeNodes.filter((b) => b !== a).map((b) => [a, b] as const)),
     ...nodePairs(siteGraph.nodes.length, 300, 7),

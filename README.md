@@ -62,9 +62,11 @@ described here. Paths below are relative to the repository root.
    reports ways excluded as unpaved, places whose entrance is far from any walkway,
    and whether the network is in one piece.
 5. **Write `places.yaml`.** Every destination: an id, a name, a category, search
-   keywords, and a position given as an OpenStreetMap element, a hand-placed location,
-   or a hand-placed entrance. Mark each `verified: true` only after checking it on
-   foot. Rebuild. To give a category a one-tap "nearest" button on the map, list it
+   keywords, and a position given as an OpenStreetMap element or a hand-placed
+   location. Directions end where the place meets the nearest walkway unless you say
+   where its doors are: give one as `entrance`, or several as `entrances`, and the
+   app leads to whichever is the shortest walk from where the person stands. Mark
+   each `verified: true` only after checking it on foot. Rebuild. To give a category a one-tap "nearest" button on the map, list it
    under `nearest` in `site.yaml` with the label the button should show; nearest is
    measured by walking distance over the network. The map colours each place by
    its category and its legend lists them; list the categories under `categories` in

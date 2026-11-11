@@ -6,7 +6,7 @@ import { buildIndex, type PlaceFeature } from '@openwalk/search';
 import { LOCATE_ZOOM, initialView, labelLanguage, loadedFrom, pageTitle, rootChoice } from './app';
 import {
   describe,
-  destinationOf,
+  entrancesOf,
   hasArrived,
   makeRouter,
   nearestInCategory,
@@ -210,7 +210,7 @@ async function start(): Promise<void> {
       else panel.update({ kind: locator.on ? 'waiting' : 'needs-location' });
       return;
     }
-    if (hasArrived(lastFix, destinationOf(router, destination))) {
+    if (hasArrived(lastFix, entrancesOf(router, destination))) {
       inputs.current = { ...inputs.current, route: null };
       map.setRoute(routeCollection(null));
       panel.update({ kind: 'arrived' });

@@ -36,6 +36,27 @@ describe('route on the hand-drawn graph', () => {
     expect(found?.distanceM).toBe(224);
   });
 
+  describe('to a place with several entrances', () => {
+    // A hall entered at the far corner (node 2) or by the start of the path (node 5).
+    const twoDoors = loadGraph({
+      ...(tiny as unknown as GraphDocument),
+      places: { hall: [2, 5], cutOff: [7, 2] },
+    });
+
+    it('ends at whichever entrance is the shorter walk', () => {
+      const fromTheEast = route(twoDoors, [0.002, 0.001], { place: 'hall' });
+      expect(fromTheEast?.positions.at(-1)).toEqual([0.002, 0]);
+      const fromTheWest = route(twoDoors, [0, 0], { place: 'hall' });
+      expect(fromTheWest?.positions.at(-1)).toEqual([0, 0.001]);
+      expect(fromTheWest?.distanceM).toBe(112);
+    });
+
+    it('uses an entrance that can be reached when another cannot', () => {
+      const found = route(twoDoors, [0, 0], { place: 'cutOff' });
+      expect(found?.positions.at(-1)).toEqual([0.002, 0]);
+    });
+  });
+
   it('snaps a free destination and adds a departure leg', () => {
     const origin: Position = [0.0005, -0.0001];
     const target: Position = [0.0015, 0.0012];
@@ -90,8 +111,8 @@ describe('golden routes on the example site', () => {
   it.each(golden.routes.map((r) => [r.from, r.to, r] as const))(
     'from %s to %s',
     (from, to, expected) => {
-      const start = siteGraph.places[from];
-      const goal = siteGraph.places[to];
+      const start = siteGraph.places[from]?.[0];
+      const goal = siteGraph.places[to]?.[0];
       if (start === undefined || goal === undefined) throw new Error('unknown place');
 
       for (const find of [dijkstra, aStar]) {

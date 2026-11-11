@@ -6,7 +6,7 @@ import {
   bearingAlong,
   compassPoint,
   describe as describeRoute,
-  destinationOf,
+  entrancesOf,
   formatDistance,
   formatDuration,
   hasArrived,
@@ -48,7 +48,7 @@ describe('makeRouter and planRoute', () => {
   });
 });
 
-describe('destinationOf', () => {
+describe('entrancesOf', () => {
   const place = (id: string, coordinates: [number, number]) => ({
     type: 'Feature' as const,
     id,
@@ -57,8 +57,8 @@ describe('destinationOf', () => {
   });
 
   it('uses the routing node for a known place and the point otherwise', () => {
-    expect(destinationOf(router, place('corner', [9, 9]))).toEqual([0.002, 0]);
-    expect(destinationOf(router, place('unknown', [9, 9]))).toEqual([9, 9]);
+    expect(entrancesOf(router, place('corner', [9, 9]))).toEqual([[0.002, 0]]);
+    expect(entrancesOf(router, place('unknown', [9, 9]))).toEqual([[9, 9]]);
   });
 });
 
@@ -98,9 +98,18 @@ describe('arrival', () => {
   });
 
   it('detects arrival inside the radius only', () => {
-    expect(hasArrived(fix(0, 0.0001), [0, 0])).toBe(true);
-    expect(hasArrived(fix(0, 0.0002), [0, 0])).toBe(false);
-    expect(hasArrived(fix(0, 0.0002, 25), [0, 0])).toBe(true);
+    expect(hasArrived(fix(0, 0.0001), [[0, 0]])).toBe(true);
+    expect(hasArrived(fix(0, 0.0002), [[0, 0]])).toBe(false);
+    expect(hasArrived(fix(0, 0.0002, 25), [[0, 0]])).toBe(true);
+  });
+
+  it('counts arrival at any one of several entrances', () => {
+    const doors = [
+      [0, 0],
+      [0.01, 0],
+    ] as const;
+    expect(hasArrived(fix(0.01, 0.0001), doors)).toBe(true);
+    expect(hasArrived(fix(0.005, 0), doors)).toBe(false);
   });
 });
 

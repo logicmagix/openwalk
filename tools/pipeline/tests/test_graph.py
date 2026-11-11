@@ -239,3 +239,27 @@ def test_three_paths_crossing_at_almost_one_point_share_a_single_join() -> None:
     assert built.component_count == 1
     assert all(edge[2] > 0 for edge in built.document["edges"])
     validate(built.document, "graph")
+
+
+def test_a_place_with_several_entrances_gets_a_node_for_each(overpass_small: dict[str, Any]) -> None:
+    features = osm.convert(overpass_small["elements"]).features
+    by_osm_id = {f["id"]: f for f in features}
+    selection = walkways.select_walkways(features, ("footway", "steps", "pedestrian"), roads=())
+    curated = [
+        {
+            "id": "hall",
+            "name": "Hall",
+            "category": "building",
+            "osm": "way/12",
+            # One door on the west wall, one on the east.
+            "entrances": [[20.001, 10.0015], [20.002, 10.0015]],
+        },
+        {"id": "memorial", "name": "Memorial", "category": "landmark", "location": [20.0, 10.0]},
+    ]
+    document = graph.build_graph(selection.collection, curated, by_osm_id, 1000).document
+    validate(document, "graph")
+    doors: list[int] = document["places"]["hall"]
+    assert len(doors) == 2
+    assert [document["nodes"][door] for door in doors] == [[20.001, 10.0015], [20.002, 10.0015]]
+    # A place with one entrance is still written as a single node.
+    assert isinstance(document["places"]["memorial"], int)
