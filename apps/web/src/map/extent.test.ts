@@ -6,6 +6,7 @@ import {
   isOnSite,
   minZoomFor,
   siteExtent,
+  zoomRoom,
   type Extent,
 } from './extent';
 
@@ -175,5 +176,20 @@ describe('being on site', () => {
 
   it('does not let a very rough reading from far away count', () => {
     expect(isOnSite([0.005, 0.1], 5000, extent)).toBe(false); // about 10 km out
+  });
+});
+
+describe('zoomRoom', () => {
+  it('has room both ways in the middle of the range', () => {
+    expect(zoomRoom(16, 14, 22)).toEqual({ canZoomIn: true, canZoomOut: true });
+  });
+
+  it('has no room out at the furthest zoom, or just short of it', () => {
+    expect(zoomRoom(14, 14, 22).canZoomOut).toBe(false);
+    expect(zoomRoom(14.004, 14, 22).canZoomOut).toBe(false);
+  });
+
+  it('has no room in at the closest zoom', () => {
+    expect(zoomRoom(22, 14, 22)).toEqual({ canZoomIn: false, canZoomOut: true });
   });
 });

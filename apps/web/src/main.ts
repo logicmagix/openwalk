@@ -46,6 +46,7 @@ import { listPlaces } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
+import { setupZoom } from './ui/zoom';
 import { setupSearch } from './ui/search';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
@@ -359,6 +360,17 @@ async function start(): Promise<void> {
   map.onRotate(() => {
     if (destination !== null && inputs.current.route && lastFix !== null) guide();
   });
+
+  // --- zoom buttons -------------------------------------------------------------
+  map.onZoomRoom(
+    setupZoom(
+      {
+        zoomIn: element<HTMLButtonElement>('zoom-in'),
+        zoomOut: element<HTMLButtonElement>('zoom-out'),
+      },
+      (direction) => map.zoomBy(direction),
+    ),
+  );
 
   // --- layers control -----------------------------------------------------------
   const initialPrefs: LayerPrefs = setupLayers(

@@ -124,3 +124,17 @@ export function minZoomFor(extent: Extent, widthPx: number, heightPx: number): n
   const fit = Math.log2(shorterScreen / (longer * WORLD_PX));
   return Math.max(0, fit - ZOOM_OUT_ALLOWANCE);
 }
+
+/**
+ * Whether a map at `zoom` can still zoom in or out within its limits. A hair's
+ * breadth from a limit counts as being at it, since an animated zoom rarely
+ * lands on the exact number.
+ */
+export function zoomRoom(
+  zoom: number,
+  minZoom: number,
+  maxZoom: number,
+): { canZoomIn: boolean; canZoomOut: boolean } {
+  const slack = 0.01;
+  return { canZoomIn: zoom < maxZoom - slack, canZoomOut: zoom > minZoom + slack };
+}
