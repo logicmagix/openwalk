@@ -67,6 +67,15 @@ li {
   color: var(--surface);
 }
 
+/* On, but the map has been moved away from the person: pressing returns to them. */
+#locate[aria-pressed='true'][data-following='false'] {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    var(--shadow);
+}
+
 #locate:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;

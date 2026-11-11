@@ -1,6 +1,10 @@
 // What the locate button does, separated from the page so it can be tested with a
 // fake provider: toggle the watch, centre the map on the first fix, drop the marker
 // when switched off, and pause while the page is hidden.
+//
+// While locating is on the map follows the person as they walk. Moving the map
+// by hand pauses that, so someone can look ahead without being pulled back;
+// pressing the button again returns to them and resumes following.
 
 import type { PositionError, PositionFix, PositionProvider } from './position/provider';
 
@@ -13,6 +17,7 @@ export interface LocatorEvents {
 export class Locator {
   private wanted = false;
   private centred = false;
+  private follows = false;
 
   constructor(
     private readonly provider: PositionProvider,
@@ -24,8 +29,24 @@ export class Locator {
     return this.wanted;
   }
 
+  /** Whether the map should keep the person's position in the centre. */
+  get following(): boolean {
+    return this.wanted && this.follows;
+  }
+
+  /** The person moved the map themselves, or it moved to show something else. */
+  pause(): void {
+    this.follows = false;
+  }
+
+  /** Keep the person in the centre again, after a pause. */
+  follow(): void {
+    this.follows = this.wanted;
+  }
+
   toggle(): boolean {
     this.wanted = !this.wanted;
+    this.follows = this.wanted;
     this.centred = false;
     if (this.wanted) {
       this.watch();

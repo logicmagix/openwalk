@@ -55,4 +55,35 @@ describe('Locator', () => {
     locator.toggle();
     expect(log).toEqual(['error denied']);
   });
+
+  it('follows from the moment it is switched on, until the map is moved by hand', () => {
+    const { locator } = harness(new FixedPositionProvider(FIX));
+    expect(locator.following).toBe(false);
+    locator.toggle();
+    expect(locator.following).toBe(true);
+    locator.pause();
+    expect(locator.on).toBe(true);
+    expect(locator.following).toBe(false);
+  });
+
+  it('follows again when asked, and not at all while off', () => {
+    const { locator } = harness(new FixedPositionProvider(FIX));
+    locator.follow();
+    expect(locator.following).toBe(false);
+    locator.toggle();
+    locator.pause();
+    locator.follow();
+    expect(locator.following).toBe(true);
+    locator.toggle();
+    expect(locator.following).toBe(false);
+  });
+
+  it('keeps a pause across the page being hidden and shown', () => {
+    const { locator } = harness(new FixedPositionProvider(FIX));
+    locator.toggle();
+    locator.pause();
+    locator.setVisible(false);
+    locator.setVisible(true);
+    expect(locator.following).toBe(false);
+  });
 });

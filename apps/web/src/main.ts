@@ -231,6 +231,9 @@ async function start(): Promise<void> {
     if (!fitted) {
       fitted = true;
       map.fitPositions(found.positions, ROUTE_PADDING);
+      // The whole route is in view now; following would pull the map off it.
+      locator.pause();
+      showLocate();
     }
   }
 
@@ -291,6 +294,8 @@ async function start(): Promise<void> {
       map.setPosition(positionCollection(fix));
       if (first && destination === null && pendingNearest === null) {
         map.easeTo(fix.position, LOCATE_ZOOM);
+      } else if (!first && locator.following) {
+        map.centreOn(fix.position);
       }
       guide();
       if (pendingNearest !== null) {
@@ -319,7 +324,7 @@ async function start(): Promise<void> {
     pendingNearest = null;
     // Switching off clears the marker and route and refreshes the panel.
     if (locator.on) locator.toggle();
-    locateButton.setAttribute('aria-pressed', 'false');
+    showLocate();
     // With a destination open the panel carries the message; otherwise a notice does.
     showStatus(
       destination === null
@@ -332,12 +337,36 @@ async function start(): Promise<void> {
     away = false;
     showStatus(null);
     const on = locator.toggle();
-    locateButton.setAttribute('aria-pressed', String(on));
+    showLocate();
     if (on) guide();
   }
 
+  /** Show on the button whether locating is on and whether the map is following. */
+  function showLocate(): void {
+    locateButton.setAttribute('aria-pressed', String(locator.on));
+    locateButton.dataset['following'] = String(locator.following);
+  }
+
+  /**
+   * The locate button. With the map moved away from the person it brings them
+   * back to the centre; otherwise it switches locating on or off.
+   */
+  function pressLocate(): void {
+    if (locator.on && !locator.following) {
+      locator.follow();
+      showLocate();
+      if (lastFix !== null) map.easeTo(lastFix.position, LOCATE_ZOOM);
+      return;
+    }
+    toggleLocate();
+  }
+
   locateButton.disabled = false;
-  locateButton.addEventListener('click', toggleLocate);
+  locateButton.addEventListener('click', pressLocate);
+  map.onUserPan(() => {
+    locator.pause();
+    showLocate();
+  });
 
   // Nothing runs while the page is in the background.
   document.addEventListener('visibilitychange', () => locator.setVisible(!document.hidden));
