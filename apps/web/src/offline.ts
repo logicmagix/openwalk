@@ -46,19 +46,27 @@ export function setupOffline(collectUrls: () => string[], hooks: OfflineHooks = 
         if (sw.controller) cacheOffline();
         else sw.addEventListener('controllerchange', cacheOffline, { once: true });
 
-        // A worker installing while another already controls the page is an
-        // update: surface it rather than swapping silently.
-        registration.addEventListener('updatefound', () => {
-          const next = registration.installing;
-          if (!next) return;
-          next.addEventListener('statechange', () => {
-            if (next.state === 'installed' && sw.controller) {
-              hooks.onUpdate?.(() => {
-                applying = true;
-                next.postMessage({ type: 'SKIP_WAITING' });
-              });
-            }
+        // A new worker beside the one controlling the page is an update: surface
+        // it rather than swapping silently. The browser checks for one by itself
+        // as the page opens, so by now it may be on its way, or already installed
+        // and waiting from this visit or an earlier one. All three are covered;
+        // listening for `updatefound` alone misses the update whenever the
+        // browser is quicker than this code.
+        const offer = (next: ServiceWorker): void => {
+          hooks.onUpdate?.(() => {
+            applying = true;
+            next.postMessage({ type: 'SKIP_WAITING' });
           });
+        };
+        const track = (next: ServiceWorker): void => {
+          next.addEventListener('statechange', () => {
+            if (next.state === 'installed' && sw.controller) offer(next);
+          });
+        };
+        if (registration.waiting && sw.controller) offer(registration.waiting);
+        if (registration.installing) track(registration.installing);
+        registration.addEventListener('updatefound', () => {
+          if (registration.installing) track(registration.installing);
         });
       },
       () => {
