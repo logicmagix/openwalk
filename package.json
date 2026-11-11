@@ -10,7 +10,8 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "e2e"
   ],
   "scripts": {
     "dev": "npm run dev --workspace apps/web",
@@ -21,7 +22,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm test"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm test",
+    "test:e2e": "npm test --workspace e2e"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

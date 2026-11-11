@@ -40,3 +40,7 @@ sites/*
 !sites/README.md
 !sites/tuscawilla-park/
 sites/*/debug.html
+
+# end-to-end test output
+e2e/test-results/
+e2e/playwright-report/
