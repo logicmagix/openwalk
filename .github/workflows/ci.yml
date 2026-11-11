@@ -64,17 +64,22 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
-      # The two browser engines the tests use, with the system libraries they need.
-      # This downloads from the network, so it comes before the app's containers
-      # and their network are started.
-      - run: npx playwright install --with-deps chromium webkit
-        working-directory: e2e
-
       # The tests drive the app as it is really served: the nginx image, built
       # with the example site. --wait returns once the container reports healthy.
       - run: docker compose -f deploy/compose.yaml up --build --detach --wait
 
-      - run: npm run test:e2e
+      # The tests run inside Playwright's own image, which already holds the
+      # browser engines and the system libraries they need, so nothing is
+      # installed here. Its version must match @playwright/test in
+      # e2e/package.json. --network host lets the tests reach the app on
+      # localhost; --ipc=host gives the browsers the shared memory they expect.
+      - name: Run the browser tests
+        run: >
+          docker run --rm --network host --ipc=host
+          --volume "$PWD":/work --workdir /work
+          --env CI=true
+          mcr.microsoft.com/playwright:v1.65.0-noble
+          npm run test:e2e
 
       # On failure, keep the report and the recordings of what the browser did.
       - uses: actions/upload-artifact@v7
