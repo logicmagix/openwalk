@@ -135,6 +135,16 @@ position. They read their places from the example site, so they hold no site fac
 Before the first run, `npx playwright install chromium webkit` in `e2e/` downloads the
 two browser engines.
 
+The same tests can check a site once it is deployed, behind whatever network serves
+it, which is where a script or request added on the way would show up:
+
+```
+E2E_BASE_URL=https://maps.example E2E_SITE=<site-id> npm run test:e2e -- privacy install
+```
+
+`E2E_SITE` names the site's directory under `sites/`, which the tests read for places
+and positions.
+
 The dev server serves every directory under `sites/` at `/sites/<site-id>/`, and the
 map for a site is at `/s/<site-id>/`, for example
 `https://localhost:5173/s/tuscawilla-park/`. The root address lists the sites a host
