@@ -41,14 +41,36 @@ export interface LoadedResource {
 }
 
 /**
- * The addresses of the files the page loaded from its own origin, for keeping a
- * copy for offline use. A file that was asked for and not found is left out: a
- * site's optional files are requested whether or not it has them, and one that
- * cannot be fetched would stop the copy from ever being complete.
+ * Where the app's own files are served: its bundles, the base map's fonts and
+ * icons, its app icons, and the sites' data.
  */
-export function loadedFrom(resources: readonly LoadedResource[], origin: string): string[] {
+export const APP_PATHS: readonly string[] = ['/assets/', '/basemap/', '/icons/', '/sites/'];
+
+/**
+ * The addresses of the app's own files that the page loaded, for keeping a copy
+ * for offline use. Two things are left out, because a file that cannot be fetched
+ * again would stop the copy from ever being complete:
+ *
+ * - a file that was asked for and not found: a site's optional files are
+ *   requested whether or not it has them;
+ * - anything that is not the app's own, such as a request added to the page by
+ *   the network it is served through. Those are not the app's to keep.
+ */
+export function loadedFrom(
+  resources: readonly LoadedResource[],
+  origin: string,
+  paths: readonly string[] = APP_PATHS,
+): string[] {
   return resources
-    .filter((resource) => resource.name.startsWith(origin))
+    .filter((resource) => {
+      let url: URL;
+      try {
+        url = new URL(resource.name);
+      } catch {
+        return false;
+      }
+      return url.origin === origin && paths.some((path) => url.pathname.startsWith(path));
+    })
     .filter((resource) => !((resource.responseStatus ?? 200) >= 400))
     .map((resource) => resource.name);
 }

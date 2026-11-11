@@ -52,17 +52,24 @@ it('titles the page after the site', () => {
 describe('loadedFrom', () => {
   const origin = 'https://maps.example';
 
-  it('keeps what loaded from the page origin', () => {
+  it("keeps the app's own files that loaded from the page origin", () => {
     expect(
       loadedFrom(
         [
           { name: 'https://maps.example/assets/app.js', responseStatus: 200 },
           { name: 'https://maps.example/sites/a/site.json' },
-          { name: 'https://elsewhere.example/x.js', responseStatus: 200 },
+          { name: 'https://maps.example/basemap/fonts/x.pbf' },
+          { name: 'https://maps.example/icons/icon-192.png' },
+          { name: 'https://elsewhere.example/assets/x.js', responseStatus: 200 },
         ],
         origin,
       ),
-    ).toEqual(['https://maps.example/assets/app.js', 'https://maps.example/sites/a/site.json']);
+    ).toEqual([
+      'https://maps.example/assets/app.js',
+      'https://maps.example/sites/a/site.json',
+      'https://maps.example/basemap/fonts/x.pbf',
+      'https://maps.example/icons/icon-192.png',
+    ]);
   });
 
   it('leaves out a file that was not found', () => {
@@ -79,8 +86,31 @@ describe('loadedFrom', () => {
 
   it('keeps a file served from the cache with nothing new to send', () => {
     expect(
-      loadedFrom([{ name: 'https://maps.example/a.css', responseStatus: 304 }], origin),
-    ).toEqual(['https://maps.example/a.css']);
+      loadedFrom([{ name: 'https://maps.example/assets/a.css', responseStatus: 304 }], origin),
+    ).toEqual(['https://maps.example/assets/a.css']);
+  });
+
+  it("leaves out requests that are not the app's own, though on its origin", () => {
+    expect(
+      loadedFrom(
+        [
+          { name: 'https://maps.example/cdn-cgi/rum', responseStatus: 204 },
+          { name: 'https://maps.example/some/injected/endpoint' },
+          { name: 'https://maps.example/assets/app.js' },
+        ],
+        origin,
+      ),
+    ).toEqual(['https://maps.example/assets/app.js']);
+  });
+
+  it('is not fooled by a host whose name merely starts with the origin', () => {
+    expect(loadedFrom([{ name: 'https://maps.example.evil.test/assets/x.js' }], origin)).toEqual(
+      [],
+    );
+  });
+
+  it('ignores an address it cannot read', () => {
+    expect(loadedFrom([{ name: 'not a url' }], origin)).toEqual([]);
   });
 });
 
