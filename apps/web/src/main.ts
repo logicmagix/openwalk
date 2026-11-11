@@ -15,7 +15,7 @@ import {
 import { Locator } from './locate';
 import { setupOffline } from './offline';
 import { MapView } from './map/adapter';
-import { siteExtent } from './map/extent';
+import { isOnSite, siteExtent } from './map/extent';
 import {
   buildStyle,
   destinationCollection,
@@ -156,6 +156,9 @@ async function start(): Promise<void> {
   let fitted = false;
   // A "nearest" request made before a position was known, resolved on the next fix.
   let pendingNearest: { category: string; label: string } | null = null;
+  // Set when the last position reading was away from the site. Position and
+  // directions are for people at the site, so locating is switched off again.
+  let away = false;
 
   const panel = setupPanel(
     {
@@ -181,7 +184,8 @@ async function start(): Promise<void> {
     if (lastFix === null || !locator.on) {
       inputs.current = { ...inputs.current, route: null };
       map.setRoute(routeCollection(null));
-      panel.update({ kind: locator.on ? 'waiting' : 'needs-location' });
+      if (away) panel.update({ kind: 'away', siteName: site.config.name });
+      else panel.update({ kind: locator.on ? 'waiting' : 'needs-location' });
       return;
     }
     if (hasArrived(lastFix, destinationOf(router, destination))) {
@@ -223,6 +227,8 @@ async function start(): Promise<void> {
       return;
     }
     panel.show(place);
+    // The panel now carries the "not at the site" message, so drop the notice.
+    if (away) showStatus(null);
     if (lastFix === null || !locator.on) map.easeTo(place.geometry.coordinates, LOCATE_ZOOM);
     guide();
   }
@@ -253,6 +259,10 @@ async function start(): Promise<void> {
   const locateButton = element<HTMLButtonElement>('locate');
   const locator = new Locator(await makeProvider(siteId), {
     onFix(fix, first) {
+      if (extent !== null && !isOnSite(fix.position, fix.accuracyM, extent)) {
+        leaveSite();
+        return;
+      }
       lastFix = fix;
       inputs.current = { ...inputs.current, position: fix };
       map.setPosition(positionCollection(fix));
@@ -277,7 +287,26 @@ async function start(): Promise<void> {
     },
   });
 
+  /**
+   * A position reading away from the site: show nothing of it, plan nothing,
+   * and stop watching, so the phone is not kept locating for no purpose.
+   */
+  function leaveSite(): void {
+    away = true;
+    pendingNearest = null;
+    // Switching off clears the marker and route and refreshes the panel.
+    if (locator.on) locator.toggle();
+    locateButton.setAttribute('aria-pressed', 'false');
+    // With a destination open the panel carries the message; otherwise a notice does.
+    showStatus(
+      destination === null
+        ? `You need to be at ${site.config.name} to see your position and get directions.`
+        : null,
+    );
+  }
+
   function toggleLocate(): void {
+    away = false;
     showStatus(null);
     const on = locator.toggle();
     locateButton.setAttribute('aria-pressed', String(on));

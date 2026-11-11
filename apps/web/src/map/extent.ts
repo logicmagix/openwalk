@@ -69,6 +69,37 @@ export function clampToExtent(position: Position, extent: Extent): Position {
   ];
 }
 
+/**
+ * How far past the extent a position may be and still count as on site, in
+ * metres: someone at the kerb or in a car park across the road is arriving.
+ */
+const ON_SITE_REACH_M = 100;
+
+/**
+ * The most a position's own uncertainty may add to that reach, in metres, so a
+ * rough first reading near the site is not turned away while a rough reading
+ * from far off still is.
+ */
+const MAX_UNCERTAINTY_M = 500;
+
+/** Metres from a position to the extent; zero when it is inside. */
+export function distanceOutsideM(position: Position, extent: Extent): number {
+  const [nearLon, nearLat] = clampToExtent(position, extent);
+  const north = (position[1] - nearLat) * METRES_PER_DEGREE;
+  const east =
+    (position[0] - nearLon) * METRES_PER_DEGREE * Math.cos(position[1] * (Math.PI / 180));
+  return Math.hypot(east, north);
+}
+
+/**
+ * Whether a position reading places the person at the site: inside the extent,
+ * or close enough that, allowing for the reading's accuracy, they may be.
+ */
+export function isOnSite(position: Position, accuracyM: number, extent: Extent): boolean {
+  const allowance = ON_SITE_REACH_M + Math.min(Math.max(accuracyM, 0), MAX_UNCERTAINTY_M);
+  return distanceOutsideM(position, extent) <= allowance;
+}
+
 /** Web Mercator's north-south coordinate for a latitude, as a fraction of the world. */
 function mercatorY(lat: number): number {
   const radians = lat * (Math.PI / 180);
