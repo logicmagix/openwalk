@@ -81,6 +81,22 @@ its own image from the published generic web image and copies its directory in. 
 application repository therefore never carries an institution's names, coordinates, or
 map images, and a site owner can withdraw their data by deleting one repository.
 
+## Each site installs as its own app
+
+One host can serve several sites, and each installs to a phone's home screen as a
+separate app, named after the site and opening on its own map (R11). A phone takes an
+installed app's name and starting address from the page and the web app manifest as
+the server sends them; values set later by script are not honoured. So each site is
+served its own copy of the page, with its title and home-screen name filled in, and
+its own manifest whose start address and scope are the site's map, `/s/<site-id>/`.
+
+The image build writes these for the sites it carries, from each site's `site.json`,
+and the development server produces the same on request, so both behave alike. The
+application bundle and the service worker stay shared by every site on the host; the
+worker keeps each site's page under its own key. Sites share the application's icon
+and are told apart by name; a site with a long name sets a `short_name` for the label
+under its icon.
+
 ## Repository layout
 
 ```
