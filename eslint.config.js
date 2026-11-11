@@ -21,8 +21,8 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.serviceworker, ...globals.browser } },
   },
   {
-    // Configuration files and build scripts run in Node, not the browser.
-    files: ['**/*.config.{js,ts}', 'apps/web/scripts/*.mjs'],
+    // Configuration files, build scripts and browser tests run in Node, not the browser.
+    files: ['**/*.config.{js,ts}', 'apps/web/scripts/*.mjs', 'e2e/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   // Must come last: turns off every rule that would fight Prettier's formatting.

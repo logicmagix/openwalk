@@ -103,6 +103,7 @@ apps/web/          the browser app (Vite + TypeScript, no framework)
 packages/routing/  pedestrian routing: graph, snapping, shortest paths (pure, tested)
 packages/search/   fuzzy search over a site's places (pure, tested)
 packages/schema/   shared schemas for pipeline output and the app
+e2e/               browser tests of the built app (Playwright)
 sites/             the example site; real sites are separate repositories
 tools/pipeline/    Python data preparation
 deploy/            Dockerfiles, compose and stack files, nginx config
@@ -120,7 +121,16 @@ npm test            # Vitest across every workspace
 npm run check       # lint, format check, typecheck, test: what CI runs
 npm run build       # production bundle in apps/web/dist
 docker compose -f deploy/compose.yaml up --build   # nginx serving the bundle
+npm run test:e2e    # browser tests against that running stack
 ```
+
+The browser tests (`e2e/`, Playwright) drive the built app the way a person would:
+search, directions with a pretended position, arrival, being away from the site,
+installing, working with no network, and automated accessibility checks. One test
+watches every request the page makes and fails if any leaves the site or carries a
+position. They read their places from the example site, so they hold no site facts.
+Before the first run, `npx playwright install chromium webkit` in `e2e/` downloads the
+two browser engines.
 
 The dev server serves every directory under `sites/` at `/sites/<site-id>/`, and the
 map for a site is at `/s/<site-id>/`, for example
