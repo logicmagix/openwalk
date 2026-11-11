@@ -3,7 +3,7 @@
 
 import './style.css';
 import { buildIndex, type PlaceFeature } from '@openwalk/search';
-import { LOCATE_ZOOM, initialView, labelLanguage, pageTitle } from './app';
+import { LOCATE_ZOOM, initialView, labelLanguage, loadedFrom, pageTitle } from './app';
 import {
   describe,
   destinationOf,
@@ -383,10 +383,13 @@ async function start(): Promise<void> {
   // this site's data, and the whole basemap.
   function collectOfflineUrls(): string[] {
     const origin = location.origin;
-    const loaded = performance
-      .getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .filter((name) => name.startsWith(origin));
+    // Not every browser reports that a file was not found, so the one optional
+    // file is also left out by name when the site turned out not to have it.
+    const absent = overlays.length === 0 ? new URL(`${siteBase}overlays.json`, origin).href : null;
+    const loaded = loadedFrom(
+      performance.getEntriesByType('resource') as PerformanceResourceTiming[],
+      origin,
+    ).filter((name) => name !== absent);
     const extras = [
       location.href,
       new URL('/index.html', origin).href, // the shell any route falls back to

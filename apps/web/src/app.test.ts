@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlacesDocument } from '@openwalk/search';
-import { initialView, labelLanguage, pageTitle } from './app';
+import { initialView, labelLanguage, loadedFrom, pageTitle } from './app';
 
 const places = (coords: [number, number][]): PlacesDocument => ({
   type: 'FeatureCollection',
@@ -47,4 +47,39 @@ describe('labelLanguage', () => {
 
 it('titles the page after the site', () => {
   expect(pageTitle({ name: 'Somewhere' })).toBe('Somewhere · OpenWalk');
+});
+
+describe('loadedFrom', () => {
+  const origin = 'https://maps.example';
+
+  it('keeps what loaded from the page origin', () => {
+    expect(
+      loadedFrom(
+        [
+          { name: 'https://maps.example/assets/app.js', responseStatus: 200 },
+          { name: 'https://maps.example/sites/a/site.json' },
+          { name: 'https://elsewhere.example/x.js', responseStatus: 200 },
+        ],
+        origin,
+      ),
+    ).toEqual(['https://maps.example/assets/app.js', 'https://maps.example/sites/a/site.json']);
+  });
+
+  it('leaves out a file that was not found', () => {
+    expect(
+      loadedFrom(
+        [
+          { name: 'https://maps.example/sites/a/overlays.json', responseStatus: 404 },
+          { name: 'https://maps.example/sites/a/places.geojson', responseStatus: 200 },
+        ],
+        origin,
+      ),
+    ).toEqual(['https://maps.example/sites/a/places.geojson']);
+  });
+
+  it('keeps a file served from the cache with nothing new to send', () => {
+    expect(
+      loadedFrom([{ name: 'https://maps.example/a.css', responseStatus: 304 }], origin),
+    ).toEqual(['https://maps.example/a.css']);
+  });
 });

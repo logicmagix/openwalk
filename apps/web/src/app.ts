@@ -32,3 +32,23 @@ export function labelLanguage(locale: string): string {
   const primary = locale.split('-')[0]?.toLowerCase() ?? '';
   return /^[a-z]{2,3}$/.test(primary) ? primary : 'en';
 }
+
+/** What the browser records about a file the page asked for. */
+export interface LoadedResource {
+  readonly name: string;
+  /** The HTTP status of the answer; some browsers do not report it. */
+  readonly responseStatus?: number;
+}
+
+/**
+ * The addresses of the files the page loaded from its own origin, for keeping a
+ * copy for offline use. A file that was asked for and not found is left out: a
+ * site's optional files are requested whether or not it has them, and one that
+ * cannot be fetched would stop the copy from ever being complete.
+ */
+export function loadedFrom(resources: readonly LoadedResource[], origin: string): string[] {
+  return resources
+    .filter((resource) => resource.name.startsWith(origin))
+    .filter((resource) => !((resource.responseStatus ?? 200) >= 400))
+    .map((resource) => resource.name);
+}
