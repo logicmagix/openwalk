@@ -17,18 +17,20 @@ export interface Category {
 }
 
 // A fixed palette of colours that stay apart for people with the common forms of
-// colour blindness (after Okabe and Ito). Each has a deeper shade for the light
-// map and a lighter one for the dark map. Dots are also outlined in a colour that
-// contrasts with the map, so a dot never depends on its fill alone to be seen.
+// colour blindness (after Okabe and Ito, and Tol). Each has a deeper shade for the
+// light map and a lighter one for the dark map. Dots are also outlined in a colour
+// that contrasts with the map, so a dot never depends on its fill alone to be seen.
+// Walkways are drawn in blue and routes in purple, so those hues are kept out of
+// the way: there is no purple, and the one blue comes last.
 const PALETTE: readonly Readonly<Record<Theme, string>>[] = [
   { light: '#d55e00', dark: '#f28c4b' }, // vermilion
-  { light: '#0072b2', dark: '#5aa9e6' }, // blue
   { light: '#009e73', dark: '#33c4a0' }, // green
-  { light: '#cc79a7', dark: '#e3a1c6' }, // pink
+  { light: '#cc79a7', dark: '#e9b3d0' }, // pink
   { light: '#e69f00', dark: '#f5b942' }, // orange
-  { light: '#56b4e9', dark: '#8fd0f5' }, // sky
   { light: '#f0e442', dark: '#f5ec6b' }, // yellow
   { light: '#737373', dark: '#b5b5b5' }, // grey
+  { light: '#882255', dark: '#c0507f' }, // wine
+  { light: '#56b4e9', dark: '#8fd0f5' }, // sky
 ];
 
 /** The dot colour for a place whose kind is not in the list. */
