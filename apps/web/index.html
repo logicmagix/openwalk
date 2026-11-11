@@ -20,6 +20,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
   <body>
+    <!-- Shown only at the root address of a host that serves several sites. -->
+    <main id="picker" class="picker" hidden>
+      <h1>OpenWalk</h1>
+      <p>Choose a map.</p>
+      <ul id="picker-list"></ul>
+    </main>
+
     <div id="map" role="application" aria-label="Map"></div>
 
     <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>

@@ -3,7 +3,7 @@
 
 import './style.css';
 import { buildIndex, type PlaceFeature } from '@openwalk/search';
-import { LOCATE_ZOOM, initialView, labelLanguage, loadedFrom, pageTitle } from './app';
+import { LOCATE_ZOOM, initialView, labelLanguage, loadedFrom, pageTitle, rootChoice } from './app';
 import {
   describe,
   destinationOf,
@@ -32,17 +32,20 @@ import { positionErrorMessage, type PositionFix, type PositionProvider } from '.
 import { ReplayProvider } from './position/replay';
 import { chooseProvider, replayAllowed, traceUrl } from './position/select';
 import {
+  fetchJson,
   loadSite,
   placeLinkFromPath,
   siteBaseUrl,
   siteIdFromPath,
   sitePagePath,
 } from './site/load';
+import { SITE_INDEX_PATH, type SiteIndex } from './site/pages';
 import { watchTheme } from './theme';
 import { setupLayers } from './ui/layers';
 import { listPlaces } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
+import { showPicker } from './ui/picker';
 import { setupSearch } from './ui/search';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
@@ -86,18 +89,30 @@ async function makeProvider(siteId: string): Promise<PositionProvider> {
   return new GeolocationProvider();
 }
 
+/**
+ * The root address: with one site on the host its map opens; with several, the
+ * person chooses from a list.
+ */
+async function startAtRoot(): Promise<void> {
+  const index = (await fetchJson(SITE_INDEX_PATH)) as SiteIndex;
+  const choice = rootChoice(index.sites, sitePagePath);
+  if (choice.kind === 'open') {
+    location.replace(choice.path);
+  } else if (choice.kind === 'choose') {
+    showPicker({ root: element('picker'), list: element('picker-list') }, choice.entries);
+  } else {
+    showStatus('There are no maps here yet.');
+  }
+}
+
 async function start(): Promise<void> {
   // A page is reached either as the map (/s/<site>/) or as a share link to one
   // place (/p/<site>/<place-id>); the latter opens the map on that place.
   const link = placeLinkFromPath(location.pathname);
   const siteId = link?.siteId ?? siteIdFromPath(location.pathname);
   if (siteId === null) {
-    const fallback = import.meta.env.VITE_DEFAULT_SITE;
-    if (fallback && location.pathname === '/') {
-      location.replace(sitePagePath(fallback));
-      return;
-    }
-    showStatus('No site in the address. Open /s/<site-id>/ for a site.');
+    if (location.pathname === '/') await startAtRoot();
+    else showStatus('No site in the address. Open /s/<site-id>/ for a site.');
     return;
   }
 

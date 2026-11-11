@@ -52,3 +52,24 @@ export function loadedFrom(resources: readonly LoadedResource[], origin: string)
     .filter((resource) => !((resource.responseStatus ?? 200) >= 400))
     .map((resource) => resource.name);
 }
+
+/** What the root address of a host does, given the sites it serves. */
+export type RootChoice =
+  | { readonly kind: 'none' }
+  /** One site: there is nothing to choose, so its map opens. */
+  | { readonly kind: 'open'; readonly path: string }
+  | {
+      readonly kind: 'choose';
+      readonly entries: readonly { readonly name: string; readonly path: string }[];
+    };
+
+export function rootChoice(
+  sites: readonly { readonly id: string; readonly name: string }[],
+  pathFor: (siteId: string) => string,
+): RootChoice {
+  const entries = sites.map((site) => ({ name: site.name, path: pathFor(site.id) }));
+  const [only] = entries;
+  if (only === undefined) return { kind: 'none' };
+  if (entries.length === 1) return { kind: 'open', path: only.path };
+  return { kind: 'choose', entries };
+}

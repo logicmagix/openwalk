@@ -5,11 +5,12 @@
 // For every site directory under <sites-dir> this writes
 //   <sites-dir>/<id>/manifest.webmanifest   the site's manifest
 //   <dist-dir>/s/<id>/index.html            the app's page, named for the site
+// and, once, <sites-dir>/index.json, the list of sites the root address offers.
 // Node runs the TypeScript module below directly, ignoring its type annotations.
 
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { siteManifest, sitePageHtml } from '../src/site/pages.ts';
+import { siteIndex, siteManifest, sitePageHtml } from '../src/site/pages.ts';
 
 const [distDir, sitesDir] = process.argv.slice(2);
 if (!distDir || !sitesDir) {
@@ -18,6 +19,7 @@ if (!distDir || !sitesDir) {
 }
 
 const html = readFileSync(join(distDir, 'index.html'), 'utf8');
+const configs = [];
 for (const entry of readdirSync(sitesDir, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue;
   const siteDir = join(sitesDir, entry.name);
@@ -32,5 +34,8 @@ for (const entry of readdirSync(sitesDir, { withFileTypes: true })) {
   const pageDir = join(distDir, 's', config.id);
   mkdirSync(pageDir, { recursive: true });
   writeFileSync(join(pageDir, 'index.html'), sitePageHtml(html, config));
+  configs.push(config);
   console.log(`${config.id}: page and manifest written as "${config.name}"`);
 }
+writeFileSync(join(sitesDir, 'index.json'), `${JSON.stringify(siteIndex(configs), null, 2)}\n`);
+console.log(`${configs.length} sites listed in index.json`);

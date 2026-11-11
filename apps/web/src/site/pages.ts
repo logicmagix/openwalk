@@ -45,6 +45,21 @@ export function siteManifestPath(siteId: string): string {
   return `/sites/${siteId}/manifest.webmanifest`;
 }
 
+/** Where the list of the sites a host serves is found. */
+export const SITE_INDEX_PATH = '/sites/index.json';
+
+/** The list of sites a host serves, as the page at the root address reads it. */
+export interface SiteIndex {
+  readonly sites: readonly { readonly id: string; readonly name: string }[];
+}
+
+/** The list of a host's sites, in name order. */
+export function siteIndex(configs: readonly SiteIdentity[]): SiteIndex {
+  const sites = configs.map(({ id, name }) => ({ id, name }));
+  sites.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+  return { sites };
+}
+
 export interface WebAppManifest {
   readonly id: string;
   readonly name: string;

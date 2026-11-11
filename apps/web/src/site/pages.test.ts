@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { sitePagePath } from './load';
-import { installName, pageTitle, siteManifest, siteManifestPath, sitePageHtml } from './pages';
+import {
+  installName,
+  pageTitle,
+  siteIndex,
+  siteManifest,
+  siteManifestPath,
+  sitePageHtml,
+} from './pages';
 
 const site = { id: 'some-site', name: 'Somewhere & Sons', short_name: 'Some' };
 
@@ -67,5 +74,24 @@ describe('sitePageHtml', () => {
 
   it('refuses a page it cannot fill in', () => {
     expect(() => sitePageHtml('<html></html>', site)).toThrow(/title/);
+  });
+});
+
+describe('siteIndex', () => {
+  it('lists each site by id and name, in name order', () => {
+    const index = siteIndex([
+      { id: 'b-site', name: 'Zebra Park', short_name: 'Zebra' },
+      { id: 'a-site', name: 'Apple Campus' },
+    ]);
+    expect(index).toEqual({
+      sites: [
+        { id: 'a-site', name: 'Apple Campus' },
+        { id: 'b-site', name: 'Zebra Park' },
+      ],
+    });
+  });
+
+  it('is empty for a host with no sites', () => {
+    expect(siteIndex([])).toEqual({ sites: [] });
   });
 });

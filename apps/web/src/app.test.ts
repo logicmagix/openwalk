@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlacesDocument } from '@openwalk/search';
-import { initialView, labelLanguage, loadedFrom, pageTitle } from './app';
+import { initialView, labelLanguage, loadedFrom, pageTitle, rootChoice } from './app';
 
 const places = (coords: [number, number][]): PlacesDocument => ({
   type: 'FeatureCollection',
@@ -81,5 +81,35 @@ describe('loadedFrom', () => {
     expect(
       loadedFrom([{ name: 'https://maps.example/a.css', responseStatus: 304 }], origin),
     ).toEqual(['https://maps.example/a.css']);
+  });
+});
+
+describe('rootChoice', () => {
+  const pathFor = (id: string) => `/s/${id}/`;
+
+  it('has nothing to offer a host with no sites', () => {
+    expect(rootChoice([], pathFor)).toEqual({ kind: 'none' });
+  });
+
+  it('opens the only site directly', () => {
+    expect(rootChoice([{ id: 'a', name: 'A' }], pathFor)).toEqual({ kind: 'open', path: '/s/a/' });
+  });
+
+  it('offers a choice between several', () => {
+    expect(
+      rootChoice(
+        [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        pathFor,
+      ),
+    ).toEqual({
+      kind: 'choose',
+      entries: [
+        { name: 'A', path: '/s/a/' },
+        { name: 'B', path: '/s/b/' },
+      ],
+    });
   });
 });
