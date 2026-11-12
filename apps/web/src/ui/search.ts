@@ -162,6 +162,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       // Nothing left to delete: step back out of the kind being browsed.
       browsing = null;
       show();
+    } else if (event.key === 'Tab') {
+      // Moving on with Tab leaves the search behind; the list would otherwise
+      // stay open over the controls the focus is heading to.
+      close();
     } else if (event.key === 'Escape') {
       // Close the list and stay in the box: letting go of the focus would send
       // a keyboard back to the top of the page.
