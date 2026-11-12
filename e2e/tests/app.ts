@@ -2,7 +2,7 @@
 // finds them: by role and name.
 
 import { expect, type Page } from '@playwright/test';
-import { MAP_PATH, labelOf, type Place } from './site';
+import { MAP_PATH, labelOf, places, type Place } from './site';
 
 export function controls(page: Page) {
   return {
@@ -30,4 +30,19 @@ export async function choosePlace(page: Page, place: Place): Promise<void> {
     .first()
     .click();
   await expect(directions).toContainText(place.properties.name);
+}
+
+// A site with many places of more than one kind opens its search list on the
+// kinds, with "All places" at their head; a small site lists its places at once.
+const GROUPS_ABOVE = 12;
+const kinds = new Set(places.map((place) => place.properties.category));
+const GROUPED = places.length > GROUPS_ABOVE && kinds.size > 1;
+
+/** Rows in the full list of places that are not places: the way back to the kinds. */
+export const LIST_EXTRA_ROWS = GROUPED ? 1 : 0;
+
+/** With the search list open and nothing typed, brings every place into it. */
+export async function showEveryPlace(page: Page): Promise<void> {
+  if (!GROUPED) return;
+  await controls(page).results.getByRole('option', { name: 'All places' }).click();
 }

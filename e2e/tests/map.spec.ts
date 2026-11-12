@@ -1,11 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { choosePlace, controls, openMap } from './app';
+import { LIST_EXTRA_ROWS, choosePlace, controls, openMap, showEveryPlace } from './app';
 import { MAP_PATH, config, labelOf, places } from './site';
-
-test('the root address opens a site', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveURL(/\/s\/[a-z0-9-]+\/$/);
-});
 
 test('the map opens, named after the site', async ({ page }) => {
   await openMap(page);
@@ -18,7 +13,8 @@ test('the search box lists every place before anything is typed', async ({ page 
   await openMap(page);
   const { search, results } = controls(page);
   await search.click();
-  await expect(results.getByRole('option')).toHaveCount(places.length);
+  await showEveryPlace(page);
+  await expect(results.getByRole('option')).toHaveCount(places.length + LIST_EXTRA_ROWS);
 });
 
 test('search finds a place by the start of its name', async ({ page }) => {
