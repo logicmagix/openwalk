@@ -7,11 +7,20 @@ const siteId = new URLSearchParams(location.search).get('site') ?? '';
 async function showSite() {
   // A site id is lower-case letters, digits and hyphens; anything else is ignored.
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(siteId)) return;
-  const response = await fetch(`/sites/${siteId}/site.json`);
-  if (!response.ok) return;
-  const site = await response.json();
 
-  document.getElementById('back').href = `/s/${siteId}/`;
+  // The way back is set before anything is fetched: on a slow connection the
+  // link could otherwise be tapped while it still led to the list of maps.
+  const back = document.getElementById('back');
+  const home = back.getAttribute('href');
+  back.href = `/s/${siteId}/`;
+
+  const response = await fetch(`/sites/${siteId}/site.json`);
+  if (!response.ok) {
+    // No such site here after all.
+    back.href = home;
+    return;
+  }
+  const site = await response.json();
 
   const operator = site.operator;
   if (!operator || typeof operator.name !== 'string') return;

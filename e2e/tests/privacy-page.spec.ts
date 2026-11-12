@@ -45,6 +45,28 @@ test('opened by itself the page stands alone and leads to the list of maps', asy
   await expect(page.getByRole('link', { name: 'Back to the map' })).toHaveAttribute('href', '/');
 });
 
+test('the way back is right even before the site has answered', async ({ page }) => {
+  // The site's settings are held up; the link must not wait for them.
+  let release: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route(`**/sites/${SITE_ID}/site.json`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(PRIVACY_FROM_SITE);
+  await expect(page.getByRole('link', { name: 'Back to the map' })).toHaveAttribute(
+    'href',
+    MAP_PATH,
+  );
+  release();
+});
+
+test('a site that looks real but is not here leads back to the list of maps', async ({ page }) => {
+  await page.goto('/privacy/?site=no-such-place');
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to the map' })).toHaveAttribute('href', '/');
+});
+
 test('a site given in the address that does not exist changes nothing', async ({ page }) => {
   await page.goto('/privacy/?site=../../etc');
   await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
