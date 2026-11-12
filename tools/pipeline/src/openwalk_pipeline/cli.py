@@ -74,6 +74,18 @@ def build_parser() -> argparse.ArgumentParser:
     check = commands.add_parser("debug", help="write a map page for checking the generated files by eye")
     check.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
     check.add_argument("--out", type=Path, help="where to write the page (default: <site>/debug.html)")
+    check.add_argument(
+        "--max-gap",
+        type=float,
+        default=gaps.DEFAULT_MAX_GAP_M,
+        help="draw a suspected gap when a dead end is this close to another walkway, in metres",
+    )
+    check.add_argument(
+        "--min-detour",
+        type=float,
+        default=gaps.DEFAULT_MIN_DETOUR_M,
+        help="draw a suspected gap only when the walk round it today is at least this long, in metres",
+    )
     return parser
 
 
@@ -279,7 +291,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "gaps":
         return run_gaps(site, max_gap_m=args.max_gap, min_detour_m=args.min_detour)
     if args.command == "debug":
-        path = debug.write(site, args.out)
+        path = debug.write(site, args.out, args.max_gap, args.min_detour)
         print(f"{site.id}: wrote {path}; open it in a browser")
         return 0
     return run_build(site)
