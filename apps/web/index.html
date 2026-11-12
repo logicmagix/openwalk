@@ -27,7 +27,10 @@
       <ul id="picker-list"></ul>
     </main>
 
-    <div id="search" class="search">
+    <!-- Names the page for a screen reader; the site's name is filled in. -->
+    <h1 id="site-heading" class="visually-hidden" hidden></h1>
+
+    <div id="search" class="search" role="search">
       <input
         id="search-input"
         type="search"
@@ -68,7 +71,6 @@
       id="layers"
       type="button"
       aria-label="Map layers"
-      aria-haspopup="true"
       aria-expanded="false"
       aria-controls="layers-panel"
       disabled

@@ -121,6 +121,9 @@ async function start(): Promise<void> {
 
   const site = await loadSite(siteId);
   document.title = pageTitle(site.config);
+  const heading = element('site-heading');
+  heading.textContent = site.config.name;
+  heading.hidden = false;
   const router = makeRouter(site.graph, site.config);
   const index = buildIndex(site.places);
   const placesById = new Map(site.places.features.map((place) => [place.id, place]));
