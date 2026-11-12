@@ -121,3 +121,15 @@ test('the focus ring on a "nearest" button is not cut off by its row', async ({ 
   expect(first.y - rowBox.y).toBeGreaterThanOrEqual(REACH_PX);
   expect(rowBox.y + rowBox.height - (first.y + first.height)).toBeGreaterThanOrEqual(REACH_PX);
 });
+
+test('Tab leaves the search box, closes its list and does not stop on it', async ({ page }) => {
+  await openMap(page);
+  const { search, results } = controls(page);
+  await search.focus();
+  await expect(results).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(results).toBeHidden();
+  // The next stop is a control, not the list.
+  const stop = await page.evaluate(() => document.activeElement?.tagName);
+  expect(stop).toBe('BUTTON');
+});
