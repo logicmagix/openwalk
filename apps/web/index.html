@@ -55,7 +55,9 @@
           />
         </svg>
       </button>
-      <ul id="search-list" role="listbox" aria-label="Places" hidden></ul>
+      <!-- A box that scrolls is a stop for the Tab key unless told otherwise. The
+           list is worked from the search box with the arrow keys, so it is not one. -->
+      <ul id="search-list" role="listbox" aria-label="Places" tabindex="-1" hidden></ul>
     </div>
 
     <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>
