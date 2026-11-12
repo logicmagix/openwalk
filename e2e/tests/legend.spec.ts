@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { controls, openMap } from './app';
+import { LIST_EXTRA_ROWS, choosePlace, controls, openMap, showEveryPlace } from './app';
 import { SITE_ID, config, places } from './site';
 
 const kinds = [...new Set(places.map((place) => place.properties.category))];
@@ -35,7 +35,8 @@ test('hiding a kind leaves search finding every place', async ({ page }) => {
   const { search, results } = controls(page);
   await search.click();
   await expect(panel).toBeHidden();
-  await expect(results.getByRole('option')).toHaveCount(places.length);
+  await showEveryPlace(page);
+  await expect(results.getByRole('option')).toHaveCount(places.length + LIST_EXTRA_ROWS);
   await page.keyboard.press('Escape');
   await button.click();
   await expect(panel.getByRole('checkbox').first()).not.toBeChecked();
@@ -59,9 +60,10 @@ test('the legend moves clear of the directions panel', async ({ page }) => {
   await openMap(page);
   const { button } = legend(page);
   const before = await button.boundingBox();
-  const { search, results, directions } = controls(page);
-  await search.click();
-  await results.getByRole('option').first().click();
+  const { directions } = controls(page);
+  const place = places[0];
+  if (place === undefined) throw new Error('the site has no places');
+  await choosePlace(page, place);
   await expect(directions).toBeVisible();
   const after = await button.boundingBox();
   const panelBox = await directions.boundingBox();
