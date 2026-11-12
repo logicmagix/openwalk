@@ -11,7 +11,19 @@ from typing import Any
 
 import requests
 
-from openwalk_pipeline import __version__, debug, gaps, graph, osm, overlay, overpass, places, tiles, walkways
+from openwalk_pipeline import (
+    __version__,
+    debug,
+    gaps,
+    graph,
+    imagery,
+    osm,
+    overlay,
+    overpass,
+    places,
+    tiles,
+    walkways,
+)
 from openwalk_pipeline.site import DEFAULT_MARGIN_M, Site, load_site
 from openwalk_pipeline.validate import validate
 
@@ -36,6 +48,11 @@ def build_parser() -> argparse.ArgumentParser:
     basemap.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
     basemap.add_argument("--source", help="PMTiles archive URL, overriding tiles.source in site.yaml")
     basemap.add_argument("--max-zoom", type=int, help="highest zoom level to extract")
+
+    photo = commands.add_parser(
+        "imagery", help="fetch one aerial photograph of the site, to offer as a layer of the map"
+    )
+    photo.add_argument("site", type=Path, help="site directory, for example sites/<site-id>")
 
     breaks = commands.add_parser(
         "gaps", help="list places where walkways nearly meet, or cross, without being joined"
@@ -141,16 +158,68 @@ def run_build(site: Site) -> int:
     if built.unreachable:
         print(f"{site.id}: unreachable from the main network: {', '.join(built.unreachable)}", file=sys.stderr)
 
+    # The aerial photograph, once fetched, is offered first; the site's own maps follow.
+    entries: list[dict[str, Any]] = []
+    image_path, description_path = imagery.paths(site.directory)
+    if site.imagery is not None and image_path.exists() and description_path.exists():
+        with description_path.open(encoding="utf-8") as handle:
+            entries.append(imagery.overlay_entry(site.imagery, json.load(handle)))
+        print(f"{site.id}: overlay {imagery.OVERLAY_ID} from {image_path}")
+    elif site.imagery is not None:
+        print(f"{site.id}: no aerial photograph yet; run 'openwalk-pipeline imagery'", file=sys.stderr)
     if site.overlays:
-        document = overlay.build_overlays(site.overlays, site.directory, by_osm_id)
-        validate(document, "overlays")
-        write_json(site.overlays_path, document)
-        for entry in document["overlays"]:
+        fitted = overlay.build_overlays(site.overlays, site.directory, by_osm_id)["overlays"]
+        for entry in fitted:
             fit = entry["fit"]
             print(
                 f"{site.id}: overlay {entry['id']} fitted from {fit['control_points']} points,"
                 f" rms {fit['rms_m']} m, max {fit['max_m']} m"
             )
+        entries.extend(fitted)
+    if entries:
+        document = {"overlays": entries}
+        validate(document, "overlays")
+        write_json(site.overlays_path, document)
+    return 0
+
+
+def site_extent(site: Site) -> tiles.Extent | None:
+    """The box around the site's walkways and places, or its bounding box if it has neither yet."""
+    collections: list[dict[str, Any]] = []
+    for path in (site.walkways_path, site.places_path):
+        if path.exists():
+            with path.open(encoding="utf-8") as handle:
+                collections.append(json.load(handle))
+    extent = tiles.extent_of(collections)
+    if extent is None and site.boundary.kind == "bbox":
+        south, west, north, east = (float(v) for v in site.boundary.value)  # type: ignore[union-attr]
+        extent = tiles.Extent(west, south, east, north)
+    return extent
+
+
+def run_imagery(site: Site, session: imagery.Fetcher | None = None) -> int:
+    config = site.imagery
+    if config is None:
+        print(f"{site.id}: no imagery in site.yaml", file=sys.stderr)
+        return 1
+    extent = site_extent(site)
+    if extent is None:
+        print(f"{site.id}: nothing to cover; run 'openwalk-pipeline build' first", file=sys.stderr)
+        return 1
+    asked = float(config.get("resolution_m", imagery.DEFAULT_RESOLUTION_M))
+    planned = imagery.plan(extent.expand(float(config.get("margin_m", imagery.DEFAULT_MARGIN_M))), asked)
+    picture = imagery.fetch(config["source"], planned, session or requests.Session())
+    image_path, description_path = imagery.paths(site.directory)
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    image_path.write_bytes(picture)
+    write_json(description_path, imagery.describe(planned, config["source"]))
+    print(
+        f"{site.id}: aerial photograph {planned.width} x {planned.height} px at"
+        f" {planned.resolution_m} m per pixel, {len(picture) / 1e6:.1f} MB, in {image_path}"
+    )
+    if planned.resolution_m > asked:
+        print(f"{site.id}: the site is too large for {asked} m per pixel in one picture", file=sys.stderr)
+    print(f"{site.id}: run 'openwalk-pipeline build' to offer it as a layer")
     return 0
 
 
@@ -163,15 +232,7 @@ def run_tiles(site: Site, *, source: str | None, max_zoom: int | None, session: 
     if max_zoom is None and site.tiles:
         max_zoom = site.tiles.max_zoom
 
-    collections: list[dict[str, Any]] = []
-    for path in (site.walkways_path, site.places_path):
-        if path.exists():
-            with path.open(encoding="utf-8") as handle:
-                collections.append(json.load(handle))
-    extent = tiles.extent_of(collections)
-    if extent is None and site.boundary.kind == "bbox":
-        south, west, north, east = (float(v) for v in site.boundary.value)  # type: ignore[union-attr]
-        extent = tiles.Extent(west, south, east, north)
+    extent = site_extent(site)
     if extent is None:
         print(f"{site.id}: nothing to cover; run 'openwalk-pipeline build' first", file=sys.stderr)
         return 1
@@ -225,6 +286,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_fetch(site, refresh=args.refresh, endpoint=args.endpoint)
     if args.command == "tiles":
         return run_tiles(site, source=args.source, max_zoom=args.max_zoom)
+    if args.command == "imagery":
+        return run_imagery(site)
     if args.command == "gaps":
         return run_gaps(site, max_gap_m=args.max_gap, min_detour_m=args.min_detour)
     if args.command == "debug":

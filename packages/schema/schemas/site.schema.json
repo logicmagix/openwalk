@@ -273,6 +273,39 @@
     "attribution": {
       "type": "string"
     },
+    "imagery": {
+      "description": "An aerial photograph of the site, offered as a layer of the map. The pipeline's imagery command fetches one picture covering the site from the service named here and stores it with the site's data, so the app serves it itself and no phone contacts the service.",
+      "type": "object",
+      "required": ["source", "attribution"],
+      "properties": {
+        "source": {
+          "description": "URL of an ArcGIS ImageServer, without a trailing operation, for example a government orthoimagery service. Use only imagery you may redistribute.",
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "attribution": {
+          "description": "The credit shown beside the layer's switch, naming whose imagery it is and from when.",
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "description": "The layer's name in the layers panel. 'Aerial photo' by default.",
+          "type": "string",
+          "minLength": 1
+        },
+        "resolution_m": {
+          "description": "Metres on the ground per pixel. A site too large for this in one picture of 4000 pixels a side is fetched more coarsely. 0.6 by default.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "margin_m": {
+          "description": "How far beyond the site's walkways and places the photograph reaches, in metres. 100 by default.",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
     "overlays": {
       "description": "Images of the site's own maps, georeferenced by control points: a pixel in the image paired with the OpenStreetMap element or the position it depicts.",
       "type": "array",
