@@ -104,3 +104,20 @@ test.describe('with less motion asked for', () => {
     expect(duration).toBe('0s');
   });
 });
+
+test('the focus ring on a "nearest" button is not cut off by its row', async ({ page }) => {
+  test.skip((config.nearest ?? []).length === 0, 'the site offers no nearest buttons');
+  await openMap(page);
+  const row = page.getByRole('group', { name: 'Find the nearest' });
+  // The ring and its band reach 7px beyond a button; the row clips at its edge.
+  const REACH_PX = 7;
+  const rowBox = await row.boundingBox();
+  const buttons = await row.getByRole('button').all();
+  const first = await buttons[0]?.boundingBox();
+  if (rowBox === null || first === null || first === undefined) {
+    throw new Error('the nearest buttons are not on the page');
+  }
+  expect(first.x - rowBox.x).toBeGreaterThanOrEqual(REACH_PX);
+  expect(first.y - rowBox.y).toBeGreaterThanOrEqual(REACH_PX);
+  expect(rowBox.y + rowBox.height - (first.y + first.height)).toBeGreaterThanOrEqual(REACH_PX);
+});
