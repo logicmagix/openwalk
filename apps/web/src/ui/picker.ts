@@ -6,6 +6,8 @@ import { APP_NAME } from '../site/pages';
 export interface PickerElements {
   readonly root: HTMLElement;
   readonly list: HTMLUListElement;
+  /** The link to the privacy page at the foot of the list. */
+  readonly privacy: HTMLAnchorElement;
 }
 
 export interface PickerEntry {
@@ -14,7 +16,12 @@ export interface PickerEntry {
   readonly path: string;
 }
 
-export function showPicker(elements: PickerElements, entries: readonly PickerEntry[]): void {
+export function showPicker(
+  elements: PickerElements,
+  entries: readonly PickerEntry[],
+  privacyPath: string,
+): void {
+  elements.privacy.href = privacyPath;
   elements.list.replaceChildren(
     ...entries.map((entry) => {
       const item = document.createElement('li');

@@ -12,7 +12,8 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['apps/web/**/*.ts'],
+    // The app, and the privacy page's own small script beside it.
+    files: ['apps/web/**/*.ts', 'apps/web/public/privacy/*.js'],
     languageOptions: { globals: globals.browser },
   },
   {

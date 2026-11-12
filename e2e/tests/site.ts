@@ -34,6 +34,7 @@ export const config = readJson<{
   name: string;
   short_name?: string;
   nearest?: { category: string; label: string }[];
+  operator?: { name: string; email?: string; url?: string };
 }>('site.json');
 
 export const places = readJson<{ features: Place[] }>('places.geojson').features;

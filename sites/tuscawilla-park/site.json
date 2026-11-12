@@ -1,6 +1,10 @@
 {
  "id": "tuscawilla-park",
  "name": "Tuscawilla Park",
+ "operator": {
+  "name": "the OpenWalk project",
+  "url": "https://github.com/logicmagix/openwalk"
+ },
  "boundary": {
   "osm_way": 462341602
  },

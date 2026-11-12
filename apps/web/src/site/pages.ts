@@ -45,6 +45,21 @@ export function siteManifestPath(siteId: string): string {
   return `/sites/${siteId}/manifest.webmanifest`;
 }
 
+/** Where the privacy page is served; the same page for every site. */
+export const PRIVACY_PATH = '/privacy/';
+
+/** The privacy page as reached from a site's map, so it can lead back there. */
+export function privacyPathFor(siteId: string): string {
+  return `${PRIVACY_PATH}?site=${encodeURIComponent(siteId)}`;
+}
+
+/** The privacy page's own files, for keeping a copy to use with no network. */
+export const PRIVACY_FILES: readonly string[] = [
+  PRIVACY_PATH,
+  `${PRIVACY_PATH}privacy.css`,
+  `${PRIVACY_PATH}privacy.js`,
+];
+
 /** Where the list of the sites a host serves is found. */
 export const SITE_INDEX_PATH = '/sites/index.json';
 

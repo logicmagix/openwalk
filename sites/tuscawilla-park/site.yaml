@@ -2,6 +2,10 @@
 # Schema: packages/schema/schemas/site.schema.json.
 id: tuscawilla-park
 name: Tuscawilla Park
+# Named on the privacy page as who runs this map, with how to reach them.
+operator:
+  name: the OpenWalk project
+  url: https://github.com/logicmagix/openwalk
 boundary:
   # The park's grounds as mapped in OpenStreetMap (leisure=park).
   osm_way: 462341602

@@ -99,6 +99,6 @@ test.describe('other sites on the host', () => {
     await legend(page).button.click();
     await page.getByRole('link', { name: 'Other locations' }).click();
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('main').getByRole('link')).toHaveCount(2);
+    await expect(page.getByRole('main').getByRole('list').getByRole('link')).toHaveCount(2);
   });
 });
