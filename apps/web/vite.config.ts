@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 import {
+  PRIVACY_PATH,
   SITE_INDEX_PATH,
   siteIndex,
   siteManifest,
@@ -64,6 +65,13 @@ const serveSites: Plugin = {
       if (url.startsWith('/sites/')) {
         request.url = `/@fs${sitesDir}${url.slice('/sites'.length)}`;
       }
+      // The privacy page is a plain file beside the app. nginx serves a
+      // directory's index.html by itself; here the address is spelled out, or
+      // the development server would answer with the app's page.
+      const [path = '', query] = url.split('?');
+      if (path === PRIVACY_PATH) {
+        request.url = `${PRIVACY_PATH}index.html${query === undefined ? '' : `?${query}`}`;
+      }
       next();
     });
   },
@@ -96,6 +104,12 @@ const contentSecurityPolicy: Plugin = {
   name: 'content-security-policy',
   apply: 'build',
   transformIndexHtml: { order: 'post', handler: (html) => withPolicy(html) },
+  // The privacy page is copied into the build as it stands, not passed through
+  // the step above, so it is given the same tag once the files are written.
+  closeBundle() {
+    const page = resolve(import.meta.dirname, 'dist', 'privacy', 'index.html');
+    if (existsSync(page)) writeFileSync(page, withPolicy(readFileSync(page, 'utf8')));
+  },
 };
 
 // Vite builds and serves the app; the `test` block configures Vitest for this

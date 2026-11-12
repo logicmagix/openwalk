@@ -40,7 +40,13 @@ import {
   siteIdFromPath,
   sitePagePath,
 } from './site/load';
-import { SITE_INDEX_PATH, type SiteIndex } from './site/pages';
+import {
+  PRIVACY_FILES,
+  PRIVACY_PATH,
+  SITE_INDEX_PATH,
+  privacyPathFor,
+  type SiteIndex,
+} from './site/pages';
 import { watchTheme } from './theme';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
@@ -102,7 +108,11 @@ async function startAtRoot(): Promise<void> {
   if (choice.kind === 'open') {
     location.replace(choice.path);
   } else if (choice.kind === 'choose') {
-    showPicker({ root: element('picker'), list: element('picker-list') }, choice.entries);
+    showPicker(
+      { root: element('picker'), list: element('picker-list'), privacy: element('picker-privacy') },
+      choice.entries,
+      PRIVACY_PATH,
+    );
   } else {
     showStatus('There are no maps here yet.');
   }
@@ -428,6 +438,7 @@ async function start(): Promise<void> {
     { button: element<HTMLButtonElement>('legend'), panel: element('legend-panel') },
     { categories, onChange: (hidden) => restyle({ hiddenCategories: hidden }) },
   );
+  legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });
   // On a host with more than one site, the legend's foot leads to the others.
   // The list is not needed for anything else, so its absence is not an error.
   fetchJson(SITE_INDEX_PATH)
@@ -480,6 +491,9 @@ async function start(): Promise<void> {
       document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href ??
         new URL('/manifest.webmanifest', origin).href,
       new URL('/favicon.svg', origin).href,
+      ...PRIVACY_FILES.map((path) => new URL(path, origin).href),
+      // Asked for by the privacy page when it is opened from this site.
+      new URL(`${siteBase}site.json`, origin).href,
       new URL('/icons/icon-192.png', origin).href,
       new URL('/icons/icon-512.png', origin).href,
       inputs.current.basemapUrl,

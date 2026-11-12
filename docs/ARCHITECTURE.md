@@ -163,8 +163,16 @@ npm workspaces, one lockfile, one `npm test` at the root.
   `packages/`.
 - All external hosts (tile providers, imagery) are listed in `site.yaml` and mirrored
   into the CSP at build time.
-- Logging: structured, no request bodies, no coordinates, no IP addresses beyond what
-  nginx needs for rate limiting (and those truncated).
+- Logging: the web server keeps no access log, since every file it serves is the
+  same for everyone and a log would hold little but visitors' addresses. It reports
+  only its own failures. Any later service logs no request bodies, no coordinates,
+  and no IP addresses beyond what rate limiting needs (and those truncated).
+- The privacy page, `/privacy/`, says in plain words what the app does with a
+  person's position, what it keeps on the phone and what the server sees. It is one
+  static page for every site, linked from the legend and from the list of maps;
+  opened from a site it also names the site's `operator` when one is set. What it
+  promises is what the browser tests check: no request leaves the host and none
+  carries a position.
 
 ## Content security policy
 

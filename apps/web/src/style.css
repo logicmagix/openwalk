@@ -709,6 +709,22 @@ body.picking .zoom {
   box-shadow: var(--focus-halo);
 }
 
+/* The link to the privacy page, set apart beneath the list of maps. */
+.picker .picker-foot {
+  margin-top: 28px;
+  font-size: 15px;
+}
+
+.picker .picker-foot a {
+  display: inline;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-weight: normal;
+  text-decoration: underline;
+}
+
 /* Legend button, bottom left, the same round shape as the other controls. */
 #legend {
   position: fixed;

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a73e8" />
+    <title>Privacy · OpenWalk</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/privacy/privacy.css" />
+  </head>
+  <body>
+    <main>
+      <p><a id="back" href="/">Back to the map</a></p>
+
+      <h1>Privacy</h1>
+      <p class="lead">OpenWalk is built so that where you are stays on your phone.</p>
+
+      <h2>Your location</h2>
+      <ul>
+        <li>
+          Your phone works out your position, and it is used only on your phone: to draw the blue
+          dot and to plan a route.
+        </li>
+        <li>
+          It is never sent to this site or to anyone else, and it is not saved. Close the map and it
+          is gone.
+        </li>
+        <li>
+          Searches and routes are worked out on your phone too. What you look for and where you ask
+          to go are not sent anywhere.
+        </li>
+      </ul>
+
+      <h2>What is kept on your phone</h2>
+      <ul>
+        <li>A copy of the map and the app, so it works without a signal.</li>
+        <li>A note that the “Ready to use offline” message has been shown.</li>
+        <li>No cookies, no account, no advertising or tracking identifiers.</li>
+        <li>
+          To remove it all, clear this site’s data in your browser, or delete the app from your home
+          screen.
+        </li>
+      </ul>
+
+      <h2>What the server sees</h2>
+      <ul>
+        <li>
+          Like any website, the server that sends you the map receives ordinary requests for files:
+          your internet address, the time, and which file. The files are the same for everyone and
+          do not show where you are. This server keeps no record of those requests.
+        </li>
+        <li>
+          The map may reach you through a network provider, which handles the same requests on the
+          way.
+        </li>
+        <li>
+          If you open a link someone shared to a particular place, that place is part of the link’s
+          address.
+        </li>
+        <li>
+          There are no analytics, and nothing is loaded from other companies. The app refuses
+          scripts from anywhere but this site.
+        </li>
+      </ul>
+
+      <!-- Filled in for a site that names who runs it. -->
+      <section id="operator" hidden>
+        <h2>Who runs this map</h2>
+        <p id="operator-name"></p>
+        <p id="operator-contact" hidden></p>
+      </section>
+
+      <h2>Open source</h2>
+      <p>
+        OpenWalk is open source, so anyone can read exactly what it does:
+        <a href="https://github.com/logicmagix/openwalk" rel="noopener">the source code</a>.
+      </p>
+    </main>
+    <script type="module" src="/privacy/privacy.js"></script>
+  </body>
+</html>

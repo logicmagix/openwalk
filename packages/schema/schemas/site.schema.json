@@ -21,6 +21,29 @@
       "minLength": 1,
       "maxLength": 30
     },
+    "operator": {
+      "description": "Who runs this site. Named on the privacy page, with any contact given, so a visitor knows whom to ask about it.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "description": "The organisation or person, as it should read after 'is run by'.",
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "description": "An address for questions about the site.",
+          "type": "string",
+          "format": "email"
+        },
+        "url": {
+          "description": "A web page for questions about the site; https only.",
+          "type": "string",
+          "pattern": "^https://"
+        }
+      },
+      "additionalProperties": false
+    },
     "boundary": {
       "description": "The area OpenStreetMap data is fetched for. Exactly one of the three forms.",
       "oneOf": [

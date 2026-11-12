@@ -24,7 +24,7 @@ test('a host with several sites lists them, and choosing one opens its map', asy
   await serveSites(page, [elsewhere, here]);
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'OpenWalk' })).toBeVisible();
-  const links = page.getByRole('main').getByRole('link');
+  const links = page.getByRole('main').getByRole('list').getByRole('link');
   await expect(links).toHaveText([elsewhere.name, here.name]);
   // The map's own controls belong to a site and are not offered yet.
   await expect(controls(page).search).toBeHidden();
@@ -50,7 +50,7 @@ for (const scheme of ['light', 'dark'] as const) {
     const page = await context.newPage();
     await serveSites(page, [elsewhere, here]);
     await page.goto('/');
-    await expect(page.getByRole('main').getByRole('link')).toHaveCount(2);
+    await expect(page.getByRole('main').getByRole('list').getByRole('link')).toHaveCount(2);
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
@@ -58,3 +58,11 @@ for (const scheme of ['light', 'dark'] as const) {
     await context.close();
   });
 }
+
+test('the list of maps leads to the privacy page', async ({ page }) => {
+  await serveSites(page, [elsewhere, here]);
+  await page.goto('/');
+  await page.getByRole('main').getByRole('link', { name: 'Privacy' }).click();
+  await expect(page).toHaveURL('/privacy/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
+});

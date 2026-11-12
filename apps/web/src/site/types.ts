@@ -19,6 +19,12 @@ export interface SiteConfig {
   /** How distances are shown; metric when absent. */
   readonly units?: 'metric' | 'imperial';
   readonly attribution?: string;
+  /** Who runs the site, named on the privacy page with a way to reach them. */
+  readonly operator?: {
+    readonly name: string;
+    readonly email?: string;
+    readonly url?: string;
+  };
   /**
    * The site's kinds of place, in legend order, each with the name people read.
    * Kinds its places use but it does not list are added after these.

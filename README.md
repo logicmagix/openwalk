@@ -51,7 +51,9 @@ described here. Paths below are relative to the repository root.
 2. **Write `site.yaml`.** The id, a display name, the boundary as an OpenStreetMap way
    or relation id or a south-west-north-east bounding box, and the default view. Each
    site installs to a phone's home screen as its own app; a long name is cut off under
-   the icon, so give it a `short_name` of about 12 characters.
+   the icon, so give it a `short_name` of about 12 characters. To have the
+   privacy page say who runs the site, add `operator` with a `name` and, if you
+   wish, an `email` or an https `url` to reach them.
    `packages/schema/schemas/site.schema.json` lists every setting.
 3. **Fetch OpenStreetMap data.** `openwalk-pipeline fetch sites/<site-id>` queries the
    Overpass API for everything inside the boundary and caches the result in `raw/`.
