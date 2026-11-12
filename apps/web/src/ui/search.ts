@@ -129,11 +129,19 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
 
   // The clear button empties the field and reopens the full list. pointerdown +
   // preventDefault keeps the input focused, so there is no blur-close race.
-  clear.addEventListener('pointerdown', (event) => {
-    event.preventDefault();
+  const clearSearch = (): void => {
     input.value = '';
     input.focus();
     open();
+  };
+  clear.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    clearSearch();
+  });
+  // Enter or Space on the button arrives as a click with no pointer behind it
+  // (detail 0); a click that follows a tap has already been handled above.
+  clear.addEventListener('click', (event) => {
+    if (event.detail === 0) clearSearch();
   });
 
   input.addEventListener('keydown', (event) => {

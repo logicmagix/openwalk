@@ -10,6 +10,8 @@ export interface PanelElements {
   readonly name: HTMLElement;
   readonly detail: HTMLElement;
   readonly status: HTMLElement;
+  /** Hidden from view; what a screen reader is told when the directions change. */
+  readonly announce: HTMLElement;
   readonly arrow: HTMLElement;
   readonly action: HTMLButtonElement;
   readonly close: HTMLButtonElement;
@@ -29,6 +31,35 @@ export type PanelState =
   | { readonly kind: 'guiding'; readonly guidance: Guidance; readonly mapBearing: number }
   | { readonly kind: 'arrived' }
   | { readonly kind: 'unreachable' };
+
+/** The line of the panel that says how things stand. */
+export function statusText(state: PanelState): string {
+  switch (state.kind) {
+    case 'needs-location':
+      return 'Turn on location to get directions.';
+    case 'away':
+      return `Directions start when you are at ${state.siteName}.`;
+    case 'waiting':
+      return 'Waiting for your position…';
+    case 'guiding':
+      return [`${state.guidance.distance}, ${state.guidance.duration}`, state.guidance.instruction]
+        .filter((part) => part !== '')
+        .join(' · ');
+    case 'arrived':
+      return 'You have arrived.';
+    case 'unreachable':
+      return 'No walking route found from here.';
+  }
+}
+
+/**
+ * What a change in the directions turns on, for reading aloud. The distance
+ * shrinks with every step and would be read out without pause, so while guiding
+ * only a new instruction ("Head north" becoming "Head east") counts as news.
+ */
+export function spokenChange(state: PanelState): string {
+  return state.kind === 'guiding' ? `guiding ${state.guidance.instruction}` : state.kind;
+}
 
 export interface Panel {
   show(place: PlaceFeature): void;
@@ -58,8 +89,14 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
     }
   }
 
+  // What was last read aloud, and the name of a destination not yet read.
+  let spoken: string | null = null;
+  let unnamed: string | null = null;
+
   return {
     show(place) {
+      spoken = null;
+      unnamed = labelOf(place);
       elements.name.textContent = labelOf(place);
       elements.detail.textContent = place.properties.annotation ?? '';
       elements.detail.hidden = elements.detail.textContent === '';
@@ -69,39 +106,22 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
       // Location can be tried again once the person has reached the site.
       elements.action.hidden = state.kind !== 'needs-location' && state.kind !== 'away';
       elements.root.classList.toggle('arrived', state.kind === 'arrived');
-      switch (state.kind) {
-        case 'needs-location':
-          setArrow(null, 0);
-          elements.status.textContent = 'Turn on location to get directions.';
-          break;
-        case 'away':
-          setArrow(null, 0);
-          elements.status.textContent = `Directions start when you are at ${state.siteName}.`;
-          break;
-        case 'waiting':
-          setArrow(null, 0);
-          elements.status.textContent = 'Waiting for your position…';
-          break;
-        case 'guiding':
-          setArrow(state.guidance.bearing, state.mapBearing);
-          elements.status.textContent = [
-            `${state.guidance.distance}, ${state.guidance.duration}`,
-            state.guidance.instruction,
-          ]
-            .filter((part) => part !== '')
-            .join(' · ');
-          break;
-        case 'arrived':
-          setArrow(null, 0);
-          elements.status.textContent = 'You have arrived.';
-          break;
-        case 'unreachable':
-          setArrow(null, 0);
-          elements.status.textContent = 'No walking route found from here.';
-          break;
+      setArrow(
+        state.kind === 'guiding' ? state.guidance.bearing : null,
+        state.kind === 'guiding' ? state.mapBearing : 0,
+      );
+      const text = statusText(state);
+      elements.status.textContent = text;
+      const change = spokenChange(state);
+      if (change !== spoken) {
+        spoken = change;
+        // A new destination is named once, ahead of its first status.
+        elements.announce.textContent = unnamed === null ? text : `${unnamed}. ${text}`;
+        unnamed = null;
       }
     },
     hide() {
+      elements.announce.textContent = '';
       elements.root.hidden = true;
     },
   };
