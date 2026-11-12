@@ -188,6 +188,7 @@ async function start(): Promise<void> {
       name: element('panel-name'),
       detail: element('panel-detail'),
       status: element('panel-status'),
+      announce: element('panel-announce'),
       arrow: element('panel-arrow'),
       action: element('panel-action'),
       close: element('panel-close'),

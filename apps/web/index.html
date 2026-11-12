@@ -27,10 +27,6 @@
       <ul id="picker-list"></ul>
     </main>
 
-    <div id="map" role="application" aria-label="Map"></div>
-
-    <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>
-
     <div id="search" class="search">
       <input
         id="search-input"
@@ -57,6 +53,8 @@
       </button>
       <ul id="search-list" role="listbox" aria-label="Places" hidden></ul>
     </div>
+
+    <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>
 
     <button id="locate" type="button" aria-label="Show my location" aria-pressed="false" disabled>
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -128,7 +126,7 @@
       </button>
     </div>
 
-    <section id="panel" class="panel" aria-label="Directions" aria-live="polite" hidden>
+    <section id="panel" class="panel" aria-label="Directions" hidden>
       <div id="panel-arrow" class="panel-arrow" aria-hidden="true" hidden>
         <svg viewBox="0 0 24 24"><path d="M12 2 4 20l8-4 8 4z" /></svg>
       </div>
@@ -136,6 +134,9 @@
         <h2 id="panel-name"></h2>
         <p id="panel-detail" hidden></p>
         <p id="panel-status"></p>
+        <!-- Read out by a screen reader when the directions change in kind, not
+             on every new distance; the line above changes too often for that. -->
+        <p id="panel-announce" class="visually-hidden" role="status"></p>
         <button id="panel-action" type="button" hidden>Turn on location</button>
       </div>
       <button id="panel-close" type="button" aria-label="Close directions">
@@ -148,6 +149,11 @@
     </section>
 
     <p id="status" role="status" aria-live="polite" hidden></p>
+
+    <!-- Last in the page so the keyboard reaches search and the controls before
+         the map's own; the stylesheet keeps it drawn underneath them. The map
+         library names its canvas for screen readers, so this holder has no role. -->
+    <div id="map"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
