@@ -163,8 +163,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       browsing = null;
       show();
     } else if (event.key === 'Escape') {
+      // Close the list and stay in the box: letting go of the focus would send
+      // a keyboard back to the top of the page.
       close();
-      input.blur();
+      event.preventDefault();
     }
   });
 }
