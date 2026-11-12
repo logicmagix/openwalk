@@ -296,6 +296,10 @@
           "attribution": {
             "type": "string"
           },
+          "publish": {
+            "description": "Whether the overlay is served to people using the map. Set false to hold back an image the site may not show yet: it stays in the maintainer's checking page and is left out of the built image. True by default.",
+            "type": "boolean"
+          },
           "control_points": {
             "type": "array",
             "minItems": 3,

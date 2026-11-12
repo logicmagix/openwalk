@@ -28,16 +28,13 @@ COPY apps/web apps/web
 COPY packages packages
 RUN npm run build
 
-# Gather the chosen sites into one directory for the next stage, which can
-# copy a directory but cannot loop over a list. A site that has not been
-# built by the pipeline stops the image build here, not at first use.
+# Gather the chosen sites for the next stage, taking from each only the files
+# the app reads. A site's directory also holds the sources its data is
+# generated from, notes and downloaded reference files; those are not the
+# image's to serve. A site that has not been built by the pipeline stops the
+# image build here, not at first use.
 COPY sites sites
-RUN set -eu; mkdir -p /out/sites; \
-    for site in $SITES; do \
-      test -f "sites/$site/site.json" \
-        || { echo "sites/$site has no site.json: run the pipeline build for it" >&2; exit 1; }; \
-      cp -rL "sites/$site" "/out/sites/$site"; \
-    done
+RUN node apps/web/scripts/gather-sites.mjs sites /out/sites $SITES
 
 # Give each site its own copy of the page and its own web app manifest, so it
 # installs to a phone as an app named after the site.

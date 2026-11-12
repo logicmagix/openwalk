@@ -96,7 +96,9 @@ described here. Paths below are relative to the repository root.
 9. **Add an official map, optionally.** Put a PNG of it under `overlay/` and list
    control points in `site.yaml`: a pixel in the image paired with the OpenStreetMap
    element or position it depicts. The build fits the image to the ground and reports
-   the residual error in metres. Permission from the map's owner is needed to display it.
+   the residual error in metres. Permission from the map's owner is needed to display
+   it. Until you have it, give the overlay `publish: false`: it stays in the debug
+   page for placing things and is left out of the image.
 
 Which ways count as walkways is set per site under `walkways` in `site.yaml`:
 the highway values admitted, surface values treated as unpaved, whether parking aisles
@@ -155,6 +157,11 @@ map for a site is at `/s/<site-id>/`, for example
 serves, or opens the site directly when there is only one. An image carries one site
 or several, chosen with `--build-arg SITES="<site-id> <site-id>"` and defaulting to
 the example site.
+
+The image takes from each site only the generated files the app reads: its settings,
+places, walkways, graph and base map, any overlays, and recorded traces. The
+hand-written sources, the checking page and anything else in the site's directory are
+left out, so they are never served.
 
 The base map's fonts and icons are served by the app itself from
 `apps/web/public/basemap/`, so no third-party host is contacted. They cover Latin,
