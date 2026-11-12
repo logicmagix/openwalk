@@ -84,7 +84,7 @@ described here. Paths below are relative to the repository root.
    that stop a few metres short of another walkway, and walkways that cross without
    sharing a point. Each is given with its coordinates and the distance a person is
    routed today to get round it, longest first, and the debug page shows each by its
-   number. Where a connection exists on the ground, draw it in `walkways.yaml` with
+   number. Both commands take `--max-gap` to look further than a few metres. Where a connection exists on the ground, draw it in `walkways.yaml` with
    those coordinates. Each end within a few metres of a mapped walkway is joined to
    it. Setting `walkways.join_crossings` in `site.yaml` joins every ground-level
    crossing at once; bridges, tunnels and ways on another layer are left apart. Mapping the connection in OpenStreetMap afterwards is the lasting fix.

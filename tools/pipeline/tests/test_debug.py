@@ -44,3 +44,17 @@ def test_debug_command_writes_next_to_the_site(site_dir: Path, tmp_path: Path) -
     out = tmp_path / "elsewhere.html"
     assert main(["debug", str(site_dir), "--out", str(out)]) == 0
     assert json.loads('"ok"') == "ok" and out.exists()
+
+
+def test_a_wider_search_draws_at_least_as_many_gaps(site_dir: Path) -> None:
+    built_site(site_dir)
+    site = load_site(site_dir)
+
+    def gap_count(html: str) -> int:
+        data, _ = json.JSONDecoder().raw_decode(html.split("const DATA = ")[1])
+        return len(data["gaps"]["features"])
+
+    narrow = gap_count(debug.render(site, max_gap_m=1, min_detour_m=0))
+    wide = gap_count(debug.render(site, max_gap_m=500, min_detour_m=0))
+    assert wide >= narrow
+    assert main(["debug", str(site_dir), "--max-gap", "25", "--min-detour", "50"]) == 0

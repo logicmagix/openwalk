@@ -52,8 +52,15 @@ def _read_json(path: Path) -> JsonObject | None:
         return json.load(handle)
 
 
-def render(site: Site) -> str:
-    """Return the page HTML for a site whose generated files exist."""
+def render(
+    site: Site,
+    max_gap_m: float = gaps.DEFAULT_MAX_GAP_M,
+    min_detour_m: float = gaps.DEFAULT_MIN_DETOUR_M,
+) -> str:
+    """Return the page HTML for a site whose generated files exist.
+
+    The two distances decide which suspected gaps are drawn, as for the gaps command.
+    """
     walkways = _read_json(site.walkways_path) or {"type": "FeatureCollection", "features": []}
     places = _read_json(site.places_path) or {"type": "FeatureCollection", "features": []}
     graph = _read_json(site.graph_path) or {"nodes": [], "edges": [], "places": {}}
@@ -67,7 +74,7 @@ def render(site: Site) -> str:
         "places": places,
         "graph": graph,
         "islands": island_edges(graph),
-        "gaps": gaps.as_geojson(gaps.find_gaps(graph)),
+        "gaps": gaps.as_geojson(gaps.find_gaps(graph, max_gap_m, min_detour_m)),
         "overlays": overlays,
     }
     return PAGE.substitute(
@@ -78,9 +85,14 @@ def render(site: Site) -> str:
     )
 
 
-def write(site: Site, out: Path | None = None) -> Path:
+def write(
+    site: Site,
+    out: Path | None = None,
+    max_gap_m: float = gaps.DEFAULT_MAX_GAP_M,
+    min_detour_m: float = gaps.DEFAULT_MIN_DETOUR_M,
+) -> Path:
     path = out or site.directory / "debug.html"
-    path.write_text(render(site), encoding="utf-8")
+    path.write_text(render(site, max_gap_m, min_detour_m), encoding="utf-8")
     return path
 
 
