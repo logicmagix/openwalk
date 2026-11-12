@@ -21,7 +21,7 @@
     },
     "overlay": {
       "type": "object",
-      "required": ["id", "name", "image", "width", "height", "corners", "fit"],
+      "required": ["id", "name", "image", "width", "height", "corners"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
         "name": { "type": "string", "minLength": 1 },
@@ -41,7 +41,7 @@
         },
         "attribution": { "type": "string" },
         "fit": {
-          "description": "How well the control points agree with the fitted transform, in metres.",
+          "description": "How well the control points agree with the fitted transform, in metres. Absent for an image whose corners are known exactly, such as an aerial photograph fetched for them.",
           "type": "object",
           "required": ["control_points", "rms_m", "max_m"],
           "properties": {

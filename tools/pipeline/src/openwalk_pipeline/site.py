@@ -115,6 +115,12 @@ class Site:
     def overlays(self) -> list[dict[str, Any]]:
         return list(self.config.get("overlays", []))
 
+    @property
+    def imagery(self) -> dict[str, Any] | None:
+        """Where the site's aerial photograph comes from, if it asks for one."""
+        found = self.config.get("imagery")
+        return dict(found) if found is not None else None
+
 
 def parse_boundary(config: dict[str, Any]) -> Boundary:
     if "osm_way" in config:
