@@ -17,6 +17,8 @@ export interface LayersOptions {
     readonly name: string;
     readonly attribution?: string;
   }[];
+  /** How the switches start: what was on when the person last used this site. */
+  readonly initial?: LayerPrefs;
   /** Called with the full, normalised preferences whenever a checkbox changes. */
   readonly onChange: (prefs: LayerPrefs) => void;
 }
@@ -54,14 +56,15 @@ function checkbox(
 
 /**
  * Wires the layers button and panel. Returns the initial preferences so the first
- * style is built to match the checkboxes (overlays off, walkways and labels on).
+ * style is built to match the checkboxes: as the person left them, or overlays
+ * off and walkways and labels on for someone new.
  */
 export function setupLayers(elements: LayersElements, options: LayersOptions): LayerPrefs {
   const { button, panel } = elements;
   // The working set of shown overlay ids; walkways and labels start on.
-  const shownOverlays = new Set<string>();
-  let walkways = true;
-  let labels = true;
+  const shownOverlays = new Set<string>(options.initial?.overlays ?? []);
+  let walkways = options.initial?.walkways ?? true;
+  let labels = options.initial?.labels ?? true;
 
   function current(): LayerPrefs {
     return { overlays: [...shownOverlays], walkways, labels };
@@ -71,7 +74,7 @@ export function setupLayers(elements: LayersElements, options: LayersOptions): L
     panel.append(
       checkbox(
         overlay.name,
-        false,
+        shownOverlays.has(overlay.id),
         (on) => {
           if (on) shownOverlays.add(overlay.id);
           else shownOverlays.delete(overlay.id);
@@ -82,11 +85,11 @@ export function setupLayers(elements: LayersElements, options: LayersOptions): L
     );
   }
   panel.append(
-    checkbox('Walkways', true, (on) => {
+    checkbox('Walkways', walkways, (on) => {
       walkways = on;
       options.onChange(current());
     }),
-    checkbox('Place labels', true, (on) => {
+    checkbox('Place labels', labels, (on) => {
       labels = on;
       options.onChange(current());
     }),
