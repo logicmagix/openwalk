@@ -280,3 +280,86 @@ describe('positionCollection', () => {
     expect(features[1]?.geometry).toEqual({ type: 'Point', coordinates: [1, 2] });
   });
 });
+
+describe('colour schemes', () => {
+  const schemes = ['standard', 'contrast', 'muted'] as const;
+  const themes = ['light', 'dark'] as const;
+
+  /** A paint value of one of the app's own layers. */
+  function paint(style: ReturnType<typeof buildStyle>, layer: string, property: string): unknown {
+    const found = style.layers.find((candidate) => candidate.id === layer);
+    return (found as { paint?: Record<string, unknown> } | undefined)?.paint?.[property];
+  }
+
+  /** How strongly two colours differ, from 1 (the same) to 21 (black on white). */
+  function contrast(a: string, b: string): number {
+    const luminance = (hex: string): number => {
+      const channel = (index: number): number => {
+        const value = parseInt(hex.slice(index, index + 2), 16) / 255;
+        return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+    };
+    const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+    return (light + 0.05) / (dark + 0.05);
+  }
+
+  it.each(schemes.flatMap((scheme) => themes.map((theme) => [scheme, theme] as const)))(
+    '%s in %s is a style MapLibre accepts, with readable labels and a visible route',
+    (scheme, theme) => {
+      const style = buildStyle({ ...base, theme, scheme });
+      expect(validateStyleMin(style)).toEqual([]);
+      // Place names against the halo drawn round them: as for body text.
+      const text = paint(style, 'places-label', 'text-color') as string;
+      const halo = paint(style, 'places-label', 'text-halo-color') as string;
+      expect(contrast(text, halo)).toBeGreaterThanOrEqual(4.5);
+      // The route against the edge drawn round it: as for a graphic that must be seen.
+      const route = paint(style, 'route-path', 'line-color') as string;
+      const casing = paint(style, 'route-casing', 'line-color') as string;
+      expect(contrast(route, casing)).toBeGreaterThanOrEqual(3);
+    },
+  );
+
+  it('is the standard scheme when none is named', () => {
+    expect(buildStyle({ ...base, theme: 'light' })).toEqual(
+      buildStyle({ ...base, theme: 'light', scheme: 'standard' }),
+    );
+  });
+
+  it('draws high contrast heavier: wider routes and thicker outlines on places', () => {
+    const standard = buildStyle({ ...base, theme: 'light', scheme: 'standard' });
+    const strong = buildStyle({ ...base, theme: 'light', scheme: 'contrast' });
+    expect(paint(strong, 'route-path', 'line-width')).toBeGreaterThan(
+      paint(standard, 'route-path', 'line-width') as number,
+    );
+    expect(paint(strong, 'places-dot', 'circle-stroke-width')).toBeGreaterThan(
+      paint(standard, 'places-dot', 'circle-stroke-width') as number,
+    );
+  });
+
+  it('keeps the route apart from the walkways in every scheme', () => {
+    for (const scheme of schemes) {
+      for (const theme of themes) {
+        const style = buildStyle({ ...base, theme, scheme });
+        const route = paint(style, 'route-path', 'line-color') as string;
+        const walkway = (paint(style, 'walkways-line', 'line-color') as unknown[]).at(-1) as string;
+        expect(route, `${scheme} ${theme}`).not.toBe(walkway);
+      }
+    }
+  });
+
+  it('gives each kind of place the same colour in every scheme', () => {
+    const colours = schemes.map((scheme) =>
+      paint(buildStyle({ ...base, theme: 'light', scheme }), 'places-dot', 'circle-color'),
+    );
+    expect(colours[1]).toEqual(colours[0]);
+    expect(colours[2]).toEqual(colours[0]);
+  });
+
+  it('changes the base map itself for the two schemes that are not the standard', () => {
+    const background = (scheme: (typeof schemes)[number]) =>
+      JSON.stringify(buildStyle({ ...base, theme: 'light', scheme }).layers[0]);
+    expect(background('contrast')).not.toBe(background('standard'));
+    expect(background('muted')).not.toBe(background('standard'));
+  });
+});

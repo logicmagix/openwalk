@@ -27,6 +27,28 @@
   color-scheme: light;
 }
 
+/* The high contrast colours chosen in the app's settings: plain surfaces, the
+   darkest or lightest ink, and a stronger accent. */
+:root[data-scheme='contrast'] {
+  --surface: #ffffff;
+  --ink: #000000;
+  --accent: #0b57d0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-scheme='contrast']:not([data-theme='light']) {
+    --surface: #000000;
+    --ink: #ffffff;
+    --accent: #a8c7fa;
+  }
+}
+
+:root[data-scheme='contrast'][data-theme='dark'] {
+  --surface: #000000;
+  --ink: #ffffff;
+  --accent: #a8c7fa;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;

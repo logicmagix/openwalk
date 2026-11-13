@@ -21,6 +21,32 @@ export const APPEARANCES: readonly { readonly value: Appearance; readonly label:
   { value: 'dark', label: 'Dark' },
 ];
 
+/**
+ * A set of colours for the map and the controls. Each is fixed and checked for
+ * contrast; a person picks one, they do not mix their own.
+ *   standard  the colours the app was designed in
+ *   contrast  stronger lines, heavier outlines and plain black or white
+ *             surfaces, for bright sun and for eyes that need more
+ *   muted     a quieter base map, so the route and the places stand out
+ * The kinds of place keep their colours in all three, so the legend reads the same.
+ */
+export type Scheme = 'standard' | 'contrast' | 'muted';
+
+export const SCHEME_KEY = 'openwalk.scheme';
+/** The attribute on the page's root element that names a scheme other than the standard. */
+export const SCHEME_ATTRIBUTE = 'data-scheme';
+
+export const SCHEMES: readonly { readonly value: Scheme; readonly label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'contrast', label: 'High contrast' },
+  { value: 'muted', label: 'Muted' },
+];
+
+/** The scheme from what was kept; anything else is the standard one. */
+export function readScheme(kept: string | null): Scheme {
+  return kept === 'contrast' || kept === 'muted' ? kept : 'standard';
+}
+
 /** The choice from what was kept; anything else means following the device. */
 export function readAppearance(kept: string | null): Appearance {
   return kept === 'light' || kept === 'dark' ? kept : 'system';

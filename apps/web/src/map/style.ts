@@ -16,6 +16,7 @@ import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
 import { FALLBACK_COLOUR, type Category } from '../categories';
 import type { PositionFix } from '../position/provider';
 import type { WalkwaysDocument } from '../site/types';
+import type { Scheme } from '../appearance';
 import type { Theme } from '../theme';
 import { circlePolygon } from './circle';
 
@@ -40,6 +41,8 @@ export interface LayerPrefs {
 
 export interface StyleInputs {
   readonly theme: Theme;
+  /** The set of colours; the standard one when absent. */
+  readonly scheme?: Scheme;
   /** URL of the site's basemap.pmtiles. */
   readonly basemapUrl: string;
   /** Where the glyphs and sprites the base map needs are served from. */
@@ -82,7 +85,63 @@ export function overlayLayerId(id: string): string {
 /** Layers a tap on selects a place; the feature's `id` property is the place id. */
 export const PLACE_LAYERS = ['places-dot', 'places-label'] as const;
 
-const COLOURS = {
+/** The colours and weights of the app's own layers, drawn over the base map. */
+interface Palette {
+  readonly walkway: string;
+  readonly walkwayHand: string;
+  readonly placeOutline: string;
+  readonly placeText: string;
+  readonly placeHalo: string;
+  readonly position: string;
+  readonly positionStroke: string;
+  readonly route: string;
+  readonly routeCasing: string;
+}
+
+/** How a scheme differs from the standard one apart from its colours. */
+interface Weights {
+  /** The base map's own flavour, by theme. */
+  readonly flavour: Readonly<Record<Theme, string>>;
+  /** Walkway and route lines are this many times as wide. */
+  readonly line: number;
+  readonly walkwayOpacity: number;
+  /** The outline of a place's dot, in pixels. */
+  readonly placeStroke: number;
+  /** Added to the size of place labels, in pixels. */
+  readonly labelExtra: number;
+  readonly labelHalo: number;
+}
+
+const WEIGHTS: Readonly<Record<Scheme, Weights>> = {
+  standard: {
+    flavour: { light: 'light', dark: 'dark' },
+    line: 1,
+    walkwayOpacity: 0.8,
+    placeStroke: 1.5,
+    labelExtra: 0,
+    labelHalo: 1.5,
+  },
+  // Plain white or black ground, and everything of the app's own drawn heavier.
+  contrast: {
+    flavour: { light: 'white', dark: 'black' },
+    line: 1.5,
+    walkwayOpacity: 1,
+    placeStroke: 2.5,
+    labelExtra: 1.5,
+    labelHalo: 2.5,
+  },
+  // A grey ground that asks for less attention than what is drawn on it.
+  muted: {
+    flavour: { light: 'grayscale', dark: 'black' },
+    line: 1,
+    walkwayOpacity: 0.7,
+    placeStroke: 1.5,
+    labelExtra: 0,
+    labelHalo: 1.5,
+  },
+};
+
+const STANDARD: Readonly<Record<Theme, Palette>> = {
   light: {
     walkway: '#2b6cb0',
     walkwayHand: '#b7791f',
@@ -105,7 +164,41 @@ const COLOURS = {
     route: '#c4b5fd',
     routeCasing: '#202124',
   },
-} as const;
+};
+
+const COLOURS: Readonly<Record<Scheme, Readonly<Record<Theme, Palette>>>> = {
+  standard: STANDARD,
+  contrast: {
+    light: {
+      walkway: '#0b3d91',
+      walkwayHand: '#7a4100',
+      placeOutline: '#000000',
+      placeText: '#000000',
+      placeHalo: '#ffffff',
+      position: '#0b57d0',
+      positionStroke: '#ffffff',
+      route: '#5b21b6',
+      routeCasing: '#ffffff',
+    },
+    dark: {
+      walkway: '#cfe9ff',
+      walkwayHand: '#ffe873',
+      placeOutline: '#ffffff',
+      placeText: '#ffffff',
+      placeHalo: '#000000',
+      position: '#a8c7fa',
+      positionStroke: '#000000',
+      // Pink, not the pale violet of the standard dark scheme, which is too
+      // close to the pale blue of the walkways when both are drawn this strongly.
+      route: '#ff8ad8',
+      routeCasing: '#000000',
+    },
+  },
+  muted: {
+    light: { ...STANDARD.light, walkway: '#5f7f9e', walkwayHand: '#9c8656' },
+    dark: { ...STANDARD.dark, walkway: '#7f9fbd', walkwayHand: '#b3a46a' },
+  },
+};
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
@@ -119,7 +212,9 @@ function visibility(shown: boolean): 'visible' | 'none' {
 }
 
 export function buildStyle(inputs: StyleInputs): StyleSpecification {
-  const colours = COLOURS[inputs.theme];
+  const scheme = inputs.scheme ?? 'standard';
+  const colours = COLOURS[scheme][inputs.theme];
+  const weights = WEIGHTS[scheme];
   const position = positionCollection(inputs.position ?? null);
   const walkways = asGeoJson(inputs.walkways ?? EMPTY);
   const places = withIdProperty(inputs.places ?? EMPTY);
@@ -208,7 +303,9 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
       ...overlaySources,
     },
     layers: [
-      ...basemapLayers(BASEMAP_SOURCE, namedFlavor(inputs.theme), { lang: inputs.lang }),
+      ...basemapLayers(BASEMAP_SOURCE, namedFlavor(weights.flavour[inputs.theme]), {
+        lang: inputs.lang,
+      }),
       ...overlayLayers,
       {
         id: 'walkways-line',
@@ -223,8 +320,18 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
             colours.walkwayHand,
             colours.walkway,
           ],
-          'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 17, 2.5, 20, 5],
-          'line-opacity': 0.8,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            14,
+            1 * weights.line,
+            17,
+            2.5 * weights.line,
+            20,
+            5 * weights.line,
+          ],
+          'line-opacity': weights.walkwayOpacity,
         },
       },
       {
@@ -241,7 +348,11 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: ROUTE_SOURCE,
         filter: ['==', ['get', 'kind'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': colours.routeCasing, 'line-width': 9, 'line-opacity': 0.9 },
+        paint: {
+          'line-color': colours.routeCasing,
+          'line-width': 9 * weights.line,
+          'line-opacity': 0.9,
+        },
       },
       {
         id: 'route-path',
@@ -249,7 +360,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: ROUTE_SOURCE,
         filter: ['==', ['get', 'kind'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': colours.route, 'line-width': 5 },
+        paint: { 'line-color': colours.route, 'line-width': 5 * weights.line },
       },
       {
         // The walk to and from the network, where no path is mapped: dashed.
@@ -301,7 +412,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
           // The outline contrasts with the map in each theme, so a dot is seen
           // whatever its fill and whatever it lies on.
           'circle-stroke-color': colours.placeOutline,
-          'circle-stroke-width': 1.5,
+          'circle-stroke-width': weights.placeStroke,
         },
       },
       {
@@ -319,7 +430,15 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
             ['get', 'name'],
           ],
           'text-font': ['Noto Sans Medium'],
-          'text-size': ['interpolate', ['linear'], ['zoom'], 15, 11, 18, 14],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            11 + weights.labelExtra,
+            18,
+            14 + weights.labelExtra,
+          ],
           'text-offset': [0, 0.9],
           'text-anchor': 'top',
           'text-max-width': 9,
@@ -327,7 +446,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         paint: {
           'text-color': colours.placeText,
           'text-halo-color': colours.placeHalo,
-          'text-halo-width': 1.5,
+          'text-halo-width': weights.labelHalo,
         },
       },
       {
