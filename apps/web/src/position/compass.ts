@@ -68,7 +68,8 @@ export class Compass {
   /**
    * Asks leave to read the compass where the browser requires it, which an
    * iPhone does and only in answer to a press. Resolves false when refused or
-   * when there is no compass to ask for; the app then uses the direction of travel.
+   * when there is no compass to ask for. Nothing need wait on the answer:
+   * without leave no readings arrive.
    */
   static async request(): Promise<boolean> {
     if (typeof DeviceOrientationEvent === 'undefined') return false;

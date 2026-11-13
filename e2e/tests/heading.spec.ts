@@ -9,23 +9,18 @@ test.use({ permissions: ['geolocation'] });
 
 const wedge = (page: Page) => page.locator('.heading-wedge');
 
-/** Whether this browser has the compass event at all; a desktop engine may not. */
-const hasCompass = (page: Page) =>
-  page.evaluate(() => typeof DeviceOrientationEvent !== 'undefined');
-
-/** Tells the page the phone points this many degrees clockwise from north. */
+/**
+ * Tells the page the phone points this many degrees clockwise from north. The
+ * event is a plain one given the fields a compass event carries, because not
+ * every browser engine lets a page construct the real kind.
+ */
 async function pointPhone(page: Page, heading: number): Promise<void> {
   await page.evaluate(
     (alpha) => {
+      const event = new Event('deviceorientationabsolute');
       // An absolute reading counts counter-clockwise from north.
-      window.dispatchEvent(
-        new DeviceOrientationEvent('deviceorientationabsolute', {
-          alpha,
-          beta: 0,
-          gamma: 0,
-          absolute: true,
-        }),
-      );
+      Object.assign(event, { alpha, beta: 0, gamma: 0, absolute: true });
+      window.dispatchEvent(event);
     },
     (360 - heading) % 360,
   );
@@ -47,7 +42,6 @@ test('no fan is drawn while the phone gives no direction', async ({ page, contex
 test('the fan points the way the compass says, and turns with it', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(places[0]!)));
   await openMap(page);
-  test.skip(!(await hasCompass(page)), 'this browser has no compass event');
   await locate(page);
   await pointPhone(page, 90);
   await expect(wedge(page)).toHaveCount(1);
@@ -67,7 +61,6 @@ test('the fan points the way the compass says, and turns with it', async ({ page
 test('the fan goes when location is switched off', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(places[0]!)));
   await openMap(page);
-  test.skip(!(await hasCompass(page)), 'this browser has no compass event');
   await locate(page);
   await pointPhone(page, 45);
   await expect(wedge(page)).toHaveCount(1);
@@ -82,7 +75,6 @@ test('the fan goes when location is switched off', async ({ page, context }) => 
 test('the fan is for looking at: presses pass through to the map', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(places[0]!)));
   await openMap(page);
-  test.skip(!(await hasCompass(page)), 'this browser has no compass event');
   await locate(page);
   await pointPhone(page, 0);
   await expect(wedge(page)).toHaveCount(1);

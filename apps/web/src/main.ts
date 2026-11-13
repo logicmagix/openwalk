@@ -638,20 +638,19 @@ async function start(): Promise<void> {
 
   /**
    * Begins reading the compass. An iPhone asks the person's leave, and only in
-   * answer to a press, which turning location on is. Refused, or with no
-   * compass, the wedge follows the direction of travel instead.
+   * answer to a press, which turning location on is. Listening starts at once
+   * and does not wait on the answer: where leave is refused, or there is no
+   * compass, no readings come and the wedge follows the direction of travel.
    */
   function startCompass(): void {
-    void Compass.request().then((allowed) => {
-      if (!allowed || !locator.on) return;
-      compass.start((heading) => {
-        compassHeading = heading;
-        // Compass readings come many times a second; draw at most once a frame.
-        if (headingFrame !== 0) return;
-        headingFrame = requestAnimationFrame(() => {
-          headingFrame = 0;
-          showHeading();
-        });
+    void Compass.request();
+    compass.start((heading) => {
+      compassHeading = heading;
+      // Compass readings come many times a second; draw at most once a frame.
+      if (headingFrame !== 0) return;
+      headingFrame = requestAnimationFrame(() => {
+        headingFrame = 0;
+        showHeading();
       });
     });
   }
