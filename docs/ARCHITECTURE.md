@@ -228,6 +228,15 @@ is about the person's eyes and screen, so it is kept once for the device, in
 the page is drawn. Which optional buttons a map shows is kept per site with the rest
 of how that map was left. Search, location, layers and the compass are not optional.
 
+The colours come in three fixed sets, chosen for the device like light and dark:
+the standard one, a high contrast one (plain white or black ground, heavier lines and
+outlines, and hard-edged controls) and a muted one (a greyscale ground, so the route
+and the places stand out; the controls are unchanged). The kinds of place keep their
+colours in all three, so the legend reads the same. A set is a palette and a few
+weights in `map/style.ts` and some custom properties in the stylesheet; unit tests
+hold each to contrast between labels and their halo and between the route and its
+edge, and the browser tests run the accessibility checks in high contrast.
+
 ## License and repository
 
 Code is Apache-2.0 (see `LICENSE`). Site data derived from OpenStreetMap stays under

@@ -3,11 +3,15 @@
 
 import {
   APPEARANCE_KEY,
+  SCHEME_ATTRIBUTE,
+  SCHEME_KEY,
   THEME_ATTRIBUTE,
   attributeFor,
   readAppearance,
+  readScheme,
   themeOf,
   type Appearance,
+  type Scheme,
 } from './appearance';
 
 export type Theme = 'light' | 'dark';
@@ -23,6 +27,17 @@ export interface ThemeControl {
   readonly appearance: Appearance;
   /** Changes the choice, keeps it for next time, and applies it at once. */
   choose(appearance: Appearance): void;
+  /** The set of colours in use. */
+  readonly scheme: Scheme;
+  chooseScheme(scheme: Scheme): void;
+}
+
+function keptScheme(): Scheme {
+  try {
+    return readScheme(localStorage.getItem(SCHEME_KEY));
+  } catch {
+    return 'standard';
+  }
 }
 
 function keptAppearance(): Appearance {
@@ -34,13 +49,14 @@ function keptAppearance(): Appearance {
 }
 
 /**
- * Follows the device's setting and the person's choice. `onChange` is called
- * with the new theme whenever either makes it differ from the one in force.
+ * Follows the device's setting and the person's choices. `onChange` is called
+ * with the theme and the scheme whenever either differs from what was in force.
  */
-export function watchTheme(onChange: (theme: Theme) => void): ThemeControl {
+export function watchTheme(onChange: (theme: Theme, scheme: Scheme) => void): ThemeControl {
   const device = window.matchMedia('(prefers-color-scheme: dark)');
   let appearance = keptAppearance();
   let theme = themeOf(appearance, device.matches);
+  let scheme = keptScheme();
 
   function apply(): void {
     // The stylesheet reads this attribute; without it the page follows the device.
@@ -50,12 +66,19 @@ export function watchTheme(onChange: (theme: Theme) => void): ThemeControl {
     const next = themeOf(appearance, device.matches);
     if (next !== theme) {
       theme = next;
-      onChange(theme);
+      onChange(theme, scheme);
     }
+  }
+
+  function applyScheme(): void {
+    // Absent for the standard scheme, so the stylesheet's own colours stand.
+    if (scheme === 'standard') document.documentElement.removeAttribute(SCHEME_ATTRIBUTE);
+    else document.documentElement.setAttribute(SCHEME_ATTRIBUTE, scheme);
   }
 
   device.addEventListener('change', apply);
   apply();
+  applyScheme();
 
   return {
     get theme() {
@@ -73,6 +96,21 @@ export function watchTheme(onChange: (theme: Theme) => void): ThemeControl {
         // Storage refused: the choice holds until the page is closed.
       }
       apply();
+    },
+    get scheme() {
+      return scheme;
+    },
+    chooseScheme(next) {
+      if (next === scheme) return;
+      scheme = next;
+      try {
+        if (next === 'standard') localStorage.removeItem(SCHEME_KEY);
+        else localStorage.setItem(SCHEME_KEY, next);
+      } catch {
+        // Storage refused: the choice holds until the page is closed.
+      }
+      applyScheme();
+      onChange(theme, scheme);
     },
   };
 }

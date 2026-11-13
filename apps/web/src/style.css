@@ -34,6 +34,32 @@
   color-scheme: light;
 }
 
+/* High contrast: plain white or black surfaces, the darkest or lightest ink, a
+   stronger accent, and a hard edge round each floating control where the
+   standard scheme has a soft shadow. The muted scheme changes the map only. */
+:root[data-scheme='contrast'] {
+  --surface: #ffffff;
+  --ink: #000000;
+  --accent: #0b57d0;
+  --shadow: 0 0 0 2px #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-scheme='contrast']:not([data-theme='light']) {
+    --surface: #000000;
+    --ink: #ffffff;
+    --accent: #a8c7fa;
+    --shadow: 0 0 0 2px #ffffff;
+  }
+}
+
+:root[data-scheme='contrast'][data-theme='dark'] {
+  --surface: #000000;
+  --ink: #ffffff;
+  --accent: #a8c7fa;
+  --shadow: 0 0 0 2px #ffffff;
+}
+
 html,
 body {
   margin: 0;

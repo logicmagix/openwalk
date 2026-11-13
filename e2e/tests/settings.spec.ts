@@ -160,3 +160,85 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 }
+
+test.describe('colours', () => {
+  test.use({ colorScheme: 'light' });
+
+  const scheme = (page: Page, name: string) =>
+    settings(page).dialog.getByRole('radio', { name, exact: true });
+  /** The colour of the app's own text, which each scheme sets with its surface. */
+  const ink = (page: Page) => page.evaluate(() => getComputedStyle(document.body).color);
+
+  test('the standard colours are in use until another set is chosen', async ({ page }) => {
+    await openMap(page);
+    await openSettings(page);
+    await expect(scheme(page, 'Standard')).toBeChecked();
+    await expect(page.locator('html')).not.toHaveAttribute('data-scheme');
+  });
+
+  test('high contrast applies at once, is kept, and reaches the privacy page', async ({ page }) => {
+    await openMap(page);
+    const before = await ink(page);
+    await openSettings(page);
+    await scheme(page, 'High contrast').check();
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'contrast');
+    expect(await ink(page)).toBe('rgb(0, 0, 0)');
+    expect(await ink(page)).not.toBe(before);
+
+    await revisit(page);
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'contrast');
+    await openSettings(page);
+    await expect(scheme(page, 'High contrast')).toBeChecked();
+
+    await page.goto(`/privacy/?site=${SITE_ID}`);
+    await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
+    expect(await ink(page)).toBe('rgb(0, 0, 0)');
+  });
+
+  test('high contrast in dark is white on black', async ({ page }) => {
+    await openMap(page);
+    await openSettings(page);
+    await settings(page).dark.check();
+    await scheme(page, 'High contrast').check();
+    expect(await surface(page)).toBe('rgb(0, 0, 0)');
+    expect(await ink(page)).toBe('rgb(255, 255, 255)');
+  });
+
+  test('muted changes the map and leaves the controls as they were', async ({ page }) => {
+    await openMap(page);
+    const before = { surface: await surface(page), ink: await ink(page) };
+    await openSettings(page);
+    await scheme(page, 'Muted').check();
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'muted');
+    expect({ surface: await surface(page), ink: await ink(page) }).toEqual(before);
+    await expect(page.locator('#map canvas')).toBeVisible();
+  });
+
+  test('going back to the standard colours undoes the choice', async ({ page }) => {
+    await openMap(page);
+    await openSettings(page);
+    await scheme(page, 'Muted').check();
+    await scheme(page, 'Standard').check();
+    await expect(page.locator('html')).not.toHaveAttribute('data-scheme');
+  });
+
+  for (const theme of ['light', 'dark'] as const) {
+    test(`the app passes accessibility checks in high contrast, ${theme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await openMap(page);
+      await openSettings(page);
+      await scheme(page, 'High contrast').check();
+      const open = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .include('#settings')
+        .analyze();
+      expect(open.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+      await settings(page).close.click();
+      const map = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .exclude('#map canvas')
+        .analyze();
+      expect(map.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    });
+  }
+});

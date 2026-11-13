@@ -250,8 +250,12 @@ async function start(): Promise<void> {
       destination: null,
     },
   };
-  const themeControl = watchTheme((theme) => restyle({ theme }));
-  inputs.current = { ...inputs.current, theme: themeControl.theme };
+  const themeControl = watchTheme((theme, scheme) => restyle({ theme, scheme }));
+  inputs.current = {
+    ...inputs.current,
+    theme: themeControl.theme,
+    scheme: themeControl.scheme,
+  };
 
   const view = initialView(site.config, site.places);
   const extent = siteExtent(site.places, site.walkways);
@@ -835,11 +839,14 @@ async function start(): Promise<void> {
       dialog: element<HTMLDialogElement>('settings'),
       close: element('settings-close'),
       appearance: element('settings-appearance'),
+      scheme: element('settings-scheme'),
       controls: element('settings-controls'),
     },
     {
       appearance: () => themeControl.appearance,
       onAppearance: (appearance) => themeControl.choose(appearance),
+      scheme: () => themeControl.scheme,
+      onScheme: (scheme) => themeControl.chooseScheme(scheme),
       choices: [
         { id: 'zoom', label: 'Zoom buttons' },
         // A site with no nearest buttons has nothing here to show or hide.
