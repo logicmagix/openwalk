@@ -39,23 +39,28 @@ test('no fan is drawn while the phone gives no direction', async ({ page, contex
   await expect(wedge(page)).toHaveCount(0);
 });
 
+/** How far the fan is turned, in degrees, read from the rotation the map library gives it. */
+async function turnOf(page: Page): Promise<number> {
+  const style = (await wedge(page).getAttribute('style')) ?? '';
+  return Number(/rotateZ\(([\d.]+)deg\)/.exec(style)?.[1] ?? NaN);
+}
+
 test('the fan points the way the compass says, and turns with it', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(places[0]!)));
   await openMap(page);
   await locate(page);
+  // A compass reading is for a phone held upright; the app allows for the
+  // screen being turned, and a test browser's screen may report that it is.
+  const screenTurn = await page.evaluate(() => window.screen.orientation?.angle ?? 0);
+  const facing = (heading: number) => (heading + screenTurn) % 360;
+
   await pointPhone(page, 90);
   await expect(wedge(page)).toHaveCount(1);
-  // The map library turns a marker with a rotation in its transform.
-  await expect(wedge(page)).toHaveAttribute('style', /rotateZ\(90deg\)/);
+  await expect.poll(() => turnOf(page)).toBe(facing(90));
 
   // A steady new reading is followed, a step at a time, until it is reached.
   for (let i = 0; i < 40; i += 1) await pointPhone(page, 180);
-  await expect
-    .poll(async () => {
-      const style = (await wedge(page).getAttribute('style')) ?? '';
-      return Number(/rotateZ\(([\d.]+)deg\)/.exec(style)?.[1] ?? NaN);
-    })
-    .toBeGreaterThan(179);
+  await expect.poll(() => turnOf(page)).toBeCloseTo(facing(180), 0);
 });
 
 test('the fan goes when location is switched off', async ({ page, context }) => {
