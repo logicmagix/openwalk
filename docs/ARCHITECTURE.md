@@ -222,6 +222,12 @@ at the point itself, leaving the network at the nearest walkway. A spot never go
 a link or a code. A saved file carries spots only when the person ticks the box for
 them, and a file's spots are taken on another device only where they lie on the site.
 
+Settings are of two kinds. How the app looks (light, dark, or following the device)
+is about the person's eyes and screen, so it is kept once for the device, in
+`localStorage`, and a small script loaded ahead of everything else applies it before
+the page is drawn. Which optional buttons a map shows is kept per site with the rest
+of how that map was left. Search, location, layers and the compass are not optional.
+
 ## License and repository
 
 Code is Apache-2.0 (see `LICENSE`). Site data derived from OpenStreetMap stays under

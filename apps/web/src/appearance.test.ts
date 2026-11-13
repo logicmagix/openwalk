@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest';
+// The script as text: `?raw` asks the build tool for a file's contents, not its exports.
+import script from '../public/theme.js?raw';
+import {
+  APPEARANCE_KEY,
+  THEME_ATTRIBUTE,
+  attributeFor,
+  readAppearance,
+  themeOf,
+} from './appearance';
+
+describe('readAppearance', () => {
+  it('follows the device unless light or dark was chosen', () => {
+    expect(readAppearance(null)).toBe('system');
+    expect(readAppearance('')).toBe('system');
+    expect(readAppearance('sepia')).toBe('system');
+    expect(readAppearance('light')).toBe('light');
+    expect(readAppearance('dark')).toBe('dark');
+  });
+});
+
+describe('themeOf', () => {
+  it('is the device’s own preference while following it', () => {
+    expect(themeOf('system', true)).toBe('dark');
+    expect(themeOf('system', false)).toBe('light');
+  });
+
+  it('is the choice, whatever the device prefers', () => {
+    expect(themeOf('light', true)).toBe('light');
+    expect(themeOf('dark', false)).toBe('dark');
+  });
+});
+
+describe('attributeFor', () => {
+  it('is absent while following the device', () => {
+    expect(attributeFor('system')).toBeNull();
+    expect(attributeFor('dark')).toBe('dark');
+  });
+});
+
+describe('the script that runs before the page is drawn', () => {
+  // It cannot import this module, so it repeats the name and the attribute.
+  it('reads the same name and sets the same attribute', () => {
+    expect(script).toContain(`'${APPEARANCE_KEY}'`);
+    expect(script).toContain(`'${THEME_ATTRIBUTE}'`);
+  });
+});

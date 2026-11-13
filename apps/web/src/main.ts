@@ -99,6 +99,7 @@ import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
 import { setupSearch } from './ui/search';
+import { setupSettings } from './ui/settings';
 import { setupSpots, spotSign } from './ui/spots';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
@@ -249,7 +250,8 @@ async function start(): Promise<void> {
       destination: null,
     },
   };
-  inputs.current = { ...inputs.current, theme: watchTheme((theme) => restyle({ theme })) };
+  const themeControl = watchTheme((theme) => restyle({ theme }));
+  inputs.current = { ...inputs.current, theme: themeControl.theme };
 
   const view = initialView(site.config, site.places);
   const extent = siteExtent(site.places, site.walkways);
@@ -813,9 +815,45 @@ async function start(): Promise<void> {
     button.addEventListener('click', () => chooseNearest(category, label));
     nearest.append(button);
   }
-  nearest.hidden = nearest.childElementCount === 0;
-  // The spots button sits under this row, and moves up when the row is not there.
-  document.body.classList.toggle('no-nearest', nearest.hidden);
+  const noNearest = nearest.childElementCount === 0;
+  nearest.hidden = noNearest;
+
+  // --- settings -----------------------------------------------------------------
+  /** Shows or hides the optional buttons as the person has them set for this map. */
+  function showControls(): void {
+    const { zoom, nearest: nearestShown, spots: spotsShown } = prefs.controls;
+    document.body.classList.toggle('hide-zoom', !zoom);
+    document.body.classList.toggle('hide-nearest', !nearestShown);
+    document.body.classList.toggle('hide-spots', !spotsShown);
+    // The spots button sits under the nearest row, and moves up when the row is not there.
+    document.body.classList.toggle('no-nearest', noNearest || !nearestShown);
+    if (!spotsShown) spotsMenu.close();
+  }
+  showControls();
+  const settings = setupSettings(
+    {
+      dialog: element<HTMLDialogElement>('settings'),
+      close: element('settings-close'),
+      appearance: element('settings-appearance'),
+      controls: element('settings-controls'),
+    },
+    {
+      appearance: () => themeControl.appearance,
+      onAppearance: (appearance) => themeControl.choose(appearance),
+      choices: [
+        { id: 'zoom', label: 'Zoom buttons' },
+        // A site with no nearest buttons has nothing here to show or hide.
+        ...(noNearest ? [] : [{ id: 'nearest' as const, label: 'Nearest buttons' }]),
+        { id: 'spots', label: 'My spots button' },
+      ],
+      controls: () => prefs.controls,
+      onControls: (controls) => {
+        remember({ controls });
+        showControls();
+      },
+    },
+  );
+  legend.addLink({ label: 'Settings', onPress: () => settings.open() });
 
   // A share link opens straight onto its place, with the panel ready.
   if (link !== null) {
@@ -847,6 +885,7 @@ async function start(): Promise<void> {
       document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.href ??
         new URL('/manifest.webmanifest', origin).href,
       new URL('/favicon.svg', origin).href,
+      new URL('/theme.js', origin).href,
       ...PRIVACY_FILES.map((path) => new URL(path, origin).href),
       // Asked for by the privacy page when it is opened from this site.
       new URL(`${siteBase}site.json`, origin).href,
