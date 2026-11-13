@@ -17,8 +17,11 @@ export type Listing =
       readonly label: string;
       /** The annotation, or an empty string. */
       readonly detail: string;
-      /** Set on a row listed because the person saved the place or went there lately. */
-      readonly mark?: 'saved' | 'recent';
+      /**
+       * Set on a row listed because it is the person's own: a place they saved
+       * or went to lately, their parked car, or a spot they marked.
+       */
+      readonly mark?: 'saved' | 'recent' | 'car' | 'spot';
     }
   /** A kind of place; choosing it lists the places of that kind. */
   | {
@@ -53,6 +56,8 @@ export const RECENT_SHOWN = 3;
 export const SAVED_WORD = 'Saved';
 export const RECENT_WORD = 'Recent';
 export const ROUTE_WORD = 'Saved route';
+export const CAR_WORD = 'Where you parked';
+export const SPOT_WORD = 'A spot you marked';
 
 export const HERE_LABEL = 'My location';
 export const HERE_DETAIL = 'Directions that follow you as you walk';
@@ -124,6 +129,11 @@ export interface ListingSource {
   readonly recent?: readonly string[];
   /** The person's saved walks, oldest first, each from one place id to another. */
   readonly routes?: readonly { readonly from: string; readonly to: string }[];
+  /**
+   * The spots the person has marked, each in the shape of a place, with whether
+   * it is the parked car. They lead the person's own rows.
+   */
+  readonly spots?: readonly { readonly place: PlaceFeature; readonly car: boolean }[];
   /** Set while a start is being chosen: the list then leads with the person's position. */
   readonly offerHere?: boolean;
 }
@@ -156,7 +166,16 @@ function ownRows(source: ListingSource): Listing[] {
       detail: ROUTE_WORD,
     });
   }
+  // A spot is somewhere to go, not somewhere a planned walk can start from.
+  const spots: Listing[] = (source.offerHere ? [] : (source.spots ?? [])).map(({ place, car }) => ({
+    kind: 'place',
+    place,
+    label: place.properties.name,
+    detail: car ? CAR_WORD : SPOT_WORD,
+    mark: car ? 'car' : 'spot',
+  }));
   return [
+    ...spots,
     ...saved.map((place) => ownRow(place, 'saved')),
     ...routes,
     ...recent.map((place) => ownRow(place, 'recent')),

@@ -19,6 +19,14 @@ import {
 } from './directions';
 import type { PositionFix } from './position/provider';
 
+/** A place by its id, as the site lists one; the point matters only for one the graph lacks. */
+const at = (id: string, coordinates: [number, number] = [0, 0]) => ({
+  type: 'Feature' as const,
+  id,
+  geometry: { type: 'Point' as const, coordinates },
+  properties: { name: id, category: 'x', keywords: [], verified: false },
+});
+
 const router = makeRouter(tiny as unknown as GraphDocument, { id: 'a', name: 'A' });
 const fix = (lon: number, lat: number, accuracyM = 5): PositionFix => ({
   position: [lon, lat],
@@ -29,7 +37,7 @@ const fix = (lon: number, lat: number, accuracyM = 5): PositionFix => ({
 
 describe('makeRouter and planRoute', () => {
   it('routes to a place with the site weights', () => {
-    const found = planRoute(router, fix(0.0005, -0.0001), 'corner');
+    const found = planRoute(router, fix(0.0005, -0.0001), at('corner'));
     expect(found?.distanceM).toBeCloseTo(11.12 + 56 + 112, 1);
     expect(found?.approach).toHaveLength(2);
   });
@@ -40,13 +48,13 @@ describe('makeRouter and planRoute', () => {
       name: 'A',
       routing: { weights: { road: 1 }, walking_speed: 2 },
     });
-    const found = planRoute(quick, fix(0, 0.001), 'top');
+    const found = planRoute(quick, fix(0, 0.001), at('top'));
     expect(found?.distanceM).toBe(224);
     expect(found?.durationS).toBe(112);
   });
 
   it('returns null for an unreachable place', () => {
-    expect(planRoute(router, fix(0, 0), 'island')).toBeNull();
+    expect(planRoute(router, fix(0, 0), at('island'))).toBeNull();
   });
 });
 
@@ -76,8 +84,8 @@ describe('nearestInCategory', () => {
 
   it('picks the category place reachable by the shortest walk', () => {
     const start = fix(0.0005, -0.0001);
-    const corner = planRoute(router, start, 'corner');
-    const top = planRoute(router, start, 'top');
+    const corner = planRoute(router, start, at('corner'));
+    const top = planRoute(router, start, at('top'));
     if (corner === null || top === null) throw new Error('expected both routes');
     const shorter = corner.distanceM <= top.distanceM ? 'corner' : 'top';
     const nearest = nearestInCategory(router, start, places, 'parking');
@@ -129,7 +137,7 @@ describe('guidance', () => {
 
   it('describes a route with distance, time and a compass instruction', () => {
     const start = fix(0.0005, -0.0001);
-    const found = planRoute(router, start, 'corner');
+    const found = planRoute(router, start, at('corner'));
     if (found === null) throw new Error('expected a route');
     const guidance = describeRoute(found, start);
     expect(guidance.distance).toBe('179 m');
@@ -141,7 +149,7 @@ describe('guidance', () => {
 
   it('has no bearing once at the end of the route', () => {
     const end = fix(0.002, 0);
-    const found = planRoute(router, end, 'corner');
+    const found = planRoute(router, end, at('corner'));
     if (found === null) throw new Error('expected a route');
     expect(bearingAlong(end, found)).toBeNull();
     expect(describeRoute(found, end).instruction).toBe('');
@@ -167,7 +175,7 @@ describe('formatting', () => {
 
   it('describes in the site units', () => {
     const start = fix(0.0005, -0.0001);
-    const found = planRoute(router, start, 'corner');
+    const found = planRoute(router, start, at('corner'));
     if (found === null) throw new Error('expected a route');
     expect(describeRoute(found, start, 'imperial').distance).toBe('0.1 mi');
     const imperial = makeRouter(tiny as unknown as GraphDocument, {
@@ -195,20 +203,44 @@ describe('formatting', () => {
 
 describe('a walk between two places', () => {
   it('starts at one place and ends at the other, wherever the person is', () => {
-    const found = planWalk(router, 'top', 'corner');
+    const found = planWalk(router, 'top', at('corner'));
     expect(found?.positions[0]).toEqual([0.002, 0.001]);
     expect(found?.positions.at(-1)).toEqual([0.002, 0]);
     expect(found?.approach).toEqual([]);
   });
 
   it('is null when no way exists', () => {
-    expect(planWalk(router, 'top', 'island')).toBeNull();
-    expect(planWalk(router, 'nowhere', 'corner')).toBeNull();
+    expect(planWalk(router, 'top', at('island'))).toBeNull();
+    expect(planWalk(router, 'nowhere', at('corner'))).toBeNull();
   });
 
   it('is summarised by how far and how long', () => {
-    const found = planWalk(router, 'top', 'corner');
+    const found = planWalk(router, 'top', at('corner'));
     if (found === null) throw new Error('no route');
     expect(summarise(found)).toEqual({ distance: '112 m', duration: '2 min' });
+  });
+});
+
+describe('directions to a point the person marked', () => {
+  // Not one of the site's places: a spot a little way off the corner.
+  const spot = at('spot:1', [0.002, -0.0002]);
+
+  it('follow the network to the nearest walkway, then leave it for the point', () => {
+    const found = planRoute(router, fix(0, 0), spot);
+    expect(found).not.toBeNull();
+    expect(found?.positions.at(-1)).toEqual([0.002, -0.0002]);
+    expect(found?.departure).toHaveLength(2);
+    // Further than the walk to the corner alone, by the stretch off the path.
+    expect(found?.distanceM).toBeGreaterThan(224);
+  });
+
+  it('can be planned from a place as well', () => {
+    const found = planWalk(router, 'top', spot);
+    expect(found?.positions[0]).toEqual([0.002, 0.001]);
+    expect(found?.positions.at(-1)).toEqual([0.002, -0.0002]);
+  });
+
+  it('count as arrived at the point itself', () => {
+    expect(entrancesOf(router, spot)).toEqual([[0.002, -0.0002]]);
   });
 });

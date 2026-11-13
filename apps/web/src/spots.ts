@@ -160,3 +160,43 @@ export function mergeSpots(
   }
   return { spots, added };
 }
+
+/** What a spot's id begins with when it stands in for a place; no place id has a colon. */
+const PLACE_PREFIX = 'spot:';
+
+/** The category a spot is given when it stands in for a place. */
+export const SPOT_CATEGORY = 'spot';
+
+/** Whether a place's id says it is a spot the person marked, not a place of the site. */
+export function isSpotId(placeId: string): boolean {
+  return placeId.startsWith(PLACE_PREFIX);
+}
+
+/** A spot's own id from the id it has while standing in for a place. */
+export function spotIdOf(placeId: string): string {
+  return placeId.slice(PLACE_PREFIX.length);
+}
+
+/**
+ * A spot in the shape of one of the site's places, so it can be chosen as a
+ * destination and listed like one. It is not in the routing graph, so
+ * directions end at its own point.
+ */
+export function spotPlace(spot: Spot): {
+  readonly type: 'Feature';
+  readonly id: string;
+  readonly geometry: { readonly type: 'Point'; readonly coordinates: Position };
+  readonly properties: {
+    readonly name: string;
+    readonly category: string;
+    readonly keywords: readonly string[];
+    readonly verified: boolean;
+  };
+} {
+  return {
+    type: 'Feature',
+    id: `${PLACE_PREFIX}${spot.id}`,
+    geometry: { type: 'Point', coordinates: spot.position },
+    properties: { name: spot.name, category: SPOT_CATEGORY, keywords: [], verified: true },
+  };
+}

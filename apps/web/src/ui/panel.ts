@@ -96,8 +96,11 @@ export interface Panel {
    * away, which is how it stands whenever the walk starts from the person.
    */
   setRouteSaved(saved: boolean | null): void;
-  /** Shows the star filled for a saved place and hollow otherwise. */
-  setSaved(saved: boolean): void;
+  /**
+   * Shows the star filled for a saved place and hollow otherwise. Null takes
+   * the star away, for a destination that is not a place of the site.
+   */
+  setSaved(saved: boolean | null): void;
   hide(): void;
 }
 
@@ -167,7 +170,8 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
       elements.saveRoute.textContent = saved === true ? 'Route saved' : 'Save route';
     },
     setSaved(saved) {
-      elements.save.setAttribute('aria-pressed', String(saved));
+      elements.save.hidden = saved === null;
+      elements.save.setAttribute('aria-pressed', String(saved === true));
     },
     hide() {
       elements.announce.textContent = '';

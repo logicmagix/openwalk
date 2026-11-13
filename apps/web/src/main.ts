@@ -49,6 +49,21 @@ import {
   privacyPathFor,
   type SiteIndex,
 } from './site/pages';
+import {
+  CAR_NAME,
+  addSpot,
+  isFull,
+  isSpotId,
+  keptSpots,
+  parkCar,
+  readSpots,
+  removeSpot,
+  renameSpot,
+  spotPlace,
+  spotsKey,
+  type Spot,
+  type SpotKind,
+} from './spots';
 import { openStore } from './store/kv';
 import { watchTheme } from './theme';
 import {
@@ -83,6 +98,7 @@ import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
 import { setupSearch } from './ui/search';
+import { setupSpots, spotSign } from './ui/spots';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
 // the page; nothing points at another origin.
@@ -105,6 +121,15 @@ const status = element<HTMLParagraphElement>('status');
 function showStatus(message: string | null): void {
   status.textContent = message ?? '';
   status.hidden = message === null;
+}
+
+/** A notice that something was done, which goes away by itself unless replaced first. */
+function showNotice(message: string | null): void {
+  showStatus(message);
+  if (message === null) return;
+  window.setTimeout(() => {
+    if (status.textContent === message) showStatus(null);
+  }, 4000);
 }
 
 /** The position source for this page load: the GPS unless the address asks otherwise. */
@@ -196,6 +221,9 @@ async function start(): Promise<void> {
     personal = next;
     void store.set(personalKey(siteId), keptPersonal(personal));
   };
+  // The spots the person has marked here: points, kept only on this device.
+  const spotsAt = spotsKey(siteId);
+  let spots: Spot[] = readSpots(await store.get(spotsAt));
   const remember = (change: Partial<SitePrefs>): void => {
     prefs = { ...prefs, ...change };
     void store.set(prefsKey(siteId), savedPrefs(prefs));
@@ -243,6 +271,8 @@ async function start(): Promise<void> {
   let fitted = false;
   // A "nearest" request made before a position was known, resolved on the next fix.
   let pendingNearest: { category: string; label: string } | null = null;
+  // A spot asked for before a position was known, marked on the next fix.
+  let pendingSpot: SpotKind | null = null;
   // Set when the last position reading was away from the site. Position and
   // directions are for people at the site, so locating is switched off again.
   let away = false;
@@ -275,7 +305,7 @@ async function start(): Promise<void> {
         panel.setRouteSaved(hasRoute(personal, walk));
       },
       onSave: () => {
-        if (destination === null) return;
+        if (destination === null || isSpotId(destination.id)) return;
         keep(toggleSaved(personal, destination.id));
         panel.setSaved(isSaved(personal, destination.id));
       },
@@ -302,7 +332,7 @@ async function start(): Promise<void> {
       panel.update({ kind: 'arrived' });
       return;
     }
-    const found = planRoute(router, lastFix, destination.id);
+    const found = planRoute(router, lastFix, destination);
     inputs.current = { ...inputs.current, route: found };
     map.setRoute(routeCollection(found));
     if (found === null) {
@@ -328,7 +358,7 @@ async function start(): Promise<void> {
    * does not follow the person, so there is no arrow and no arriving.
    */
   function showPlannedWalk(from: PlaceFeature, to: PlaceFeature): void {
-    const found = planWalk(router, from.id, to.id);
+    const found = planWalk(router, from.id, to);
     inputs.current = { ...inputs.current, route: found };
     map.setRoute(routeCollection(found));
     if (found === null) {
@@ -336,7 +366,8 @@ async function start(): Promise<void> {
       panel.update({ kind: 'unreachable' });
       return;
     }
-    panel.setRouteSaved(hasRoute(personal, { from: from.id, to: to.id }));
+    // A saved walk is between two of the site's places; a spot is not one.
+    panel.setRouteSaved(isSpotId(to.id) ? null : hasRoute(personal, { from: from.id, to: to.id }));
     panel.update({ kind: 'planned', from: labelOf(from), ...summarise(found, router.units) });
     if (!fitted) {
       fitted = true;
@@ -386,12 +417,59 @@ async function start(): Promise<void> {
       return;
     }
     panel.show(place);
-    panel.setSaved(isSaved(personal, place.id));
-    keep(withRecent(personal, place.id));
+    if (isSpotId(place.id)) {
+      // A spot is the person's own already: nothing to star, and not a recent place.
+      panel.setSaved(null);
+    } else {
+      panel.setSaved(isSaved(personal, place.id));
+      keep(withRecent(personal, place.id));
+    }
     // The panel now carries the "not at the site" message, so drop the notice.
     if (away) showStatus(null);
     if (lastFix === null || !locator.on) map.easeTo(place.geometry.coordinates, LOCATE_ZOOM);
     guide();
+  }
+
+  /** Keeps a change to the spots, and shows it on the map and in the menu. */
+  function keepSpots(next: Spot[]): void {
+    spots = next;
+    void store.set(spotsAt, keptSpots(spots));
+    showSpots();
+  }
+
+  function showSpots(): void {
+    map.setMarkers(
+      spots.map((spot) => {
+        const marker = document.createElement('div');
+        marker.className = `spot-marker ${spot.kind}`;
+        marker.append(spotSign(spot.kind));
+        return { position: spot.position, element: marker };
+      }),
+    );
+    spotsMenu.refresh();
+  }
+
+  /**
+   * Marks where the person is standing, as the parked car or as a spot. That
+   * needs a position, so without one it turns on location and marks the spot
+   * on the next fix.
+   */
+  function markHere(kind: SpotKind): void {
+    if (lastFix === null || !locator.on) {
+      pendingSpot = kind;
+      showStatus('Finding where you are…');
+      if (!locator.on) toggleLocate();
+      return;
+    }
+    const id = crypto.randomUUID();
+    if (kind === 'car') {
+      keepSpots(parkCar(spots, lastFix.position, id));
+      showNotice(`“${CAR_NAME}” is saved here.`);
+    } else {
+      keepSpots(addSpot(spots, lastFix.position, id));
+      const added = spots.find((spot) => spot.id === id);
+      showNotice(added === undefined ? null : `Saved here as “${added.name}”.`);
+    }
   }
 
   /**
@@ -433,6 +511,11 @@ async function start(): Promise<void> {
         map.centreOn(fix.position);
       }
       guide();
+      if (pendingSpot !== null) {
+        const kind = pendingSpot;
+        pendingSpot = null;
+        markHere(kind);
+      }
       if (pendingNearest !== null) {
         const request = pendingNearest;
         pendingNearest = null;
@@ -457,6 +540,7 @@ async function start(): Promise<void> {
   function leaveSite(): void {
     away = true;
     pendingNearest = null;
+    pendingSpot = null;
     // Switching off clears the marker and route and refreshes the panel.
     if (locator.on) locator.toggle();
     showLocate();
@@ -524,6 +608,7 @@ async function start(): Promise<void> {
             saved: personal.saved,
             recent: personal.recent,
             routes: personal.routes,
+            spots: spots.map((spot) => ({ place: spotPlace(spot), car: spot.kind === 'car' })),
             offerHere: forStart,
           },
           query,
@@ -652,7 +737,7 @@ async function start(): Promise<void> {
   /** Keeps a change made from the panel, and brings the open directions in line with it. */
   function forget(next: Personal): void {
     keep(next);
-    if (destination === null) return;
+    if (destination === null || isSpotId(destination.id)) return;
     panel.setSaved(isSaved(personal, destination.id));
     if (origin !== null) {
       panel.setRouteSaved(hasRoute(personal, { from: origin.id, to: destination.id }));
@@ -678,6 +763,35 @@ async function start(): Promise<void> {
     })
     .catch(() => undefined);
 
+  // --- my spots -----------------------------------------------------------------
+  const spotsMenu = setupSpots(
+    { button: element<HTMLButtonElement>('spots'), panel: element('spots-panel') },
+    {
+      spots: () => spots,
+      roomForMore: () => !isFull(spots),
+      onPark: () => markHere('car'),
+      onAdd: () => markHere('spot'),
+      onGo: (spot) => {
+        searchInput.value = '';
+        chooseDestination(spotPlace(spot));
+      },
+      onRename: (spot, name) => {
+        keepSpots(renameSpot(spots, spot.id, name));
+        const renamed = spots.find((kept) => kept.id === spot.id);
+        // Directions open to it carry its name; show the new one.
+        if (renamed !== undefined && destination?.id === spotPlace(spot).id) {
+          chooseDestination(spotPlace(renamed));
+        }
+      },
+      onRemove: (spot) => {
+        keepSpots(removeSpot(spots, spot.id));
+        if (destination?.id === spotPlace(spot).id) chooseDestination(null);
+        showNotice(`Removed “${spot.name}”.`);
+      },
+    },
+  );
+  showSpots();
+
   // --- "nearest" chips ----------------------------------------------------------
   // One button per category the site configures; hidden when it configures none.
   const nearest = element('nearest');
@@ -689,6 +803,8 @@ async function start(): Promise<void> {
     nearest.append(button);
   }
   nearest.hidden = nearest.childElementCount === 0;
+  // The spots button sits under this row, and moves up when the row is not there.
+  document.body.classList.toggle('no-nearest', nearest.hidden);
 
   // A share link opens straight onto its place, with the panel ready.
   if (link !== null) {
