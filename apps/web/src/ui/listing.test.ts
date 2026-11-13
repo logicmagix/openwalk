@@ -165,3 +165,45 @@ it('labels a place with its number when it has one', () => {
   expect(labelOf(places.features[1] as (typeof places.features)[number])).toBe('12 Library');
   expect(labelOf(places.features[0] as (typeof places.features)[number])).toBe('Main Gate');
 });
+
+describe("the person's own places", () => {
+  const own = {
+    ...source,
+    saved: ['shelter-n', 'b12'],
+    recent: ['gate', 'b12', 'b2', 'shelter-s'],
+  };
+
+  it('head the list when nothing is typed: saved by name, then the last few chosen', () => {
+    const rows = listFor(own, '');
+    expect(
+      rows.slice(0, 4).map((row) => (row.kind === 'place' ? [row.place.id, row.mark] : [])),
+    ).toEqual([
+      ['b12', 'saved'],
+      ['shelter-n', 'saved'],
+      ['gate', 'recent'],
+      ['b2', 'recent'],
+    ]);
+    // Every place still follows, unmarked.
+    expect(ids(rows.slice(5))).toEqual(['b2', 'b12', 'gate', 'shelter-n', 'shelter-s']);
+  });
+
+  it('say why they are there, ahead of the annotation', () => {
+    const [library, shelter, gate] = listFor(own, '');
+    expect(library?.detail).toBe('Saved');
+    expect(shelter?.detail).toBe('Saved · North');
+    expect(gate?.detail).toBe('Recent');
+  });
+
+  it('do not list a saved place again as recent, nor more than a few recent', () => {
+    const rows = listFor(own, '').filter((row) => row.kind === 'place' && row.mark === 'recent');
+    expect(ids(rows)).toEqual(['gate', 'b2', 'shelter-s']);
+  });
+
+  it('are left out of a search and skip places the site no longer has', () => {
+    expect(
+      listFor(own, 'library').every((row) => row.kind !== 'place' || row.mark === undefined),
+    ).toBe(true);
+    const stale = { ...source, saved: ['gone'], recent: ['gone'] };
+    expect(listFor(stale, '')).toEqual(listFor(source, ''));
+  });
+});

@@ -31,7 +31,10 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
     option.id = `${list.id}-${index}`;
     option.setAttribute('role', 'option');
     option.setAttribute('aria-selected', String(index === active));
-    option.className = [item.kind, index === active ? 'active' : ''].join(' ').trim();
+    const mark = item.kind === 'place' ? (item.mark ?? '') : '';
+    option.className = [item.kind, mark, index === active ? 'active' : '']
+      .filter((name) => name !== '')
+      .join(' ');
     if (item.kind === 'category') {
       // The same dot as on the map and in the legend; the stylesheet picks the
       // shade for the theme.

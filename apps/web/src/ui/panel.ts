@@ -14,6 +14,8 @@ export interface PanelElements {
   readonly announce: HTMLElement;
   readonly arrow: HTMLElement;
   readonly action: HTMLButtonElement;
+  /** The star: saves the place shown, or forgets it. */
+  readonly save: HTMLButtonElement;
   readonly close: HTMLButtonElement;
 }
 
@@ -21,6 +23,8 @@ export interface PanelHandlers {
   readonly onClose: () => void;
   /** The action button: turning location on. */
   readonly onAction: () => void;
+  /** The star was pressed for the place shown. */
+  readonly onSave: () => void;
 }
 
 export type PanelState =
@@ -64,6 +68,8 @@ export function spokenChange(state: PanelState): string {
 export interface Panel {
   show(place: PlaceFeature): void;
   update(state: PanelState): void;
+  /** Shows the star filled for a saved place and hollow otherwise. */
+  setSaved(saved: boolean): void;
   hide(): void;
 }
 
@@ -80,6 +86,7 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
 
   elements.close.addEventListener('click', handlers.onClose);
   elements.action.addEventListener('click', handlers.onAction);
+  elements.save.addEventListener('click', handlers.onSave);
 
   function setArrow(bearing: number | null, mapBearing: number): void {
     elements.arrow.hidden = bearing === null;
@@ -119,6 +126,9 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
         elements.announce.textContent = unnamed === null ? text : `${unnamed}. ${text}`;
         unnamed = null;
       }
+    },
+    setSaved(saved) {
+      elements.save.setAttribute('aria-pressed', String(saved));
     },
     hide() {
       elements.announce.textContent = '';

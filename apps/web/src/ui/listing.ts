@@ -17,6 +17,8 @@ export type Listing =
       readonly label: string;
       /** The annotation, or an empty string. */
       readonly detail: string;
+      /** Set on a row listed because the person saved the place or went there lately. */
+      readonly mark?: 'saved' | 'recent';
     }
   /** A kind of place; choosing it lists the places of that kind. */
   | {
@@ -33,6 +35,12 @@ export type Listing =
 
 /** A site with more places than this lists its kinds first when nothing is typed. */
 export const GROUP_ABOVE = 12;
+
+/** How many recently chosen places head the list. */
+export const RECENT_SHOWN = 3;
+
+export const SAVED_WORD = 'Saved';
+export const RECENT_WORD = 'Recent';
 
 export const BACK_LABEL = 'All categories';
 export const ALL_LABEL = 'All places';
@@ -78,16 +86,52 @@ function placeRow(place: PlaceFeature): Listing {
   };
 }
 
+/** A place listed at the head because it is the person's own: the word says why. */
+function ownRow(place: PlaceFeature, mark: 'saved' | 'recent'): Listing {
+  const word = mark === 'saved' ? SAVED_WORD : RECENT_WORD;
+  const annotation = place.properties.annotation ?? '';
+  return {
+    kind: 'place',
+    place,
+    label: labelOf(place),
+    detail: annotation === '' ? word : `${word} · ${annotation}`,
+    mark,
+  };
+}
+
 export interface ListingSource {
   readonly places: PlacesDocument;
   readonly index: SearchIndex;
   /** The site's kinds of place, in legend order. */
   readonly categories: readonly Category[];
+  /** The person's saved places, oldest first, and recently chosen ones, newest first. */
+  readonly saved?: readonly string[];
+  readonly recent?: readonly string[];
+}
+
+/**
+ * The person's own places, to head the list when nothing is typed: every saved
+ * place by name, then the last few chosen that are not among them.
+ */
+function ownRows(source: ListingSource): Listing[] {
+  const byId = new Map(source.places.features.map((place) => [place.id, place]));
+  const find = (ids: readonly string[]) =>
+    ids.map((id) => byId.get(id)).filter((place): place is PlaceFeature => place !== undefined);
+  const saved = find(source.saved ?? []).sort(compareForDropdown);
+  const savedIds = new Set(saved.map((place) => place.id));
+  const recent = find(source.recent ?? [])
+    .filter((place) => !savedIds.has(place.id))
+    .slice(0, RECENT_SHOWN);
+  return [
+    ...saved.map((place) => ownRow(place, 'saved')),
+    ...recent.map((place) => ownRow(place, 'recent')),
+  ];
 }
 
 /**
  * The rows for the text typed and the kind being browsed, if any (or
  * `ALL_PLACES`). Typing always searches every place, whichever kind was open.
+ * With nothing typed and no kind open, the person's own places come first.
  */
 export function listFor(
   source: ListingSource,
@@ -112,6 +156,7 @@ export function listFor(
   }
   if (grouped) {
     return [
+      ...ownRows(source),
       { kind: 'all', label: ALL_LABEL, detail: countOf(all.length) },
       ...source.categories.map((category): Listing => ({
         kind: 'category',
@@ -121,5 +166,5 @@ export function listFor(
       })),
     ];
   }
-  return all.map(placeRow);
+  return [...ownRows(source), ...all.map(placeRow)];
 }

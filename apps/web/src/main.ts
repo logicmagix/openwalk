@@ -49,6 +49,15 @@ import {
 } from './site/pages';
 import { openStore } from './store/kv';
 import { watchTheme } from './theme';
+import {
+  isSaved,
+  keptPersonal,
+  personalKey,
+  readPersonal,
+  toggleSaved,
+  withRecent,
+  type Personal,
+} from './personal';
 import { prefsKey, readPrefs, savedPrefs, type SitePrefs } from './prefs';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
@@ -159,6 +168,15 @@ async function start(): Promise<void> {
     overlays: overlays.map((overlay) => overlay.id),
     categories: categories.map((category) => category.id),
   });
+  // The places the person has saved here, and the last few they asked the way to.
+  let personal: Personal = readPersonal(
+    await store.get(personalKey(siteId)),
+    site.places.features.map((place) => place.id),
+  );
+  const keep = (next: Personal): void => {
+    personal = next;
+    void store.set(personalKey(siteId), keptPersonal(personal));
+  };
   const remember = (change: Partial<SitePrefs>): void => {
     prefs = { ...prefs, ...change };
     void store.set(prefsKey(siteId), savedPrefs(prefs));
@@ -217,12 +235,18 @@ async function start(): Promise<void> {
       announce: element('panel-announce'),
       arrow: element('panel-arrow'),
       action: element('panel-action'),
+      save: element('panel-save'),
       close: element('panel-close'),
     },
     {
       onClose: () => chooseDestination(null),
       onAction: () => {
         if (!locator.on) toggleLocate();
+      },
+      onSave: () => {
+        if (destination === null) return;
+        keep(toggleSaved(personal, destination.id));
+        panel.setSaved(isSaved(personal, destination.id));
       },
     },
   );
@@ -280,6 +304,8 @@ async function start(): Promise<void> {
       return;
     }
     panel.show(place);
+    panel.setSaved(isSaved(personal, place.id));
+    keep(withRecent(personal, place.id));
     // The panel now carries the "not at the site" message, so drop the notice.
     if (away) showStatus(null);
     if (lastFix === null || !locator.on) map.easeTo(place.geometry.coordinates, LOCATE_ZOOM);
@@ -408,7 +434,17 @@ async function start(): Promise<void> {
     },
     {
       listFor: (query, browsing) =>
-        listFor({ places: site.places, index, categories }, query, browsing),
+        listFor(
+          {
+            places: site.places,
+            index,
+            categories,
+            saved: personal.saved,
+            recent: personal.recent,
+          },
+          query,
+          browsing,
+        ),
       onChoose: (place) => chooseDestination(place),
     },
   );
