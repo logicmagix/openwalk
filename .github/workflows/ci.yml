@@ -51,9 +51,11 @@ jobs:
   e2e:
     name: Browser tests
     runs-on: ubuntu-latest
-    # The job normally takes about three minutes. A step that waits on the
-    # network can stall for hours; this makes it fail soon enough to be retried.
-    timeout-minutes: 15
+    # The tests themselves take about ten minutes and grow with the app, so the
+    # job is given room for a slow day. The steps that wait on the network,
+    # which can stall for hours, carry shorter limits of their own, so a stall
+    # still fails soon enough to be retried.
+    timeout-minutes: 40
     env:
       # Playwright's own image, which already holds the browser engines and the
       # system libraries they need, so nothing is installed here. Its version
@@ -68,14 +70,17 @@ jobs:
           cache: npm
 
       - run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
 
       # The tests drive the app as it is really served: the nginx image, built
       # with the example site. --wait returns once the container reports healthy.
       - run: docker compose -f deploy/compose.yaml up --build --detach --wait
+        timeout-minutes: 10
 
       # The image is one large download; a dropped connection is tried again
       # before the job gives up.
       - name: Fetch the browser image
+        timeout-minutes: 10
         run: |
           for attempt in 1 2 3; do
             docker pull "$PLAYWRIGHT_IMAGE" && exit 0
@@ -87,6 +92,7 @@ jobs:
       # The tests run inside that image. --network host lets them reach the app
       # on localhost; --ipc=host gives the browsers the shared memory they expect.
       - name: Run the browser tests
+        timeout-minutes: 30
         run: >
           docker run --rm --network host --ipc=host
           --volume "$PWD":/work --workdir /work
