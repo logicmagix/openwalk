@@ -67,17 +67,28 @@ test('parking with location off turns it on and saves the car where the person i
   await expect(spots(page).park).toHaveText('Move my car here');
 });
 
-test('a marked spot is kept, and leads back from somewhere else', async ({ page, context }) => {
+test('a marked spot is still there on the next visit', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(from)));
   await openMap(page);
   await openMenu(page);
   await spots(page).park.click();
   await expect(spots(page).markers).toHaveCount(1);
 
-  await context.setGeolocation(reading(arrivalPoint(to)));
   await revisit(page);
   await expect(spots(page).markers).toHaveCount(1);
-  await controls(page).locate.click();
+  await openMenu(page);
+  await expect(spots(page).rows).toContainText('My car');
+});
+
+test('a spot leads back from somewhere else', async ({ page, context }) => {
+  await context.setGeolocation(reading(arrivalPoint(from)));
+  await openMap(page);
+  await openMenu(page);
+  await spots(page).park.click();
+  await expect(spots(page).markers).toHaveCount(1);
+
+  // The person walks off, then asks the way back.
+  await context.setGeolocation(reading(arrivalPoint(to)));
   await openMenu(page);
   await spots(page).menu.getByRole('button', { name: 'Directions to My car' }).click();
   const { directions } = controls(page);
@@ -85,10 +96,17 @@ test('a marked spot is kept, and leads back from somewhere else', async ({ page,
   await expect(directions).toContainText(/\d+(\.\d+)? (ft|mi|m|km), \d+ min/);
   // A spot is the person's own already: there is nothing to star.
   await expect(page.getByRole('button', { name: 'Save this place' })).toBeHidden();
+});
 
-  // Walking back to it ends with arrival.
+test('standing at a spot counts as having arrived at it', async ({ page, context }) => {
   await context.setGeolocation(reading(arrivalPoint(from)));
-  await expect(directions).toContainText('You have arrived.');
+  await openMap(page);
+  await openMenu(page);
+  await spots(page).add.click();
+  await expect(spots(page).markers).toHaveCount(1);
+  await openMenu(page);
+  await spots(page).menu.getByRole('button', { name: 'Directions to My spot' }).click();
+  await expect(controls(page).directions).toContainText('You have arrived.');
 });
 
 test('further spots are named in turn, and can be renamed and removed', async ({
