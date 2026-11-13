@@ -227,3 +227,29 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 }
+
+test('the panel is open again when the app restarts while it was open', async ({ page }) => {
+  await openMap(page);
+  await openMyPlaces(page);
+  // As when a phone starts the app afresh on returning to it from another.
+  await page.waitForTimeout(250);
+  await page.reload();
+  await expect(panel(page).dialog).toBeVisible();
+
+  // Closed on purpose, it stays closed.
+  await panel(page).close.click();
+  await page.waitForTimeout(250);
+  await page.reload();
+  await openMap(page);
+  await expect(panel(page).dialog).toBeHidden();
+});
+
+test('no field has text small enough to make a phone enlarge the page', async ({ page }) => {
+  await openMap(page);
+  await openMyPlaces(page);
+  const sizes = await page
+    .locator('input[type="text"], input[type="search"], input:not([type])')
+    .evaluateAll((fields) => fields.map((field) => parseFloat(getComputedStyle(field).fontSize)));
+  expect(sizes.length).toBeGreaterThan(2);
+  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+});

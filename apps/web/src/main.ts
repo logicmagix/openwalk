@@ -88,6 +88,9 @@ import { setupSearch } from './ui/search';
 // the page; nothing points at another origin.
 const ASSETS_BASE = new URL('/basemap', location.href).href;
 
+/** How long after it was last seen open the "My places" panel is opened again on a restart. */
+const REOPEN_WITHIN_MS = 10 * 60 * 1000;
+
 /** Screen space kept clear around a route when the map is fitted to it. */
 const ROUTE_PADDING = 80;
 
@@ -633,8 +636,19 @@ async function start(): Promise<void> {
         forget(merge.personal);
         return mergeMessage(merge);
       },
+      // A phone may start the app afresh when it is returned to from another,
+      // which happens in the middle of copying a link across. When the panel
+      // was open the moment before, it is opened again.
+      onOpenChange: (open) => {
+        if (open) void store.set(panelKey, Date.now());
+        else void store.delete(panelKey);
+      },
     },
   );
+  const panelKey = `my-places-open:${siteId}`;
+  const lastOpen = await store.get(panelKey);
+  if (typeof lastOpen === 'number' && Date.now() - lastOpen < REOPEN_WITHIN_MS) myPlaces.open();
+  else void store.delete(panelKey);
   /** Keeps a change made from the panel, and brings the open directions in line with it. */
   function forget(next: Personal): void {
     keep(next);

@@ -44,6 +44,8 @@ export interface MyPlacesOptions {
   readonly file: () => { readonly name: string; readonly text: string };
   /** Adds what the text holds; returns what to tell the person. */
   readonly add: (text: string) => string;
+  /** Told when the panel opens and when it closes. */
+  readonly onOpenChange?: (open: boolean) => void;
 }
 
 export interface MyPlaces {
@@ -123,6 +125,8 @@ export function setupMyPlaces(elements: MyPlacesElements, options: MyPlacesOptio
   }
 
   elements.close.addEventListener('click', () => dialog.close());
+  // However it closes: its button, Escape, or a press outside.
+  dialog.addEventListener('close', () => options.onOpenChange?.(false));
   // A press on the dimmed page around the panel closes it, as Escape does.
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
@@ -185,6 +189,7 @@ export function setupMyPlaces(elements: MyPlacesElements, options: MyPlacesOptio
     say('');
     render();
     if (!dialog.open) dialog.showModal();
+    options.onOpenChange?.(true);
   }
 
   return {

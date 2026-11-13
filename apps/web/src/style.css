@@ -1144,7 +1144,9 @@ body.picking .zoom {
   background: var(--surface);
   color: var(--ink);
   font: inherit;
-  font-size: 14px;
+  /* An iPhone enlarges the whole page when a field with smaller text than this
+     is tapped, and leaves it enlarged. */
+  font-size: 16px;
 }
 
 /* The file chooser is the browser's own control, kept out of sight inside a
