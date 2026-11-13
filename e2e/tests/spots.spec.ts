@@ -245,3 +245,60 @@ test.describe('a copy of one’s spots in a file', () => {
     await other.close();
   });
 });
+
+test.describe('marking a spot while the position is still rough', () => {
+  /** A reading at the start with the given uncertainty, each a step from the last. */
+  let step = 0;
+  const fix = (accuracy: number) => {
+    const at = reading(arrivalPoint(from));
+    step += 1;
+    return { longitude: at.longitude, latitude: at.latitude + step * 0.00001, accuracy };
+  };
+
+  test('waits for the reading to settle, then marks the spot there', async ({ page, context }) => {
+    await context.setGeolocation(fix(80));
+    await openMap(page);
+    await openMenu(page);
+    await spots(page).park.click();
+    await expect(controls(page).notice).toContainText('Finding where you are…');
+    await page.waitForTimeout(800);
+    // Nothing is marked at the rough reading.
+    await expect(spots(page).markers).toHaveCount(0);
+
+    await context.setGeolocation(fix(8));
+    await expect(controls(page).notice).toContainText('“My car” is saved here.');
+    await expect(controls(page).notice).not.toContainText('rough');
+    await expect(spots(page).markers).toHaveCount(1);
+  });
+
+  test('marks the spot anyway after a while, and says it may be off', async ({ page, context }) => {
+    await page.clock.install();
+    await context.setGeolocation(fix(80));
+    await openMap(page);
+    await openMenu(page);
+    await spots(page).add.click();
+    await expect(controls(page).notice).toContainText('Finding where you are…');
+    await page.clock.fastForward(10_000);
+    await expect(spots(page).markers).toHaveCount(0);
+    await page.clock.fastForward(6_000);
+    await expect(controls(page).notice).toContainText('Saved here as “My spot”.');
+    await expect(controls(page).notice).toContainText('it may be a little off');
+    await expect(spots(page).markers).toHaveCount(1);
+  });
+
+  test('gives up when location is switched off before a spot is marked', async ({
+    page,
+    context,
+  }) => {
+    await page.clock.install();
+    await context.setGeolocation(fix(80));
+    await openMap(page);
+    await openMenu(page);
+    await spots(page).park.click();
+    await expect(controls(page).notice).toContainText('Finding where you are…');
+    await controls(page).locate.click();
+    await expect(controls(page).locate).toHaveAttribute('aria-pressed', 'false');
+    await page.clock.fastForward(20_000);
+    await expect(spots(page).markers).toHaveCount(0);
+  });
+});

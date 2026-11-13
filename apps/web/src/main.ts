@@ -111,6 +111,9 @@ const ASSETS_BASE = new URL('/basemap', location.href).href;
 /** How long after it was last seen open the "My places" panel is opened again on a restart. */
 const REOPEN_WITHIN_MS = 10 * 60 * 1000;
 
+/** How long a spot waits for a rough position to settle before it is marked anyway. */
+const SPOT_WAIT_MS = 15_000;
+
 /** Screen space kept clear around a route when the map is fitted to it. */
 const ROUTE_PADDING = 80;
 
@@ -299,8 +302,10 @@ async function start(): Promise<void> {
   };
   // The message last shown for a reading that could not be had.
   let positionProblem: string | null = null;
-  // A spot asked for before a position was known, marked on the next fix.
+  // A spot asked for before a position worth keeping was known, and the timer
+  // after which it is marked with whatever position there is.
   let pendingSpot: SpotKind | null = null;
+  let spotWait = 0;
   // Set when the last position reading was away from the site. Position and
   // directions are for people at the site, so locating is switched off again.
   let away = false;
@@ -479,24 +484,37 @@ async function start(): Promise<void> {
 
   /**
    * Marks where the person is standing, as the parked car or as a spot. That
-   * needs a position, so without one it turns on location and marks the spot
-   * on the next fix.
+   * needs a position worth keeping. Without one it turns on location; with a
+   * rough one, which can be a street out, it waits for the reading to settle.
+   * If it has not settled after a while the spot is marked where the phone
+   * says, and the person is told it may be a little off: a spot roughly right
+   * is more use than none.
    */
-  function markHere(kind: SpotKind): void {
-    if (lastFix === null || !locator.on) {
+  function markHere(kind: SpotKind, evenIfRough = false): void {
+    if (lastFix === null || !locator.on || (positionRough && !evenIfRough)) {
       pendingSpot = kind;
-      showStatus('Finding where you are…', 'stay');
+      // Turning location on clears the message, so the message comes after.
       if (!locator.on) toggleLocate();
+      showStatus('Finding where you are…', 'stay');
+      window.clearTimeout(spotWait);
+      spotWait = window.setTimeout(() => {
+        if (pendingSpot === null || lastFix === null) return;
+        const waiting = pendingSpot;
+        pendingSpot = null;
+        markHere(waiting, true);
+      }, SPOT_WAIT_MS);
       return;
     }
+    window.clearTimeout(spotWait);
     const id = crypto.randomUUID();
+    const caution = positionRough ? ' The position was rough, so it may be a little off.' : '';
     if (kind === 'car') {
       keepSpots(parkCar(spots, lastFix.position, id));
-      showNotice(`“${CAR_NAME}” is saved here.`);
+      showNotice(`“${CAR_NAME}” is saved here.${caution}`);
     } else {
       keepSpots(addSpot(spots, lastFix.position, id));
       const added = spots.find((spot) => spot.id === id);
-      showNotice(added === undefined ? null : `Saved here as “${added.name}”.`);
+      showNotice(added === undefined ? null : `Saved here as “${added.name}”.${caution}`);
     }
   }
 
@@ -508,8 +526,9 @@ async function start(): Promise<void> {
   function chooseNearest(category: string, label: string): void {
     if (lastFix === null || !locator.on) {
       pendingNearest = { category, label };
-      showStatus(`Finding the nearest ${label.toLowerCase()}…`, 'stay');
+      // Turning location on clears the message, so the message comes after.
       if (!locator.on) toggleLocate();
+      showStatus(`Finding the nearest ${label.toLowerCase()}…`, 'stay');
       return;
     }
     const match = nearestInCategory(router, lastFix, site.places.features, category);
@@ -548,7 +567,8 @@ async function start(): Promise<void> {
         map.centerOn(fix.position);
       }
       guide();
-      if (pendingSpot !== null) {
+      // A spot asked for is marked at the first reading good enough to keep.
+      if (pendingSpot !== null && !positionRough) {
         const kind = pendingSpot;
         pendingSpot = null;
         markHere(kind);
@@ -565,6 +585,9 @@ async function start(): Promise<void> {
     },
     onCleared() {
       lastFix = null;
+      // Location is off: a spot still waiting for a reading is given up.
+      pendingSpot = null;
+      window.clearTimeout(spotWait);
       positionRough = false;
       roughNoteClosed = false;
       if (notice.message === ROUGH_MESSAGE) showStatus(null);
