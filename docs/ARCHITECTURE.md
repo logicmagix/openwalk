@@ -197,6 +197,14 @@ Geolocation API, a mocked fixed position for tests, and a GPX replay for demos a
 testing away from the site. Nothing else in the app touches `navigator.geolocation`.
 The replay build flag is off in production images.
 
+The direction the person faces is drawn as a fan beside the position dot. It comes
+from the phone's compass when there is one, through device orientation events, and
+otherwise from the direction of travel that position readings carry while walking. An
+iPhone asks leave for the compass, and only in answer to a press, so leave is asked as
+location is turned on; refused, the app falls back to the direction of travel. Compass
+readings are smoothed and drawn at most once a frame. Like the position, the heading
+never leaves the phone.
+
 ## Personalization lives on the device
 
 How a site's map was left (layers, hidden kinds of place), saved places, saved walks
