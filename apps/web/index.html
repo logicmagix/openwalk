@@ -62,6 +62,23 @@
 
     <div id="nearest" class="nearest" role="group" aria-label="Find the nearest" hidden></div>
 
+    <button
+      id="spots"
+      type="button"
+      aria-label="My spots"
+      aria-expanded="false"
+      aria-controls="spots-panel"
+      disabled
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"
+        />
+      </svg>
+    </button>
+
+    <div id="spots-panel" class="spots-panel" role="group" aria-label="My spots" hidden></div>
+
     <button id="locate" type="button" aria-label="Show my location" aria-pressed="false" disabled>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -204,13 +221,24 @@
           Scan this with the other device’s camera, or send it the link or the file. They hold the
           names of your saved places and routes, and nothing else.
         </p>
-        <div id="my-places-code" class="my-places-code"></div>
-        <label class="field">
-          <span>Link</span>
-          <input id="my-places-link" type="text" readonly />
+        <div id="my-places-link-parts">
+          <div id="my-places-code" class="my-places-code"></div>
+          <label class="field">
+            <span>Link</span>
+            <input id="my-places-link" type="text" readonly />
+          </label>
+          <div class="button-row">
+            <button id="my-places-copy" class="plain-button" type="button">Copy link</button>
+          </div>
+        </div>
+        <label id="my-places-with-spots-row" class="check-row" hidden>
+          <input id="my-places-with-spots" type="checkbox" />
+          <span>
+            Include my spots in the file. These are positions; the code and the link do not carry
+            them.
+          </span>
         </label>
         <div class="button-row">
-          <button id="my-places-copy" class="plain-button" type="button">Copy link</button>
           <button id="my-places-save-file" class="plain-button" type="button">
             Save as a file
           </button>

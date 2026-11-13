@@ -8,6 +8,7 @@ import {
   loadGraph,
   resolveWeights,
   route,
+  type Destination,
   type Graph,
   type GraphDocument,
   type Position,
@@ -49,30 +50,31 @@ export function entrancesOf(router: Router, place: PlaceFeature): readonly Posit
   return entrances.length > 0 ? entrances : [place.geometry.coordinates];
 }
 
+/**
+ * Where a route to `place` ends. A place of the site ends at its entrances. A
+ * place the graph does not know, such as a spot the person marked, ends at its
+ * own point, reached from the nearest walkway.
+ */
+function goalOf(router: Router, place: PlaceFeature): Destination {
+  return router.graph.places[place.id] === undefined
+    ? { position: place.geometry.coordinates }
+    : { place: place.id };
+}
+
 /** The walking route from a fix to a place, or null when none exists. */
-export function planRoute(router: Router, fix: PositionFix, placeId: string): Route | null {
-  return route(
-    router.graph,
-    fix.position,
-    { place: placeId },
-    {
-      weights: router.weights,
-      ...(router.walkingSpeedMps === undefined ? {} : { walkingSpeedMps: router.walkingSpeedMps }),
-    },
-  );
+export function planRoute(router: Router, fix: PositionFix, place: PlaceFeature): Route | null {
+  return route(router.graph, fix.position, goalOf(router, place), {
+    weights: router.weights,
+    ...(router.walkingSpeedMps === undefined ? {} : { walkingSpeedMps: router.walkingSpeedMps }),
+  });
 }
 
 /** The walk from one place to another, wherever the person is, or null when none exists. */
-export function planWalk(router: Router, fromPlaceId: string, toPlaceId: string): Route | null {
-  return route(
-    router.graph,
-    { place: fromPlaceId },
-    { place: toPlaceId },
-    {
-      weights: router.weights,
-      ...(router.walkingSpeedMps === undefined ? {} : { walkingSpeedMps: router.walkingSpeedMps }),
-    },
-  );
+export function planWalk(router: Router, fromPlaceId: string, to: PlaceFeature): Route | null {
+  return route(router.graph, { place: fromPlaceId }, goalOf(router, to), {
+    weights: router.weights,
+    ...(router.walkingSpeedMps === undefined ? {} : { walkingSpeedMps: router.walkingSpeedMps }),
+  });
 }
 
 export interface NearestMatch {
@@ -96,7 +98,7 @@ export function nearestInCategory(
   let best: NearestMatch | null = null;
   for (const place of places) {
     if (place.properties.category !== category) continue;
-    const found = planRoute(router, fix, place.id);
+    const found = planRoute(router, fix, place);
     if (found === null) continue;
     if (best === null || found.distanceM < best.route.distanceM) {
       best = { place, route: found };

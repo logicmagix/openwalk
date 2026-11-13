@@ -213,8 +213,14 @@ therefore also be pasted into the app, and a file chosen from it. What arrives i
 strictly, must name the same site, and is added to what the device holds, never put in
 its place. Only place ids travel: no position, and not the recent places.
 
-A walk is saved as two place ids. Nothing that records where a person has been leaves
-the device under any option.
+A walk is saved as two place ids.
+
+A spot is the one thing kept that is a position: a point the person marked, such as
+where the car is parked, with a name. It is stored only when asked for, shown on the
+map, and offered as a destination; it is not in the routing graph, so directions end
+at the point itself, leaving the network at the nearest walkway. A spot never goes in
+a link or a code. A saved file carries spots only when the person ticks the box for
+them, and a file's spots are taken on another device only where they lie on the site.
 
 ## License and repository
 

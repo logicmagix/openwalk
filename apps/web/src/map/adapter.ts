@@ -9,6 +9,7 @@
 import {
   LngLat,
   Map as MapLibreMap,
+  Marker,
   NavigationControl,
   addProtocol,
   setWorkerUrl,
@@ -48,6 +49,8 @@ const MAX_ZOOM = 22;
 
 export class MapView {
   private readonly map: MapLibreMap;
+  /** The markers now on the map, kept so they can be taken off again. */
+  private markers: Marker[] = [];
   /** The furthest out the map may zoom; follows the screen size. */
   private minZoom = 0;
 
@@ -200,6 +203,22 @@ export class MapView {
   /** Calls back when the person starts dragging the map, not when code moves it. */
   onUserPan(callback: () => void): void {
     this.map.on('dragstart', callback);
+  }
+
+  /**
+   * Shows a marker at each given point, replacing those shown before. A marker
+   * is a small piece of the page pinned to a place on the map; these are for
+   * looking at only, so presses pass through them to the map.
+   */
+  setMarkers(
+    markers: readonly { readonly position: Position; readonly element: HTMLElement }[],
+  ): void {
+    for (const marker of this.markers) marker.remove();
+    this.markers = markers.map(({ position, element }) =>
+      new Marker({ element, anchor: 'bottom' })
+        .setLngLat([position[0], position[1]])
+        .addTo(this.map),
+    );
   }
 
   destroy(): void {
