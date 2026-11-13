@@ -31,7 +31,11 @@ export const PASS_AFTER_MS = 8000;
 /** How long the fade out takes; it must match the stylesheet's. */
 const FADE_MS = 250;
 
-export function setupNotice(elements: NoticeElements): Notice {
+export function setupNotice(
+  elements: NoticeElements,
+  /** Told which message the person closed with the button. */
+  onClosed: (message: string) => void = () => undefined,
+): Notice {
   const { root, text, close } = elements;
   let passTimer = 0;
   let fadeTimer = 0;
@@ -67,7 +71,11 @@ export function setupNotice(elements: NoticeElements): Notice {
     leave();
   }
 
-  close.addEventListener('click', remove);
+  close.addEventListener('click', () => {
+    const closed = current;
+    remove();
+    if (closed !== null) onClosed(closed);
+  });
 
   return {
     show(message, life = 'pass') {

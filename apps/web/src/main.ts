@@ -99,6 +99,7 @@ import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
+import { ROUGH_MESSAGE, isRough, roughNoteStep } from './position/accuracy';
 import { setupSearch } from './ui/search';
 import { setupSettings } from './ui/settings';
 import { setupSpots, spotSign } from './ui/spots';
@@ -119,11 +120,16 @@ function element<T extends HTMLElement>(id: string): T {
   return found as T;
 }
 
-const notice = setupNotice({
-  root: element('status'),
-  text: element('status-text'),
-  close: element('status-close'),
-});
+/** Called with a message the person closed; set once a site's map is running. */
+let noticeClosed: (message: string) => void = () => undefined;
+const notice = setupNotice(
+  {
+    root: element('status'),
+    text: element('status-text'),
+    close: element('status-close'),
+  },
+  (message) => noticeClosed(message),
+);
 
 /**
  * Shows a message, or takes the one showing away. A message goes away by itself
@@ -284,6 +290,15 @@ async function start(): Promise<void> {
   let fitted = false;
   // A "nearest" request made before a position was known, resolved on the next fix.
   let pendingNearest: { category: string; label: string } | null = null;
+  // Whether the last reading was too uncertain to trust the dot's place, and
+  // whether the person has closed the message that says so.
+  let positionRough = false;
+  let roughNoteClosed = false;
+  noticeClosed = (message) => {
+    if (message === ROUGH_MESSAGE) roughNoteClosed = true;
+  };
+  // The message last shown for a reading that could not be had.
+  let positionProblem: string | null = null;
   // A spot asked for before a position was known, marked on the next fix.
   let pendingSpot: SpotKind | null = null;
   // Set when the last position reading was away from the site. Position and
@@ -518,6 +533,15 @@ async function start(): Promise<void> {
       lastFix = fix;
       inputs.current = { ...inputs.current, position: fix };
       map.setPosition(positionCollection(fix));
+      // A first reading can be a street out; say so until it tightens.
+      // A reading has come, so a message that none could be had is out of date.
+      if (positionProblem !== null && notice.message === positionProblem) showStatus(null);
+      positionProblem = null;
+      positionRough = isRough(positionRough, fix.accuracyM);
+      if (!positionRough) roughNoteClosed = false;
+      const step = roughNoteStep(positionRough, notice.message, roughNoteClosed);
+      if (step === 'show') showStatus(ROUGH_MESSAGE, 'stay');
+      else if (step === 'hide') showStatus(null);
       if (first && destination === null && pendingNearest === null) {
         map.easeTo(fix.position, LOCATE_ZOOM);
       } else if (!first && locator.following) {
@@ -536,10 +560,14 @@ async function start(): Promise<void> {
       }
     },
     onError(error) {
-      showStatus(positionErrorMessage(error));
+      positionProblem = positionErrorMessage(error);
+      showStatus(positionProblem);
     },
     onCleared() {
       lastFix = null;
+      positionRough = false;
+      roughNoteClosed = false;
+      if (notice.message === ROUGH_MESSAGE) showStatus(null);
       inputs.current = { ...inputs.current, position: null };
       map.setPosition(positionCollection(null));
       guide();
