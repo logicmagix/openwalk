@@ -57,6 +57,37 @@ describe('route on the hand-drawn graph', () => {
     });
   });
 
+  describe('from a place', () => {
+    it('begins at the place, with no leg to reach the network', () => {
+      const found = route(tinyGraph, { place: 'top' }, { place: 'corner' });
+      expect(found?.approach).toEqual([]);
+      expect(found?.positions[0]).toEqual([0.002, 0.001]);
+      expect(found?.positions.at(-1)).toEqual([0.002, 0]);
+      expect(found?.distanceM).toBe(112);
+    });
+
+    it('leaves by whichever door makes the shorter walk', () => {
+      const doors = loadGraph({
+        ...(tiny as unknown as GraphDocument),
+        places: { hall: [0, 4], corner: 2, far: 5 },
+      });
+      // Node 4 is next to the corner; node 0 is next to the far place.
+      expect(route(doors, { place: 'hall' }, { place: 'corner' })?.positions[0]).toEqual([
+        0.002, 0.001,
+      ]);
+      expect(route(doors, { place: 'hall' }, { place: 'far' })?.positions[0]).toEqual([0, 0]);
+    });
+
+    it('is null for a place the site does not have, or one cut off', () => {
+      expect(route(tinyGraph, { place: 'nowhere' }, { place: 'corner' })).toBeNull();
+      expect(route(tinyGraph, { place: 'island' }, { place: 'corner' })).toBeNull();
+    });
+
+    it('is a walk of no length from a place to itself', () => {
+      expect(route(tinyGraph, { place: 'corner' }, { place: 'corner' })?.distanceM).toBe(0);
+    });
+  });
+
   it('snaps a free destination and adds a departure leg', () => {
     const origin: Position = [0.0005, -0.0001];
     const target: Position = [0.0015, 0.0012];
