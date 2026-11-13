@@ -93,6 +93,7 @@ import { prefsKey, readPrefs, savedPrefs, type SitePrefs } from './prefs';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
 import { setupMyPlaces } from './ui/my-places';
+import { setupNotice, type NoticeLife } from './ui/notice';
 import { HERE_LABEL, labelOf, listFor } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
@@ -118,20 +119,25 @@ function element<T extends HTMLElement>(id: string): T {
   return found as T;
 }
 
-const status = element<HTMLParagraphElement>('status');
+const notice = setupNotice({
+  root: element('status'),
+  text: element('status-text'),
+  close: element('status-close'),
+});
 
-function showStatus(message: string | null): void {
-  status.textContent = message ?? '';
-  status.hidden = message === null;
+/**
+ * Shows a message, or takes the one showing away. A message goes away by itself
+ * after a few seconds unless it is told to stay, which is for something still
+ * under way and for something the person must know before going on.
+ */
+function showStatus(message: string | null, life: NoticeLife = 'pass'): void {
+  if (message === null) notice.hide();
+  else notice.show(message, life);
 }
 
-/** A notice that something was done, which goes away by itself unless replaced first. */
+/** A message that something was done. */
 function showNotice(message: string | null): void {
   showStatus(message);
-  if (message === null) return;
-  window.setTimeout(() => {
-    if (status.textContent === message) showStatus(null);
-  }, 4000);
 }
 
 /** The position source for this page load: the GPS unless the address asks otherwise. */
@@ -171,7 +177,7 @@ async function startAtRoot(): Promise<void> {
       PRIVACY_PATH,
     );
   } else {
-    showStatus('There are no maps here yet.');
+    showStatus('There are no maps here yet.', 'stay');
   }
 }
 
@@ -182,7 +188,7 @@ async function start(): Promise<void> {
   const siteId = link?.siteId ?? siteIdFromPath(location.pathname);
   if (siteId === null) {
     if (location.pathname === '/') await startAtRoot();
-    else showStatus('No site in the address. Open /s/<site-id>/ for a site.');
+    else showStatus('No site in the address. Open /s/<site-id>/ for a site.', 'stay');
     return;
   }
 
@@ -464,7 +470,7 @@ async function start(): Promise<void> {
   function markHere(kind: SpotKind): void {
     if (lastFix === null || !locator.on) {
       pendingSpot = kind;
-      showStatus('Finding where you are…');
+      showStatus('Finding where you are…', 'stay');
       if (!locator.on) toggleLocate();
       return;
     }
@@ -487,7 +493,7 @@ async function start(): Promise<void> {
   function chooseNearest(category: string, label: string): void {
     if (lastFix === null || !locator.on) {
       pendingNearest = { category, label };
-      showStatus(`Finding the nearest ${label.toLowerCase()}…`);
+      showStatus(`Finding the nearest ${label.toLowerCase()}…`, 'stay');
       if (!locator.on) toggleLocate();
       return;
     }
@@ -909,5 +915,8 @@ async function start(): Promise<void> {
 }
 
 start().catch((error: unknown) => {
-  showStatus(`Could not load the site: ${error instanceof Error ? error.message : String(error)}`);
+  showStatus(
+    `Could not load the site: ${error instanceof Error ? error.message : String(error)}`,
+    'stay',
+  );
 });

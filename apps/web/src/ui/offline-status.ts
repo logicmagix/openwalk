@@ -18,7 +18,8 @@ export function setupOfflineStatus(): OfflineHooks {
   banner.className = 'offline-note';
   banner.hidden = true;
   banner.setAttribute('role', 'status');
-  document.body.append(banner);
+  // Beside the app's other messages, so the two stack and never overlap.
+  (document.getElementById('notices') ?? document.body).append(banner);
 
   let hideTimer = 0;
 
