@@ -253,3 +253,61 @@ test('the two choices of look are named for what they are', async ({ page }) => 
     dialog.getByRole('group', { name: 'Color scheme' }).getByRole('radio', { name: 'Muted' }),
   ).toBeVisible();
 });
+
+test.describe('the color around the app', () => {
+  // A phone paints its status bar, and a browser its toolbar, in the color the
+  // page names. It should be the color of the app's own surfaces.
+  const bar = (page: Page) =>
+    page.evaluate(() => {
+      const tags = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+      // The tag in force: one with no condition, or the one whose condition holds.
+      const live = tags.find((tag) => !tag.media || window.matchMedia(tag.media).matches);
+      return live?.content ?? null;
+    });
+
+  for (const [device, color] of [
+    ['light', '#ffffff'],
+    ['dark', '#202124'],
+  ] as const) {
+    test(`follows a device set to ${device}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: device });
+      await openMap(page);
+      expect(await bar(page)).toBe(color);
+    });
+  }
+
+  test('follows the choice of light or dark, at once and on the next visit', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openMap(page);
+    await openSettings(page);
+    await settings(page).dark.check();
+    expect(await bar(page)).toBe('#202124');
+    await revisit(page);
+    expect(await bar(page)).toBe('#202124');
+    await openSettings(page);
+    await settings(page).follow.check();
+    expect(await bar(page)).toBe('#ffffff');
+  });
+
+  test('is black for high contrast in dark', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await openMap(page);
+    await openSettings(page);
+    await settings(page).dialog.getByRole('radio', { name: 'High contrast' }).check();
+    expect(await bar(page)).toBe('#000000');
+  });
+
+  test('is set before the page is drawn, and on the privacy page', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openMap(page);
+    await openSettings(page);
+    await settings(page).dark.check();
+    // With the app's own code held back, only the small early script has run.
+    await page.route('**/assets/*.js', (route) => route.abort());
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await bar(page)).toBe('#202124');
+    await page.goto(`/privacy/?site=${SITE_ID}`);
+    expect(await bar(page)).toBe('#202124');
+  });
+});

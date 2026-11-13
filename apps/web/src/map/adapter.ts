@@ -47,8 +47,38 @@ export interface MapViewOptions {
 /** The closest zoom MapLibre offers; the limit applied when zooming in. */
 const MAX_ZOOM = 22;
 
+const SVG = 'http://www.w3.org/2000/svg';
+
+/**
+ * The wedge: a fan opening away from the position, drawn pointing north so
+ * that turning it by a heading points it that way. Its narrow end starts
+ * outside the position dot, which stays in view. Presses pass through it.
+ */
+function headingWedge(): HTMLElement {
+  const holder = document.createElement('div');
+  holder.className = 'heading-wedge';
+  holder.setAttribute('aria-hidden', 'true');
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('viewBox', '-40 -40 80 80');
+  const path = document.createElementNS(SVG, 'path');
+  // From 11 units out to 38, spanning 35 degrees either side of straight up.
+  const sin = Math.sin((35 * Math.PI) / 180);
+  const cos = Math.cos((35 * Math.PI) / 180);
+  const point = (radius: number, side: number) =>
+    `${(side * radius * sin).toFixed(2)} ${(-radius * cos).toFixed(2)}`;
+  path.setAttribute(
+    'd',
+    `M${point(11, -1)} L${point(38, -1)} A38 38 0 0 1 ${point(38, 1)} L${point(11, 1)} A11 11 0 0 0 ${point(11, -1)}Z`,
+  );
+  svg.append(path);
+  holder.append(svg);
+  return holder;
+}
+
 export class MapView {
   private readonly map: MapLibreMap;
+  /** The wedge that shows which way the person faces, while there is one. */
+  private headingMarker: Marker | null = null;
   /** The markers now on the map, kept so they can be taken off again. */
   private markers: Marker[] = [];
   /** The furthest out the map may zoom; follows the screen size. */
@@ -219,6 +249,29 @@ export class MapView {
         .setLngLat([position[0], position[1]])
         .addTo(this.map),
     );
+  }
+
+  /**
+   * Shows which way the person faces: a wedge at their position, turned to the
+   * heading. It turns with the map, so it always points the same way on the
+   * ground. Either argument null takes it away.
+   */
+  setHeading(position: Position | null, heading: number | null): void {
+    if (position === null || heading === null) {
+      this.headingMarker?.remove();
+      this.headingMarker = null;
+      return;
+    }
+    if (this.headingMarker === null) {
+      this.headingMarker = new Marker({
+        element: headingWedge(),
+        anchor: 'center',
+        rotationAlignment: 'map',
+      })
+        .setLngLat([position[0], position[1]])
+        .addTo(this.map);
+    }
+    this.headingMarker.setLngLat([position[0], position[1]]).setRotation(heading);
   }
 
   destroy(): void {

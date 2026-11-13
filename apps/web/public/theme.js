@@ -13,6 +13,21 @@
     if (scheme === 'contrast' || scheme === 'muted') {
       document.documentElement.setAttribute('data-scheme', scheme);
     }
+    // The color a phone paints its status bar around the app: the color of
+    // the app's surfaces under the choices above. The page's own tags give it
+    // for someone following their device with the standard colors.
+    if (chosen === 'light' || chosen === 'dark' || scheme === 'contrast') {
+      var dark =
+        chosen === 'dark' ||
+        (chosen !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var color =
+        scheme === 'contrast' ? (dark ? '#000000' : '#ffffff') : dark ? '#202124' : '#ffffff';
+      var tags = document.querySelectorAll('meta[name="theme-color"]');
+      for (var i = 0; i < tags.length; i += 1) {
+        tags[i].removeAttribute('media');
+        tags[i].setAttribute('content', color);
+      }
+    }
   } catch {
     // Storage refused: the page follows the device, as it does by default.
   }

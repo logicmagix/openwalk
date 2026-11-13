@@ -47,6 +47,17 @@ export function readScheme(kept: string | null): Scheme {
   return kept === 'contrast' || kept === 'muted' ? kept : 'standard';
 }
 
+/**
+ * The color a phone paints its status bar, and a browser its toolbar, around
+ * the app: the color of the app's own surfaces, so the two read as one. It is
+ * told to the browser through the page's theme-color tag. public/theme.js
+ * holds the same four values, to set the tag before the page is drawn.
+ */
+export function barColor(theme: Theme, scheme: Scheme): string {
+  if (scheme === 'contrast') return theme === 'dark' ? '#000000' : '#ffffff';
+  return theme === 'dark' ? '#202124' : '#ffffff';
+}
+
 /** The choice from what was kept; anything else means following the device. */
 export function readAppearance(kept: string | null): Appearance {
   return kept === 'light' || kept === 'dark' ? kept : 'system';
