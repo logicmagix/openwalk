@@ -5,7 +5,7 @@
 // drive it.
 
 import type { PlaceFeature } from '@openwalk/search';
-import { ALL_PLACES, type Listing } from './listing';
+import { ALL_PLACES, labelOf, type Listing } from './listing';
 
 export interface SearchElements {
   readonly input: HTMLInputElement;
@@ -14,17 +14,49 @@ export interface SearchElements {
 }
 
 export interface SearchHandlers {
-  /** The rows for the text typed and the kind of place being browsed, if any. */
-  readonly listFor: (query: string, browsing: string | null) => Listing[];
+  /**
+   * The rows for the text typed and the kind of place being browsed, if any.
+   * `forStart` is set while the box is being used to choose where a walk starts.
+   */
+  readonly listFor: (query: string, browsing: string | null, forStart: boolean) => Listing[];
   readonly onChoose: (place: PlaceFeature) => void;
+  /** A saved walk was chosen, from one place to another. */
+  readonly onChooseRoute: (from: PlaceFeature, to: PlaceFeature) => void;
+  /** A start was chosen: a place, or null for the person's own position. */
+  readonly onChooseStart: (place: PlaceFeature | null) => void;
 }
 
-export function setupSearch(elements: SearchElements, handlers: SearchHandlers): void {
+export interface Search {
+  /** Turns the box to choosing where a walk starts, until a choice is made or given up. */
+  pickStart(): void;
+}
+
+const START_PLACEHOLDER = 'Start from…';
+const START_NAME = 'Choose where to start';
+
+export function setupSearch(elements: SearchElements, handlers: SearchHandlers): Search {
   const { input, list, clear } = elements;
   let items: Listing[] = [];
   let active = -1;
   // The kind of place whose places are listed, while browsing with nothing typed.
   let browsing: string | null = null;
+  // The box usually finds a destination. While `forStart` is set it is choosing
+  // where a walk starts instead, and says so; what it held before is put back
+  // when that is over.
+  let forStart = false;
+  const usual = {
+    placeholder: input.placeholder,
+    name: input.getAttribute('aria-label') ?? '',
+    value: '',
+  };
+
+  function endStart(): void {
+    if (!forStart) return;
+    forStart = false;
+    input.placeholder = usual.placeholder;
+    input.setAttribute('aria-label', usual.name);
+    input.value = usual.value;
+  }
 
   function rowFor(item: Listing, index: number): HTMLLIElement {
     const option = document.createElement('li');
@@ -76,7 +108,7 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
 
   /** Lists the rows for the text as it stands. */
   function show(): void {
-    items = handlers.listFor(input.value, browsing);
+    items = handlers.listFor(input.value, browsing, forStart);
     active = -1;
     render();
   }
@@ -91,11 +123,27 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
     items = [];
     active = -1;
     browsing = null;
+    // Closing the list without choosing gives up on choosing a start.
+    endStart();
     render();
   }
 
   function choose(item: Listing | undefined): void {
     if (item === undefined) return;
+    if (forStart && (item.kind === 'place' || item.kind === 'here')) {
+      close();
+      input.blur();
+      handlers.onChooseStart(item.kind === 'place' ? item.place : null);
+      return;
+    }
+    if (item.kind === 'here') return;
+    if (item.kind === 'route') {
+      input.value = labelOf(item.to);
+      close();
+      input.blur();
+      handlers.onChooseRoute(item.from, item.to);
+      return;
+    }
     if (item.kind === 'place') {
       input.value = item.label;
       close();
@@ -176,4 +224,17 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       event.preventDefault();
     }
   });
+
+  return {
+    pickStart() {
+      usual.value = input.value;
+      forStart = true;
+      input.placeholder = START_PLACEHOLDER;
+      input.setAttribute('aria-label', START_NAME);
+      input.value = '';
+      // Focusing opens the list; if the box already has the focus, open it here.
+      if (document.activeElement === input) open();
+      else input.focus();
+    },
+  };
 }

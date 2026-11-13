@@ -42,3 +42,25 @@ describe('spokenChange', () => {
     expect(new Set(kinds).size).toBe(kinds.length);
   });
 });
+
+describe('a planned walk', () => {
+  const planned = (from: string, distance: string): PanelState => ({
+    kind: 'planned',
+    from,
+    distance,
+    duration: '6 min',
+  });
+
+  it('is described by its length alone', () => {
+    expect(statusText(planned('Parking Lot P9', '0.3 mi'))).toBe('0.3 mi, 6 min');
+  });
+
+  it('is news when the start changes, and differs from being guided', () => {
+    expect(spokenChange(planned('Parking Lot P9', '0.3 mi'))).not.toBe(
+      spokenChange(planned('Library', '0.3 mi')),
+    );
+    expect(spokenChange(planned('Library', '0.3 mi'))).not.toBe(
+      spokenChange(guiding('0.3 mi', '')),
+    );
+  });
+});

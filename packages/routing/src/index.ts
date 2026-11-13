@@ -31,6 +31,7 @@ export {
   estimateDuration,
   route,
   type Destination,
+  type Origin,
   type Route,
   type RouteOptions,
 } from './route';

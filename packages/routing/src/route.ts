@@ -1,4 +1,4 @@
-// A complete walking route: snap the start (and a free destination) onto the
+// A complete walking route: snap a start position (and a free destination) onto the
 // network, find the shortest path, and turn it back into positions with the distance
 // and an estimated walking time.
 
@@ -9,6 +9,13 @@ import { insertSnapPoint, snapToGraph } from './snap';
 
 /** Either a place from the site's list or any position, which is snapped. */
 export type Destination = { readonly place: string } | { readonly position: Position };
+
+/** Where a walk begins: a position, or a place from the site's list. */
+export type Origin = Position | { readonly place: string };
+
+function isPlace(origin: Origin): origin is { readonly place: string } {
+  return !Array.isArray(origin);
+}
 
 export interface RouteOptions {
   readonly weights?: KindWeights;
@@ -36,20 +43,40 @@ export interface Route {
   readonly cost: number;
 }
 
-/** Shortest walking route from a position to a destination, or null if unreachable. */
+/**
+ * Shortest walking route to a destination, or null if unreachable. The start is
+ * a position, which is snapped onto the network, or a place from the site's
+ * list, in which case the walk begins at whichever of its entrances suits best.
+ */
 export function route(
   graph: Graph,
-  from: Position,
+  from: Origin,
   to: Destination,
   options: RouteOptions = {},
 ): Route | null {
   const weights = options.weights ?? DEFAULT_WEIGHTS;
   const speed = options.walkingSpeedMps ?? DEFAULT_WALKING_SPEED_MPS;
 
-  const startSnap = snapToGraph(graph, from);
-  if (startSnap === null) return null;
-  let working = insertSnapPoint(graph, startSnap);
-  const start = working.node;
+  let working = { graph, node: -1 };
+  // Where the walk may begin on the network: one snapped point, or a place's doors.
+  let starts: readonly number[];
+  // The dashed leg at the near end, from a position to where it meets the network.
+  let approach: Position[] = [];
+  let approachM = 0;
+  if (isPlace(from)) {
+    const entrances = graph.places[from.place];
+    if (entrances === undefined) return null;
+    starts = entrances;
+  } else {
+    const startSnap = snapToGraph(graph, from);
+    if (startSnap === null) return null;
+    working = insertSnapPoint(graph, startSnap);
+    starts = [working.node];
+    if (startSnap.distanceM > 0) {
+      approach = [from, startSnap.position];
+      approachM = startSnap.distanceM;
+    }
+  }
 
   // A place may be entered at several doors; a free destination has one end.
   let goals: readonly number[];
@@ -71,19 +98,21 @@ export function route(
     }
   }
 
-  // Try each entrance and keep the cheapest way in. A search takes a fraction of
-  // a millisecond and a place has a handful of doors at most.
+  // Try each pairing of a door to leave by and a door to arrive at, and keep the
+  // cheapest. A search takes a fraction of a millisecond and a place has a
+  // handful of doors at most.
   let found: PathResult | null = null;
-  for (const goal of goals) {
-    const candidate = aStar(working.graph, start, goal, { weights });
-    if (candidate !== null && (found === null || candidate.cost < found.cost)) found = candidate;
+  for (const start of starts) {
+    for (const goal of goals) {
+      const candidate = aStar(working.graph, start, goal, { weights });
+      if (candidate !== null && (found === null || candidate.cost < found.cost)) found = candidate;
+    }
   }
   if (found === null) return null;
 
   const path = found.nodes.map((node) => working.graph.nodes[node] as Position);
-  const approach: Position[] = startSnap.distanceM > 0 ? [from, startSnap.position] : [];
   const positions = [...approach.slice(0, -1), ...path, ...departure.slice(1)];
-  const distanceM = startSnap.distanceM + found.metres + departureM;
+  const distanceM = approachM + found.metres + departureM;
   return {
     approach,
     path,
