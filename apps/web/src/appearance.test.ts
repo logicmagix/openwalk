@@ -8,6 +8,7 @@ import {
   readScheme,
   THEME_ATTRIBUTE,
   attributeFor,
+  barColor,
   readAppearance,
   themeOf,
 } from './appearance';
@@ -61,5 +62,24 @@ describe('readScheme', () => {
     expect(readScheme('neon')).toBe('standard');
     expect(readScheme('contrast')).toBe('contrast');
     expect(readScheme('muted')).toBe('muted');
+  });
+});
+
+describe('barColor', () => {
+  it("is the color of the app's surfaces in each theme and scheme", () => {
+    expect(barColor('light', 'standard')).toBe('#ffffff');
+    expect(barColor('dark', 'standard')).toBe('#202124');
+    expect(barColor('light', 'muted')).toBe('#ffffff');
+    expect(barColor('dark', 'muted')).toBe('#202124');
+    expect(barColor('light', 'contrast')).toBe('#ffffff');
+    expect(barColor('dark', 'contrast')).toBe('#000000');
+  });
+
+  it('is known to the script that runs before the page is drawn', () => {
+    for (const theme of ['light', 'dark'] as const) {
+      for (const scheme of ['standard', 'contrast', 'muted'] as const) {
+        expect(script).toContain(`'${barColor(theme, scheme)}'`);
+      }
+    }
   });
 });

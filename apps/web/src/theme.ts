@@ -7,6 +7,7 @@ import {
   SCHEME_KEY,
   THEME_ATTRIBUTE,
   attributeFor,
+  barColor,
   readAppearance,
   readScheme,
   themeOf,
@@ -68,6 +69,17 @@ export function watchTheme(onChange: (theme: Theme, scheme: Scheme) => void): Th
       theme = next;
       onChange(theme, scheme);
     }
+    paintBar();
+  }
+
+  /** Tells the browser the color to paint around the app: its status bar or toolbar. */
+  function paintBar(): void {
+    const color = barColor(theme, scheme);
+    for (const tag of document.querySelectorAll('meta[name="theme-color"]')) {
+      // One color whatever the device prefers: the choice made here decides.
+      tag.removeAttribute('media');
+      tag.setAttribute('content', color);
+    }
   }
 
   function applyScheme(): void {
@@ -79,6 +91,7 @@ export function watchTheme(onChange: (theme: Theme, scheme: Scheme) => void): Th
   device.addEventListener('change', apply);
   apply();
   applyScheme();
+  paintBar();
 
   return {
     get theme() {
@@ -110,6 +123,7 @@ export function watchTheme(onChange: (theme: Theme, scheme: Scheme) => void): Th
         // Storage refused: the choice holds until the page is closed.
       }
       applyScheme();
+      paintBar();
       onChange(theme, scheme);
     },
   };
