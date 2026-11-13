@@ -6,7 +6,7 @@ import type { Position } from '../site/types';
 
 export interface PositionFix {
   readonly position: Position;
-  /** Radius in metres within which the true position probably lies. */
+  /** Radius in meters within which the true position probably lies. */
   readonly accuracyM: number;
   /** Direction of travel in degrees clockwise from north, when known. */
   readonly heading: number | null;

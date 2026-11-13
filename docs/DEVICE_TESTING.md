@@ -33,7 +33,7 @@ committed.
   site denied once is reset from Safari's page menu, Website Settings, Location.
 - Progressive web apps on iPhone install only from Safari (other browsers cannot
   install them), and iOS evicts a web app's stored data after about a week of non-use
-  unless the app is on the home screen. Offline behaviour is therefore observable only
+  unless the app is on the home screen. Offline behavior is therefore observable only
   from the home-screen icon, not from a Safari tab.
 - Location is available only while the page is in the foreground; there is no
   background tracking, which suits this product, and the privacy page says so.
@@ -48,7 +48,7 @@ committed.
   trusts the dev server. Alternatively skip certificates entirely and give Android
   testers the tunnel URL (method 4), which needs no setup on their phone.
 - Install the app from Chrome's menu, "Install app" or "Add to Home screen". Samsung
-  Internet and Firefox also support installation. Offline behaviour is observable from
+  Internet and Firefox also support installation. Offline behavior is observable from
   the installed icon.
 - Android keeps location flowing while the app is in the foreground and may keep
   updating briefly in the background, so the app stops watching position when the
@@ -102,7 +102,7 @@ no request ever carries a position (R27).
   `sites/<site-id>/traces/<name>.gpx` (traces are routes: only the recorder's own),
   and open `/s/<site-id>/?replay=<name>&speed=5` elsewhere to test directions,
   re-routing, and arrival detection; add `&loop` to start over at the end. A fixed
-  position is `/s/<site-id>/?at=<lon>,<lat>&accuracy=<metres>`. Both work in the
+  position is `/s/<site-id>/?at=<lon>,<lat>&accuracy=<meters>`. Both work in the
   development server and are ignored by production builds unless the build sets
   `VITE_ENABLE_REPLAY=true`. The example site ships a synthetic trace,
   `demo-walk`, generated along its walkways rather than recorded.

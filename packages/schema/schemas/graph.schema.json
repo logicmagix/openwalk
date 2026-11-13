@@ -14,7 +14,7 @@
       }
     },
     "edges": {
-      "description": "Each edge is [from, to, metres, kind]; edges are undirected. An aisle runs through a parking lot and a road along a street; a router may penalise both, roads more.",
+      "description": "Each edge is [from, to, meters, kind]; edges are undirected. An aisle runs through a parking lot and a road along a street; a router may penalize both, roads more.",
       "type": "array",
       "items": {
         "type": "array",

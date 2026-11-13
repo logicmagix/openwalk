@@ -43,7 +43,7 @@ describe('attributeFor', () => {
 
 describe('the script that runs before the page is drawn', () => {
   // It cannot import this module, so it repeats the name and the attribute.
-  it('does the same for the set of colours', () => {
+  it('does the same for the set of colors', () => {
     expect(script).toContain(`'${SCHEME_KEY}'`);
     expect(script).toContain(`'${SCHEME_ATTRIBUTE}'`);
   });

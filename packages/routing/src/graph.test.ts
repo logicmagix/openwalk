@@ -8,12 +8,12 @@ describe('loadGraph', () => {
   it('lists each edge from both of its ends', () => {
     const graph = loadGraph(document);
     expect(graph.nodes).toHaveLength(8);
-    expect(graph.neighbours[0]).toEqual([
-      { node: 1, metres: 112, kind: 'walkway' },
-      { node: 5, metres: 112, kind: 'walkway' },
-      { node: 3, metres: 159, kind: 'area' },
+    expect(graph.neighbors[0]).toEqual([
+      { node: 1, meters: 112, kind: 'walkway' },
+      { node: 5, meters: 112, kind: 'walkway' },
+      { node: 3, meters: 159, kind: 'area' },
     ]);
-    expect(graph.neighbours[7]).toEqual([{ node: 6, metres: 112, kind: 'walkway' }]);
+    expect(graph.neighbors[7]).toEqual([{ node: 6, meters: 112, kind: 'walkway' }]);
     expect(graph.places).toEqual({ corner: [2], top: [4], island: [7] });
   });
 

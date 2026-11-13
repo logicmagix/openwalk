@@ -24,7 +24,7 @@ def test_output_matches_schema(overpass_small: dict[str, Any]) -> None:
     validate(build(overpass_small).document, "graph")
 
 
-def test_edge_lengths_are_metres(overpass_small: dict[str, Any]) -> None:
+def test_edge_lengths_are_meters(overpass_small: dict[str, Any]) -> None:
     document = build(overpass_small).document
     # way/10 is the only plain walkway: 0.001 degrees north, then a diagonal; about
     # 110.6 m plus 123.7 m on the WGS84 ellipsoid near the equator.
@@ -231,7 +231,7 @@ def test_grade_separation_is_read_from_the_tags() -> None:
 
 
 def test_three_paths_crossing_at_almost_one_point_share_a_single_join() -> None:
-    # The diagonal passes a few millimetres from where the other two cross.
+    # The diagonal passes a few millimeters from where the other two cross.
     diagonal = line("way/3", [[0.0, 0.0], [0.001, 0.00100000005]])
     built = graph.build_graph(
         collection(line("way/1", EAST_WEST), line("way/2", NORTH_SOUTH), diagonal), [], {}, join_crossings=True

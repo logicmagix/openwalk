@@ -86,7 +86,7 @@ map images, and a site owner can withdraw their data by deleting one repository.
 One host can serve several sites, and each installs to a phone's home screen as a
 separate app, named after the site and opening on its own map (R11). A phone takes an
 installed app's name and starting address from the page and the web app manifest as
-the server sends them; values set later by script are not honoured. So each site is
+the server sends them; values set later by script are not honored. So each site is
 served its own copy of the page, with its title and home-screen name filled in, and
 its own manifest whose start address and scope are the site's map, `/s/<site-id>/`.
 
@@ -228,11 +228,11 @@ is about the person's eyes and screen, so it is kept once for the device, in
 the page is drawn. Which optional buttons a map shows is kept per site with the rest
 of how that map was left. Search, location, layers and the compass are not optional.
 
-The colours come in three fixed sets, chosen for the device like light and dark:
+The colors come in three fixed sets, chosen for the device like light and dark:
 the standard one, a high contrast one (plain white or black ground, heavier lines and
-outlines, and hard-edged controls) and a muted one (a greyscale ground, so the route
+outlines, and hard-edged controls) and a muted one (a grayscale ground, so the route
 and the places stand out; the controls are unchanged). The kinds of place keep their
-colours in all three, so the legend reads the same. A set is a palette and a few
+colors in all three, so the legend reads the same. A set is a palette and a few
 weights in `map/style.ts` and some custom properties in the stylesheet; unit tests
 hold each to contrast between labels and their halo and between the route and its
 edge, and the browser tests run the accessibility checks in high contrast.

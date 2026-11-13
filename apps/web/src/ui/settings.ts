@@ -11,7 +11,7 @@ export interface SettingsElements {
   readonly close: HTMLButtonElement;
   /** Where the choice of light or dark is listed. */
   readonly appearance: HTMLElement;
-  /** Where the choice of colours is listed. */
+  /** Where the choice of colors is listed. */
   readonly scheme: HTMLElement;
   /** Where the switches for this map's buttons are listed. */
   readonly controls: HTMLElement;

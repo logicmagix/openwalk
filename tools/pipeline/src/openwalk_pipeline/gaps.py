@@ -4,7 +4,7 @@ A routing graph can be in one piece and still send people a long way round: two 
 that meet on the ground may not meet in the data. This module looks for the two ways
 that happens and measures what each costs:
 
-- a dead end that stops a few metres short of another walkway, and
+- a dead end that stops a few meters short of another walkway, and
 - two walkways that cross without sharing a point (which is right for a bridge, and
   a mistake almost everywhere else).
 
@@ -30,7 +30,7 @@ XY = tuple[float, float]
 LonLat = tuple[float, float]
 GapKind = Literal["dead_end", "crossing"]
 
-METRES_PER_DEGREE = 111_320.0
+METERS_PER_DEGREE = 111_320.0
 
 # A dead end is reported when it stops within this distance of another walkway.
 DEFAULT_MAX_GAP_M = 10.0
@@ -50,9 +50,9 @@ class Gap:
     #: the nearest point on the other walkway; for a crossing, the crossing point twice.
     start: LonLat
     end: LonLat
-    #: Straight-line distance between them, in metres.
+    #: Straight-line distance between them, in meters.
     gap_m: float
-    #: Today's walking distance between the two sides, in metres; infinite when one
+    #: Today's walking distance between the two sides, in meters; infinite when one
     #: cannot be reached from the other at all.
     detour_m: float
     #: The kinds of the two walkways involved, such as ("walkway", "road").
@@ -65,32 +65,32 @@ class Gap:
 
 
 class _Network:
-    """The graph on a flat plane in metres, without the connectors to places."""
+    """The graph on a flat plane in meters, without the connectors to places."""
 
     def __init__(self, document: JsonObject) -> None:
         nodes: list[list[float]] = document["nodes"]
         self.lon0 = sum(n[0] for n in nodes) / len(nodes)
         self.lat0 = sum(n[1] for n in nodes) / len(nodes)
-        self.east = METRES_PER_DEGREE * math.cos(math.radians(self.lat0))
+        self.east = METERS_PER_DEGREE * math.cos(math.radians(self.lat0))
         self.xy: list[XY] = [self.to_plane(n[0], n[1]) for n in nodes]
         self.edges: list[tuple[int, int, float, str]] = [
             (int(a), int(b), float(length), str(kind))
             for a, b, length, kind in document["edges"]
             if kind != "connector"
         ]
-        self.neighbours: dict[int, list[tuple[int, float]]] = {}
+        self.neighbors: dict[int, list[tuple[int, float]]] = {}
         for a, b, length, _ in self.edges:
-            self.neighbours.setdefault(a, []).append((b, length))
-            self.neighbours.setdefault(b, []).append((a, length))
+            self.neighbors.setdefault(a, []).append((b, length))
+            self.neighbors.setdefault(b, []).append((a, length))
         self.segments = [LineString([self.xy[a], self.xy[b]]) for a, b, _, _ in self.edges]
         self.tree = STRtree(self.segments)
         self._distances: dict[int, dict[int, float]] = {}
 
     def to_plane(self, lon: float, lat: float) -> XY:
-        return ((lon - self.lon0) * self.east, (lat - self.lat0) * METRES_PER_DEGREE)
+        return ((lon - self.lon0) * self.east, (lat - self.lat0) * METERS_PER_DEGREE)
 
     def to_lonlat(self, xy: XY) -> LonLat:
-        return (round(self.lon0 + xy[0] / self.east, 7), round(self.lat0 + xy[1] / METRES_PER_DEGREE, 7))
+        return (round(self.lon0 + xy[0] / self.east, 7), round(self.lat0 + xy[1] / METERS_PER_DEGREE, 7))
 
     def distances_from(self, source: int) -> dict[int, float]:
         """Walking distance from one node to every node it can reach (Dijkstra)."""
@@ -103,7 +103,7 @@ class _Network:
             distance, node = heapq.heappop(queue)
             if distance > best.get(node, math.inf):
                 continue
-            for other, length in self.neighbours.get(node, []):
+            for other, length in self.neighbors.get(node, []):
                 candidate = distance + length
                 if candidate < best.get(other, math.inf):
                     best[other] = candidate
@@ -122,8 +122,8 @@ class _Network:
 
 def _dead_ends(network: _Network, max_gap_m: float, min_detour_m: float) -> list[Gap]:
     found: list[Gap] = []
-    for node, neighbours in network.neighbours.items():
-        if len(neighbours) != 1:
+    for node, neighbors in network.neighbors.items():
+        if len(neighbors) != 1:
             continue
         tip = Point(network.xy[node])
         best: tuple[float, int, XY] | None = None

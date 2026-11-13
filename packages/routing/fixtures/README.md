@@ -1,7 +1,7 @@
 # Routing fixtures
 
 `tiny.graph.json` is a hand-drawn graph on a 0.001-degree grid at the equator, where
-one grid step is about 111 m. Edge lengths are rounded up to whole metres. Drawn with
+one grid step is about 111 m. Edge lengths are rounded up to whole meters. Drawn with
 node ids, the layout is:
 
 ```

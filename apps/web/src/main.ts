@@ -12,7 +12,7 @@ import {
   nearestInCategory,
   planRoute,
   planWalk,
-  summarise,
+  summarize,
 } from './directions';
 import { siteCategories } from './categories';
 import { Locator } from './locate';
@@ -375,7 +375,7 @@ async function start(): Promise<void> {
     }
     // A saved walk is between two of the site's places; a spot is not one.
     panel.setRouteSaved(isSpotId(to.id) ? null : hasRoute(personal, { from: from.id, to: to.id }));
-    panel.update({ kind: 'planned', from: labelOf(from), ...summarise(found, router.units) });
+    panel.update({ kind: 'planned', from: labelOf(from), ...summarize(found, router.units) });
     if (!fitted) {
       fitted = true;
       // A walk of no length has nothing to fit; show its one spot instead.
@@ -515,7 +515,7 @@ async function start(): Promise<void> {
       if (first && destination === null && pendingNearest === null) {
         map.easeTo(fix.position, LOCATE_ZOOM);
       } else if (!first && locator.following) {
-        map.centreOn(fix.position);
+        map.centerOn(fix.position);
       }
       guide();
       if (pendingSpot !== null) {
@@ -575,7 +575,7 @@ async function start(): Promise<void> {
 
   /**
    * The locate button. With the map moved away from the person it brings them
-   * back to the centre; otherwise it switches locating on or off.
+   * back to the center; otherwise it switches locating on or off.
    */
   function pressLocate(): void {
     if (locator.on && !locator.following) {

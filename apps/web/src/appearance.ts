@@ -22,13 +22,13 @@ export const APPEARANCES: readonly { readonly value: Appearance; readonly label:
 ];
 
 /**
- * A set of colours for the map and the controls. Each is fixed and checked for
+ * A set of colors for the map and the controls. Each is fixed and checked for
  * contrast; a person picks one, they do not mix their own.
- *   standard  the colours the app was designed in
+ *   standard  the colors the app was designed in
  *   contrast  stronger lines, heavier outlines and plain black or white
  *             surfaces, for bright sun and for eyes that need more
  *   muted     a quieter base map, so the route and the places stand out
- * The kinds of place keep their colours in all three, so the legend reads the same.
+ * The kinds of place keep their colors in all three, so the legend reads the same.
  */
 export type Scheme = 'standard' | 'contrast' | 'muted';
 

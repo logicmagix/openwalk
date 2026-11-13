@@ -1,5 +1,5 @@
 // What the locate button does, separated from the page so it can be tested with a
-// fake provider: toggle the watch, centre the map on the first fix, drop the marker
+// fake provider: toggle the watch, center the map on the first fix, drop the marker
 // when switched off, and pause while the page is hidden.
 //
 // While locating is on the map follows the person as they walk. Moving the map
@@ -16,7 +16,7 @@ export interface LocatorEvents {
 
 export class Locator {
   private wanted = false;
-  private centred = false;
+  private centered = false;
   private follows = false;
 
   constructor(
@@ -29,7 +29,7 @@ export class Locator {
     return this.wanted;
   }
 
-  /** Whether the map should keep the person's position in the centre. */
+  /** Whether the map should keep the person's position in the center. */
   get following(): boolean {
     return this.wanted && this.follows;
   }
@@ -39,7 +39,7 @@ export class Locator {
     this.follows = false;
   }
 
-  /** Keep the person in the centre again, after a pause. */
+  /** Keep the person in the center again, after a pause. */
   follow(): void {
     this.follows = this.wanted;
   }
@@ -47,7 +47,7 @@ export class Locator {
   toggle(): boolean {
     this.wanted = !this.wanted;
     this.follows = this.wanted;
-    this.centred = false;
+    this.centered = false;
     if (this.wanted) {
       this.watch();
     } else {
@@ -57,11 +57,11 @@ export class Locator {
     return this.wanted;
   }
 
-  /** Called when the page is hidden or shown again; a return centres anew. */
+  /** Called when the page is hidden or shown again; a return centers anew. */
   setVisible(visible: boolean): void {
     if (!this.wanted) return;
     if (visible) {
-      this.centred = false;
+      this.centered = false;
       this.watch();
     } else {
       this.provider.stop();
@@ -71,8 +71,8 @@ export class Locator {
   private watch(): void {
     this.provider.start(
       (fix) => {
-        const first = !this.centred;
-        this.centred = true;
+        const first = !this.centered;
+        this.centered = true;
         this.events.onFix(fix, first);
       },
       (error) => this.events.onError(error),

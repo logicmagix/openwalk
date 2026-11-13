@@ -89,7 +89,7 @@ test('a focused control shows a ring with a contrasting band around it', async (
   });
   expect(ring.outline).toBe('solid');
   expect(ring.width).toBe('3px');
-  // Two bands of the surface colour: one inside the ring and one outside it.
+  // Two bands of the surface color: one inside the ring and one outside it.
   expect(ring.halo.match(/0px 0px 0px (2|7)px/g)).toHaveLength(2);
 });
 

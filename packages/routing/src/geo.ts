@@ -1,20 +1,20 @@
-// Geographic maths used by routing: distances, bearings, and a local metre plane for
+// Geographic math used by routing: distances, bearings, and a local meter plane for
 // nearest-point work. Everything is pure and position arguments follow GeoJSON order,
 // longitude then latitude, in degrees.
 
 /** A longitude and latitude pair in degrees, in GeoJSON order. */
 export type Position = readonly [lon: number, lat: number];
 
-/** A point on a flat plane, in metres. */
+/** A point on a flat plane, in meters. */
 export type PlanePoint = readonly [x: number, y: number];
 
-/** Mean radius of the earth in metres, the figure used by the haversine formula. */
+/** Mean radius of the earth in meters, the figure used by the haversine formula. */
 export const EARTH_RADIUS_M = 6_371_008.8;
 
 const DEGREES_TO_RADIANS = Math.PI / 180;
 const RADIANS_TO_DEGREES = 180 / Math.PI;
 
-/** Great-circle distance between two positions in metres. */
+/** Great-circle distance between two positions in meters. */
 export function haversineDistance(a: Position, b: Position): number {
   const lat1 = a[1] * DEGREES_TO_RADIANS;
   const lat2 = b[1] * DEGREES_TO_RADIANS;
@@ -40,7 +40,7 @@ export function initialBearing(a: Position, b: Position): number {
 
 /**
  * A flat approximation of the earth around one position: east and north offsets in
- * metres. Accurate to well under a percent within a few kilometres of the origin,
+ * meters. Accurate to well under a percent within a few kilometers of the origin,
  * which covers any site, and far cheaper than a true projection.
  */
 export interface LocalPlane {
@@ -48,11 +48,11 @@ export interface LocalPlane {
 }
 
 export function localPlane(origin: Position): LocalPlane {
-  const metresPerDegree = EARTH_RADIUS_M * DEGREES_TO_RADIANS;
-  const eastScale = metresPerDegree * Math.cos(origin[1] * DEGREES_TO_RADIANS);
+  const metersPerDegree = EARTH_RADIUS_M * DEGREES_TO_RADIANS;
+  const eastScale = metersPerDegree * Math.cos(origin[1] * DEGREES_TO_RADIANS);
   return {
     toPlane(position) {
-      return [(position[0] - origin[0]) * eastScale, (position[1] - origin[1]) * metresPerDegree];
+      return [(position[0] - origin[0]) * eastScale, (position[1] - origin[1]) * metersPerDegree];
     },
   };
 }

@@ -26,7 +26,7 @@ async function openSettings(page: Page): Promise<void> {
   await expect(settings(page).dialog).toBeVisible();
 }
 
-/** The colour the page is drawn on, which is the surface colour of the theme in force. */
+/** The color the page is drawn on, which is the surface color of the theme in force. */
 const surface = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
@@ -161,15 +161,15 @@ for (const scheme of ['light', 'dark'] as const) {
   });
 }
 
-test.describe('colours', () => {
+test.describe('colors', () => {
   test.use({ colorScheme: 'light' });
 
   const scheme = (page: Page, name: string) =>
     settings(page).dialog.getByRole('radio', { name, exact: true });
-  /** The colour of the app's own text, which each scheme sets with its surface. */
+  /** The color of the app's own text, which each scheme sets with its surface. */
   const ink = (page: Page) => page.evaluate(() => getComputedStyle(document.body).color);
 
-  test('the standard colours are in use until another set is chosen', async ({ page }) => {
+  test('the standard colors are in use until another set is chosen', async ({ page }) => {
     await openMap(page);
     await openSettings(page);
     await expect(scheme(page, 'Standard')).toBeChecked();
@@ -214,7 +214,7 @@ test.describe('colours', () => {
     await expect(page.locator('#map canvas')).toBeVisible();
   });
 
-  test('going back to the standard colours undoes the choice', async ({ page }) => {
+  test('going back to the standard colors undoes the choice', async ({ page }) => {
     await openMap(page);
     await openSettings(page);
     await scheme(page, 'Muted').check();

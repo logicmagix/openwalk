@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { choosePlace, controls, openMap } from './app';
 import { arrivalPoint, farthestPair, reading } from './site';
 
-// While locating is on the map keeps the person in the centre. Moving the map
+// While locating is on the map keeps the person in the center. Moving the map
 // by hand pauses that, and the locate button brings them back.
 const { from, to } = farthestPair();
 
@@ -43,7 +43,7 @@ test('moving the map pauses following and the locate button resumes it', async (
   await expect(locate).toHaveAttribute('aria-pressed', 'true');
   await expect(locate).toHaveAttribute('data-following', 'true');
 
-  // A press while centred switches locating off.
+  // A press while centered switches locating off.
   await locate.click();
   await expect(locate).toHaveAttribute('aria-pressed', 'false');
   await expect(locate).toHaveAttribute('data-following', 'false');

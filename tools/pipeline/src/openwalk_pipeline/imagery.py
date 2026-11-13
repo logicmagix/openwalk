@@ -31,7 +31,7 @@ OVERLAY_ID = "aerial"
 
 DEFAULT_NAME = "Aerial photo"
 DEFAULT_RESOLUTION_M = 0.6
-#: How far beyond the site's walkways and places the photograph reaches, in metres.
+#: How far beyond the site's walkways and places the photograph reaches, in meters.
 DEFAULT_MARGIN_M = 100.0
 #: The longest side asked for, in pixels. Imagery services commonly refuse more than
 #: 4000, and a phone cannot draw an image wider than 4096.
@@ -65,7 +65,7 @@ def to_lonlat(x: float, y: float) -> tuple[float, float]:
 
 @dataclass(frozen=True)
 class Plan:
-    """One picture to ask for: its box in Web Mercator metres and its size in pixels."""
+    """One picture to ask for: its box in Web Mercator meters and its size in pixels."""
 
     west: float
     south: float
@@ -73,7 +73,7 @@ class Plan:
     north: float
     width: int
     height: int
-    #: Metres on the ground per pixel, which is coarser than asked when the site is
+    #: Meters on the ground per pixel, which is coarser than asked when the site is
     #: too large for the asked resolution to fit in one picture.
     resolution_m: float
 
@@ -88,7 +88,7 @@ def plan(extent: Extent, resolution_m: float, max_side_px: int = MAX_SIDE_PX) ->
     """The picture covering ``extent`` at ``resolution_m`` or the finest that fits.
 
     Web Mercator stretches distances by 1 / cos(latitude), so a pixel that is to
-    cover ``resolution_m`` on the ground covers more than that in Mercator metres.
+    cover ``resolution_m`` on the ground covers more than that in Mercator meters.
     """
     if resolution_m <= 0:
         raise ValueError(f"resolution must be positive, got {resolution_m}")

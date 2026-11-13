@@ -12,7 +12,7 @@ from openwalk_pipeline.tiles import Extent
 from openwalk_pipeline.validate import validate
 from tests.conftest import FIXTURES
 
-# A box about a kilometre wide and half that tall, at a latitude where Web Mercator
+# A box about a kilometer wide and half that tall, at a latitude where Web Mercator
 # stretches distances by about 15%.
 EXTENT = Extent(west=-82.18, south=29.163, east=-82.17, north=29.168)
 

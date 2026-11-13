@@ -7,8 +7,8 @@ between every pair of its boundary vertices whose straight line stays inside it,
 route may cross a plaza. Each place is joined to the network by a connector from its
 entrance to the nearest point on the nearest edge, which is split there.
 
-All geometry is done on a local metric plane centred on the data, so edge lengths are
-metres and nearest-point searches are not distorted by latitude.
+All geometry is done on a local metric plane centered on the data, so edge lengths are
+meters and nearest-point searches are not distorted by latitude.
 """
 
 from __future__ import annotations
@@ -45,8 +45,8 @@ def is_grade_separated(properties: JsonObject) -> bool:
         return True
     return str(properties.get("layer", "0")).strip() not in ("", "0")
 
-# Points closer than this, in metres, are the same node. Coordinates are written to
-# seven decimal places of a degree, about a centimetre, so anything nearer than that
+# Points closer than this, in meters, are the same node. Coordinates are written to
+# seven decimal places of a degree, about a centimeter, so anything nearer than that
 # cannot be told apart once saved and would leave an edge of no length.
 SNAP_M = 0.02
 

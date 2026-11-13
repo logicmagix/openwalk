@@ -1,4 +1,4 @@
-// The kinds of place a site has, each with a readable name and a colour: what
+// The kinds of place a site has, each with a readable name and a color: what
 // the map draws its dots in, and what the legend lists. Pure; no DOM, no map.
 
 import type { PlacesDocument } from '@openwalk/search';
@@ -12,13 +12,13 @@ export interface Category {
   readonly label: string;
   /** How many of the site's places are of this kind. */
   readonly count: number;
-  /** The colour of its dots, in the light and in the dark theme. */
-  readonly colour: Readonly<Record<Theme, string>>;
+  /** The color of its dots, in the light and in the dark theme. */
+  readonly color: Readonly<Record<Theme, string>>;
 }
 
-// A fixed palette of colours that stay apart for people with the common forms of
-// colour blindness (after Okabe and Ito, and Tol). Each has a deeper shade for the
-// light map and a lighter one for the dark map. Dots are also outlined in a colour
+// A fixed palette of colors that stay apart for people with the common forms of
+// color blindness (after Okabe and Ito, and Tol). Each has a deeper shade for the
+// light map and a lighter one for the dark map. Dots are also outlined in a color
 // that contrasts with the map, so a dot never depends on its fill alone to be seen.
 // Walkways are drawn in blue and routes in purple, so those hues are kept out of
 // the way: there is no purple, and the one blue comes last.
@@ -28,19 +28,19 @@ const PALETTE: readonly Readonly<Record<Theme, string>>[] = [
   { light: '#cc79a7', dark: '#e9b3d0' }, // pink
   { light: '#e69f00', dark: '#f5b942' }, // orange
   { light: '#f0e442', dark: '#f5ec6b' }, // yellow
-  { light: '#737373', dark: '#b5b5b5' }, // grey
+  { light: '#737373', dark: '#b5b5b5' }, // gray
   { light: '#882255', dark: '#c0507f' }, // wine
   { light: '#56b4e9', dark: '#8fd0f5' }, // sky
 ];
 
-/** The dot colour for a place whose kind is not in the list. */
-export const FALLBACK_COLOUR: Readonly<Record<Theme, string>> = {
+/** The dot color for a place whose kind is not in the list. */
+export const FALLBACK_COLOR: Readonly<Record<Theme, string>> = {
   light: '#737373',
   dark: '#b5b5b5',
 };
 
 /** A readable name made from a category value: `call_box` becomes "Call box". */
-export function humanise(id: string): string {
+export function humanize(id: string): string {
   const words = id.replace(/_/g, ' ').trim();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
@@ -48,8 +48,8 @@ export function humanise(id: string): string {
 /**
  * The site's kinds of place, in the order the legend shows them: first those the
  * site lists in its configuration, in its order and with its names, then any
- * other kind its places use, by name. Colours follow that order, so a site that
- * lists its categories also decides which colour each gets. A listed kind that
+ * other kind its places use, by name. Colors follow that order, so a site that
+ * lists its categories also decides which color each gets. A listed kind that
  * no place uses is left out.
  */
 export function siteCategories(
@@ -65,12 +65,12 @@ export function siteCategories(
   const listedIds = new Set(listed.map((entry) => entry.id));
   const others = [...counts.keys()]
     .filter((id) => !listedIds.has(id))
-    .map((id) => ({ id, label: humanise(id) }))
+    .map((id) => ({ id, label: humanize(id) }))
     .sort((a, b) => a.label.localeCompare(b.label));
   return [...listed, ...others].map((entry, index) => ({
     id: entry.id,
     label: entry.label,
     count: counts.get(entry.id) ?? 0,
-    colour: PALETTE[index % PALETTE.length] ?? FALLBACK_COLOUR,
+    color: PALETTE[index % PALETTE.length] ?? FALLBACK_COLOR,
   }));
 }

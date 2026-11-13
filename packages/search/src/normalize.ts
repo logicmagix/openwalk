@@ -8,7 +8,7 @@
  * NFKD decomposition splits an accented letter into the base letter and a separate
  * combining mark (U+0300 to U+036F), which the regular expression then removes.
  */
-export function normalise(text: string): string {
+export function normalize(text: string): string {
   return text
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
@@ -18,8 +18,8 @@ export function normalise(text: string): string {
     .trim();
 }
 
-/** The normalised words of a text, in order, without empties. */
-export function tokenise(text: string): string[] {
-  const normalised = normalise(text);
-  return normalised === '' ? [] : normalised.split(' ');
+/** The normalized words of a text, in order, without empties. */
+export function tokenize(text: string): string[] {
+  const normalized = normalize(text);
+  return normalized === '' ? [] : normalized.split(' ');
 }

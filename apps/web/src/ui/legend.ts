@@ -1,5 +1,5 @@
 // The legend: a button that opens a list of the site's kinds of place, each with
-// the colour of its dots and a checkbox. Unticking a kind takes its places off the
+// the color of its dots and a checkbox. Unticking a kind takes its places off the
 // map, to thin out a busy one; search still finds every place. The control owns no
 // map state: it reports the hidden kinds and the caller restyles.
 
@@ -31,7 +31,7 @@ export interface Legend {
   addLink(link: LegendLink): void;
 }
 
-/** One kind of place: its colour, its name, how many there are, and its switch. */
+/** One kind of place: its color, its name, how many there are, and its switch. */
 function row(category: Category, shown: boolean, onToggle: (shown: boolean) => void): HTMLElement {
   const label = document.createElement('label');
   label.className = 'legend-row';
@@ -43,8 +43,8 @@ function row(category: Category, shown: boolean, onToggle: (shown: boolean) => v
   const swatch = document.createElement('span');
   swatch.className = 'kind-swatch';
   swatch.setAttribute('aria-hidden', 'true');
-  swatch.style.setProperty('--swatch-light', category.colour.light);
-  swatch.style.setProperty('--swatch-dark', category.colour.dark);
+  swatch.style.setProperty('--swatch-light', category.color.light);
+  swatch.style.setProperty('--swatch-dark', category.color.dark);
   const name = document.createElement('span');
   name.className = 'legend-name';
   name.textContent = category.label;

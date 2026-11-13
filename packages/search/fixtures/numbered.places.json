@@ -40,10 +40,10 @@
     },
     {
       "type": "Feature",
-      "id": "health-centre",
+      "id": "health-center",
       "geometry": { "type": "Point", "coordinates": [0.002, 0.002] },
       "properties": {
-        "name": "Health Centre",
+        "name": "Health Center",
         "number": "120",
         "category": "service",
         "keywords": ["first aid", "nurse", "clinic"],

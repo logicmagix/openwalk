@@ -19,7 +19,7 @@ function isPlace(origin: Origin): origin is { readonly place: string } {
 
 export interface RouteOptions {
   readonly weights?: KindWeights;
-  /** Walking speed in metres per second. */
+  /** Walking speed in meters per second. */
   readonly walkingSpeedMps?: number;
 }
 
@@ -35,7 +35,7 @@ export interface Route {
   readonly departure: readonly Position[];
   /** Whole route in order, for drawing or for finding the next waypoint. */
   readonly positions: readonly Position[];
-  /** Total walking distance in metres, including the approach and departure. */
+  /** Total walking distance in meters, including the approach and departure. */
   readonly distanceM: number;
   /** Estimated walking time in seconds. */
   readonly durationS: number;
@@ -112,7 +112,7 @@ export function route(
 
   const path = found.nodes.map((node) => working.graph.nodes[node] as Position);
   const positions = [...approach.slice(0, -1), ...path, ...departure.slice(1)];
-  const distanceM = approachM + found.metres + departureM;
+  const distanceM = approachM + found.meters + departureM;
   return {
     approach,
     path,

@@ -33,7 +33,7 @@ test('no request leaves the site or carries a position', async ({ page, context,
   expect(elsewhere, 'requests to other hosts').toEqual([]);
 
   // A coordinate written to three decimal places pins a person to about a
-  // hundred metres; none of the positions used may appear anywhere in a request.
+  // hundred meters; none of the positions used may appear anywhere in a request.
   const fragments = [start, end].flatMap(([lon, lat]) => [lon.toFixed(3), lat.toFixed(3)]);
   const leaks = requests.filter((request) => {
     const sent = `${decodeURIComponent(request.url())} ${request.postData() ?? ''}`;

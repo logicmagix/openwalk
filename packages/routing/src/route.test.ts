@@ -105,7 +105,7 @@ describe('route on the hand-drawn graph', () => {
     expect(found.distanceM).toBeCloseTo(11.1195 + 224 + 22.239, 2);
   });
 
-  it('honours site weights', () => {
+  it('honors site weights', () => {
     const found = route(
       tinyGraph,
       [0, 0.001],
@@ -155,7 +155,7 @@ describe('golden routes on the example site', () => {
         expect(found).not.toBeNull();
         if (found === null) return;
         expect(found.cost).toBeCloseTo(expected.cost ?? NaN, 4);
-        expect(found.metres).toBeCloseTo(expected.metres ?? NaN, 4);
+        expect(found.meters).toBeCloseTo(expected.meters ?? NaN, 4);
         expect(found.nodes).toEqual(expected.nodes);
       }
 
@@ -165,7 +165,7 @@ describe('golden routes on the example site', () => {
       const walked = route(siteGraph, origin, { place: to }, { weights });
       if (expected.reachable) {
         expect(walked?.approach).toEqual([]);
-        expect(walked?.distanceM).toBeCloseTo(expected.metres ?? NaN, 4);
+        expect(walked?.distanceM).toBeCloseTo(expected.meters ?? NaN, 4);
       } else {
         expect(walked).toBeNull();
       }

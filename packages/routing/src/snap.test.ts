@@ -45,17 +45,17 @@ describe('insertSnapPoint', () => {
     expect(node).toBe(8);
     expect(split.nodes).toHaveLength(9);
     expect(split.nodes[8]).toEqual(snap.position);
-    expect(split.neighbours[8]).toEqual([
-      { node: 0, metres: 56, kind: 'walkway' },
-      { node: 1, metres: 56, kind: 'walkway' },
+    expect(split.neighbors[8]).toEqual([
+      { node: 0, meters: 56, kind: 'walkway' },
+      { node: 1, meters: 56, kind: 'walkway' },
     ]);
-    expect(split.neighbours[0]).toContainEqual({ node: 8, metres: 56, kind: 'walkway' });
-    expect(split.neighbours[0]).not.toContainEqual(expect.objectContaining({ node: 1 }));
-    expect(split.neighbours[1]).toContainEqual({ node: 8, metres: 56, kind: 'walkway' });
-    expect(split.neighbours[1]).not.toContainEqual(expect.objectContaining({ node: 0 }));
+    expect(split.neighbors[0]).toContainEqual({ node: 8, meters: 56, kind: 'walkway' });
+    expect(split.neighbors[0]).not.toContainEqual(expect.objectContaining({ node: 1 }));
+    expect(split.neighbors[1]).toContainEqual({ node: 8, meters: 56, kind: 'walkway' });
+    expect(split.neighbors[1]).not.toContainEqual(expect.objectContaining({ node: 0 }));
 
     expect(graph.nodes).toHaveLength(8);
-    expect(graph.neighbours[0]).toContainEqual({ node: 1, metres: 112, kind: 'walkway' });
+    expect(graph.neighbors[0]).toContainEqual({ node: 1, meters: 112, kind: 'walkway' });
   });
 
   it('reuses an endpoint instead of splitting at an edge end', () => {

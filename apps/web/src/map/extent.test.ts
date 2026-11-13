@@ -61,7 +61,7 @@ describe('siteExtent', () => {
     expect(extent).not.toBeNull();
     if (extent === null) return;
     const [[west, south], [east, north]] = extent;
-    // Tens of metres, not hundreds: well under a thousandth of a degree north-south.
+    // Tens of meters, not hundreds: well under a thousandth of a degree north-south.
     expect(north - south).toBeGreaterThan(0);
     expect(north - south).toBeLessThan(0.002);
     // The same distance is more degrees east-west away from the equator.

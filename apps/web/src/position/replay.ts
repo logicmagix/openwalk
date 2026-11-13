@@ -16,7 +16,7 @@ export interface ReplayOptions {
   readonly intervalMs?: number;
   /** Accuracy reported when the track carries none. */
   readonly accuracyM?: number;
-  /** Pace assumed when the track carries no times, in metres per second. */
+  /** Pace assumed when the track carries no times, in meters per second. */
   readonly walkingSpeedMps?: number;
 }
 

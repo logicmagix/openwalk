@@ -58,7 +58,7 @@ described here. Paths below are relative to the repository root.
    `packages/schema/schemas/site.schema.json` lists every setting.
 3. **Fetch OpenStreetMap data.** `openwalk-pipeline fetch sites/<site-id>` queries the
    Overpass API for everything inside the boundary and caches the result in `raw/`.
-   The cache is reused until `--refresh` is given. Commit it if the licence allows, as
+   The cache is reused until `--refresh` is given. Commit it if the license allows, as
    the example does: OpenStreetMap data is ODbL.
 4. **Build.** `openwalk-pipeline build sites/<site-id>` writes `walkways.geojson` and
    `graph.json`, then `places.geojson` and `overlays.json` once their inputs exist. It
@@ -71,10 +71,10 @@ described here. Paths below are relative to the repository root.
    app leads to whichever is the shortest walk from where the person stands. Mark
    each `verified: true` only after checking it on foot. Rebuild. To give a category a one-tap "nearest" button on the map, list it
    under `nearest` in `site.yaml` with the label the button should show; nearest is
-   measured by walking distance over the network. The map colours each place by
+   measured by walking distance over the network. The map colors each place by
    its category and its legend lists them; list the categories under `categories` in
    `site.yaml` to give each a readable name and set their order, which also decides
-   their colours.
+   their colors.
 6. **Check it on a map.** `openwalk-pipeline debug sites/<site-id>` writes
    `debug.html`, a page that draws everything over satellite imagery. Clicking the map
    prints coordinates in the order the YAML files use; the view is kept in the URL
@@ -82,11 +82,11 @@ described here. Paths below are relative to the repository root.
 7. **Close gaps in the network.** A network can be in one piece and still send people
    a long way round, because two paths that meet on the ground do not meet in the
    data. `openwalk-pipeline gaps sites/<site-id>` lists the likely spots: dead ends
-   that stop a few metres short of another walkway, and walkways that cross without
+   that stop a few meters short of another walkway, and walkways that cross without
    sharing a point. Each is given with its coordinates and the distance a person is
    routed today to get round it, longest first, and the debug page shows each by its
-   number. Both commands take `--max-gap` to look further than a few metres. Where a connection exists on the ground, draw it in `walkways.yaml` with
-   those coordinates. Each end within a few metres of a mapped walkway is joined to
+   number. Both commands take `--max-gap` to look further than a few meters. Where a connection exists on the ground, draw it in `walkways.yaml` with
+   those coordinates. Each end within a few meters of a mapped walkway is joined to
    it. Setting `walkways.join_crossings` in `site.yaml` joins every ground-level
    crossing at once; bridges, tunnels and ways on another layer are left apart. Mapping the connection in OpenStreetMap afterwards is the lasting fix.
 8. **Extract the base map.** Set `tiles.source` in `site.yaml` to the URL of a
@@ -97,7 +97,7 @@ described here. Paths below are relative to the repository root.
 9. **Add an official map, optionally.** Put a PNG of it under `overlay/` and list
    control points in `site.yaml`: a pixel in the image paired with the OpenStreetMap
    element or position it depicts. The build fits the image to the ground and reports
-   the residual error in metres. Permission from the map's owner is needed to display
+   the residual error in meters. Permission from the map's owner is needed to display
    it. Until you have it, give the overlay `publish: false`: it stays in the debug
    page for placing things and is left out of the image.
 10. **Add an aerial photograph, optionally.** Name an imagery service under `imagery`

@@ -13,7 +13,7 @@ import type {
   StyleSpecification,
 } from '@maplibre/maplibre-gl-style-spec';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
-import { FALLBACK_COLOUR, type Category } from '../categories';
+import { FALLBACK_COLOR, type Category } from '../categories';
 import type { PositionFix } from '../position/provider';
 import type { WalkwaysDocument } from '../site/types';
 import type { Scheme } from '../appearance';
@@ -41,7 +41,7 @@ export interface LayerPrefs {
 
 export interface StyleInputs {
   readonly theme: Theme;
-  /** The set of colours; the standard one when absent. */
+  /** The set of colors; the standard one when absent. */
   readonly scheme?: Scheme;
   /** URL of the site's basemap.pmtiles. */
   readonly basemapUrl: string;
@@ -60,7 +60,7 @@ export interface StyleInputs {
   readonly route?: Route | null;
   /** The chosen destination, ringed on the map. */
   readonly destination?: Position | null;
-  /** The site's kinds of place; each place's dot takes its kind's colour. */
+  /** The site's kinds of place; each place's dot takes its kind's color. */
   readonly categories?: readonly Category[];
   /** Kinds of place left off the map for now. */
   readonly hiddenCategories?: readonly string[];
@@ -85,7 +85,7 @@ export function overlayLayerId(id: string): string {
 /** Layers a tap on selects a place; the feature's `id` property is the place id. */
 export const PLACE_LAYERS = ['places-dot', 'places-label'] as const;
 
-/** The colours and weights of the app's own layers, drawn over the base map. */
+/** The colors and weights of the app's own layers, drawn over the base map. */
 interface Palette {
   readonly walkway: string;
   readonly walkwayHand: string;
@@ -98,10 +98,10 @@ interface Palette {
   readonly routeCasing: string;
 }
 
-/** How a scheme differs from the standard one apart from its colours. */
+/** How a scheme differs from the standard one apart from its colors. */
 interface Weights {
-  /** The base map's own flavour, by theme. */
-  readonly flavour: Readonly<Record<Theme, string>>;
+  /** The base map's own flavor, by theme. */
+  readonly flavor: Readonly<Record<Theme, string>>;
   /** Walkway and route lines are this many times as wide. */
   readonly line: number;
   readonly walkwayOpacity: number;
@@ -114,7 +114,7 @@ interface Weights {
 
 const WEIGHTS: Readonly<Record<Scheme, Weights>> = {
   standard: {
-    flavour: { light: 'light', dark: 'dark' },
+    flavor: { light: 'light', dark: 'dark' },
     line: 1,
     walkwayOpacity: 0.8,
     placeStroke: 1.5,
@@ -123,16 +123,16 @@ const WEIGHTS: Readonly<Record<Scheme, Weights>> = {
   },
   // Plain white or black ground, and everything of the app's own drawn heavier.
   contrast: {
-    flavour: { light: 'white', dark: 'black' },
+    flavor: { light: 'white', dark: 'black' },
     line: 1.5,
     walkwayOpacity: 1,
     placeStroke: 2.5,
     labelExtra: 1.5,
     labelHalo: 2.5,
   },
-  // A grey ground that asks for less attention than what is drawn on it.
+  // A gray ground that asks for less attention than what is drawn on it.
   muted: {
-    flavour: { light: 'grayscale', dark: 'black' },
+    flavor: { light: 'grayscale', dark: 'black' },
     line: 1,
     walkwayOpacity: 0.7,
     placeStroke: 1.5,
@@ -166,7 +166,7 @@ const STANDARD: Readonly<Record<Theme, Palette>> = {
   },
 };
 
-const COLOURS: Readonly<Record<Scheme, Readonly<Record<Theme, Palette>>>> = {
+const COLORS: Readonly<Record<Scheme, Readonly<Record<Theme, Palette>>>> = {
   standard: STANDARD,
   contrast: {
     light: {
@@ -213,26 +213,26 @@ function visibility(shown: boolean): 'visible' | 'none' {
 
 export function buildStyle(inputs: StyleInputs): StyleSpecification {
   const scheme = inputs.scheme ?? 'standard';
-  const colours = COLOURS[scheme][inputs.theme];
+  const colors = COLORS[scheme][inputs.theme];
   const weights = WEIGHTS[scheme];
   const position = positionCollection(inputs.position ?? null);
   const walkways = asGeoJson(inputs.walkways ?? EMPTY);
   const places = withIdProperty(inputs.places ?? EMPTY);
   const routeData = routeCollection(inputs.route ?? null);
 
-  // A place's dot takes the colour of its kind. `match` is the style language's
+  // A place's dot takes the color of its kind. `match` is the style language's
   // switch statement: the value, then pairs of case and result, then the default.
   const categories = inputs.categories ?? [];
-  const fallback = FALLBACK_COLOUR[inputs.theme];
+  const fallback = FALLBACK_COLOR[inputs.theme];
   // The spec types a `match` as a tuple of fixed shape, which a list built from
   // data cannot satisfy, hence the cast.
-  const placeColour: ExpressionSpecification | string =
+  const placeColor: ExpressionSpecification | string =
     categories.length === 0
       ? fallback
       : ([
           'match',
           ['get', 'category'],
-          ...categories.flatMap((category) => [category.id, category.colour[inputs.theme]]),
+          ...categories.flatMap((category) => [category.id, category.color[inputs.theme]]),
           fallback,
         ] as unknown as ExpressionSpecification);
   // Places of a hidden kind are left out of both the dots and the labels, except
@@ -303,7 +303,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
       ...overlaySources,
     },
     layers: [
-      ...basemapLayers(BASEMAP_SOURCE, namedFlavor(weights.flavour[inputs.theme]), {
+      ...basemapLayers(BASEMAP_SOURCE, namedFlavor(weights.flavor[inputs.theme]), {
         lang: inputs.lang,
       }),
       ...overlayLayers,
@@ -317,8 +317,8 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
           'line-color': [
             'case',
             ['==', ['get', 'source'], 'hand'],
-            colours.walkwayHand,
-            colours.walkway,
+            colors.walkwayHand,
+            colors.walkway,
           ],
           'line-width': [
             'interpolate',
@@ -340,7 +340,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: WALKWAYS_SOURCE,
         filter: ['==', ['geometry-type'], 'Polygon'],
         layout: { visibility: visibility(showWalkways) },
-        paint: { 'line-color': colours.walkway, 'line-width': 1, 'line-opacity': 0.6 },
+        paint: { 'line-color': colors.walkway, 'line-width': 1, 'line-opacity': 0.6 },
       },
       {
         id: 'route-casing',
@@ -349,7 +349,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         filter: ['==', ['get', 'kind'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
-          'line-color': colours.routeCasing,
+          'line-color': colors.routeCasing,
           'line-width': 9 * weights.line,
           'line-opacity': 0.9,
         },
@@ -360,7 +360,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: ROUTE_SOURCE,
         filter: ['==', ['get', 'kind'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': colours.route, 'line-width': 5 * weights.line },
+        paint: { 'line-color': colors.route, 'line-width': 5 * weights.line },
       },
       {
         // The walk to and from the network, where no path is mapped: dashed.
@@ -368,7 +368,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         type: 'line',
         source: ROUTE_SOURCE,
         filter: ['!=', ['get', 'kind'], 'path'],
-        paint: { 'line-color': colours.route, 'line-width': 4, 'line-dasharray': [1, 2] },
+        paint: { 'line-color': colors.route, 'line-width': 4, 'line-dasharray': [1, 2] },
       },
       {
         // A soft glow so the chosen place is unmistakable even before a route or
@@ -378,19 +378,19 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         source: DESTINATION_SOURCE,
         paint: {
           'circle-radius': 24,
-          'circle-color': colours.route,
+          'circle-color': colors.route,
           'circle-opacity': 0.22,
         },
       },
       {
-        // A bold, white-edged marker at its centre.
+        // A bold, white-edged marker at its center.
         id: 'destination-mark',
         type: 'circle',
         source: DESTINATION_SOURCE,
         paint: {
           'circle-radius': 9,
-          'circle-color': colours.route,
-          'circle-stroke-color': colours.routeCasing,
+          'circle-color': colors.route,
+          'circle-stroke-color': colors.routeCasing,
           'circle-stroke-width': 3,
         },
       },
@@ -399,7 +399,7 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         type: 'fill',
         source: POSITION_SOURCE,
         filter: ['==', ['geometry-type'], 'Polygon'],
-        paint: { 'fill-color': colours.position, 'fill-opacity': 0.15 },
+        paint: { 'fill-color': colors.position, 'fill-opacity': 0.15 },
       },
       {
         id: 'places-dot',
@@ -408,10 +408,10 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         filter: placeFilter,
         paint: {
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 3.5, 18, 7],
-          'circle-color': placeColour,
+          'circle-color': placeColor,
           // The outline contrasts with the map in each theme, so a dot is seen
           // whatever its fill and whatever it lies on.
-          'circle-stroke-color': colours.placeOutline,
+          'circle-stroke-color': colors.placeOutline,
           'circle-stroke-width': weights.placeStroke,
         },
       },
@@ -444,8 +444,8 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
           'text-max-width': 9,
         },
         paint: {
-          'text-color': colours.placeText,
-          'text-halo-color': colours.placeHalo,
+          'text-color': colors.placeText,
+          'text-halo-color': colors.placeHalo,
           'text-halo-width': weights.labelHalo,
         },
       },
@@ -456,8 +456,8 @@ export function buildStyle(inputs: StyleInputs): StyleSpecification {
         filter: ['==', ['geometry-type'], 'Point'],
         paint: {
           'circle-radius': 7,
-          'circle-color': colours.position,
-          'circle-stroke-color': colours.positionStroke,
+          'circle-color': colors.position,
+          'circle-stroke-color': colors.positionStroke,
           'circle-stroke-width': 2.5,
         },
       },

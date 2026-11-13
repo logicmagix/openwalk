@@ -17,7 +17,7 @@ describe.each(algorithms)('%s on the hand-drawn graph', (_name, find) => {
     const result = find(tinyGraph, 0, 2);
     expect(result?.nodes).toEqual([0, 1, 2]);
     expect(result?.cost).toBe(224);
-    expect(result?.metres).toBe(224);
+    expect(result?.meters).toBe(224);
   });
 
   it('cuts across the plaza when that is shorter', () => {
@@ -30,18 +30,18 @@ describe.each(algorithms)('%s on the hand-drawn graph', (_name, find) => {
     const result = find(tinyGraph, 5, 3);
     expect(result?.nodes).toEqual([5, 0, 3]);
     expect(result?.cost).toBe(271);
-    expect(result?.metres).toBe(271);
+    expect(result?.meters).toBe(271);
   });
 
   it('takes the road once its weight makes it cheaper', () => {
     const result = find(tinyGraph, 5, 3, { weights: resolveWeights({ road: 2 }) });
     expect(result?.nodes).toEqual([5, 3]);
     expect(result?.cost).toBe(224);
-    expect(result?.metres).toBe(112);
+    expect(result?.meters).toBe(112);
   });
 
   it('returns a single node for a trip to the start', () => {
-    expect(find(tinyGraph, 1, 1)).toMatchObject({ nodes: [1], cost: 0, metres: 0 });
+    expect(find(tinyGraph, 1, 1)).toMatchObject({ nodes: [1], cost: 0, meters: 0 });
   });
 
   it('returns null when the goal is on an island', () => {
@@ -117,17 +117,17 @@ describe('Dijkstra and A* agree', () => {
       const found = aStar(siteGraph, start, goal, { weights });
       if (found === null) continue;
       let cost = 0;
-      let metres = 0;
+      let meters = 0;
       for (let i = 1; i < found.nodes.length; i += 1) {
         const from = found.nodes[i - 1] as number;
         const to = found.nodes[i] as number;
-        const edge = siteGraph.neighbours[from]?.find((n) => n.node === to);
+        const edge = siteGraph.neighbors[from]?.find((n) => n.node === to);
         if (edge === undefined) throw new Error(`no edge ${from}-${to}`);
-        cost += edge.metres * weights[edge.kind];
-        metres += edge.metres;
+        cost += edge.meters * weights[edge.kind];
+        meters += edge.meters;
       }
       expect(found.cost).toBeCloseTo(cost, 6);
-      expect(found.metres).toBeCloseTo(metres, 6);
+      expect(found.meters).toBeCloseTo(meters, 6);
     }
   });
 });
