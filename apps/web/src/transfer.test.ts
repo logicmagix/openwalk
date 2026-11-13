@@ -133,3 +133,54 @@ describe('mergeMessage', () => {
     expect(merge(1, 0, 2)).toContain('2 were left out');
   });
 });
+
+describe('spots in a file', () => {
+  const spots = [
+    { id: 'a', kind: 'car' as const, name: 'My car', position: [-82.13, 29.19] as const },
+    { id: 'b', kind: 'spot' as const, name: 'Big bass', position: [-82.14, 29.2] as const },
+  ];
+
+  it('are written only when given, and read back as points and names', () => {
+    expect(transferFile(transfer)).not.toContain('"x"');
+    const read = readTransfer(transferFile(transfer, spots));
+    expect(read?.saved).toEqual(transfer.saved);
+    expect(read?.spots?.map(({ kind, name, position }) => ({ kind, name, position }))).toEqual(
+      spots.map(({ kind, name, position }) => ({ kind, name, position })),
+    );
+  });
+
+  it('are never put in a link, and are ignored if a link carries them', () => {
+    expect(transferLink('https://maps.example', { ...transfer, spots })).toBe(
+      transferLink('https://maps.example', transfer),
+    );
+    const forged = btoa(
+      JSON.stringify({ v: 1, s: 'campus', p: [], x: [{ k: 'spot', n: 'Here', c: [1, 2] }] }),
+    )
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    expect(readTransfer(forged)?.site).toBe('campus');
+    expect(readTransfer(forged)?.spots).toBeUndefined();
+    expect(readTransfer(`https://maps.example/s/campus/#places=${forged}`)?.spots).toBeUndefined();
+  });
+
+  it('drop any that are malformed and keep the rest', () => {
+    const text = JSON.stringify({
+      v: 1,
+      s: 'campus',
+      x: [{ k: 'spot', n: 'Fine', c: [1, 2] }, { k: 'spot', n: 'No point' }, 'nonsense'],
+    });
+    expect(readTransfer(text)?.spots?.map((spot) => spot.name)).toEqual(['Fine']);
+  });
+
+  it('are counted in what the person is told', () => {
+    const told = mergeMessage({
+      personal: NOTHING_KEPT,
+      addedPlaces: 1,
+      addedRoutes: 1,
+      addedSpots: 2,
+      unknown: 0,
+    });
+    expect(told).toBe('Added 1 place, 1 route and 2 spots.');
+  });
+});

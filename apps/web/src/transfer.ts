@@ -6,17 +6,24 @@
 // about what is in it. Only the ids of places travel: no position, and nothing
 // about where the person has been. Recent places are left out for that reason.
 //
+// A file, and only a file, may also carry the spots the person has marked,
+// which are positions. That is for keeping a copy of one's own, it happens
+// only when asked for, and spots found in a link are ignored.
+//
 // What arrives is treated as untrusted. It is read strictly, checked against
 // the site it names and the places that site has, and added to what the device
 // already holds, never put in its place. Pure data in, data out.
 
 import type { Personal, SavedRoute } from './personal';
+import { readSpots, type Spot } from './spots';
 
 /** What travels: the site it belongs to, saved place ids, and saved walks. */
 export interface Transfer {
   readonly site: string;
   readonly saved: readonly string[];
   readonly routes: readonly SavedRoute[];
+  /** Marked spots, which only a file carries; each is a point and a name. */
+  readonly spots?: readonly Spot[];
 }
 
 /** The name the data goes under after the "#" of a link. */
@@ -35,6 +42,7 @@ export function toTransfer(siteId: string, personal: Personal): Transfer {
   };
 }
 
+/** Whether there is nothing to put in a link: no saved place and no saved walk. */
 export function isEmpty(transfer: Transfer): boolean {
   return transfer.saved.length === 0 && transfer.routes.length === 0;
 }
@@ -78,9 +86,20 @@ export function transferLink(origin: string, transfer: Transfer): string {
   return `${origin}/s/${transfer.site}/#${LINK_KEY}=${transferCode(transfer)}`;
 }
 
-/** The data as a file's contents: the same short form, laid out to be read. */
-export function transferFile(transfer: Transfer): string {
-  return `${JSON.stringify(compact(transfer), null, 2)}\n`;
+/**
+ * The data as a file's contents: the same short form, laid out to be read,
+ * with the given spots added when there are any.
+ */
+export function transferFile(transfer: Transfer, spots: readonly Spot[] = []): string {
+  const contents = compact(transfer) as Record<string, unknown>;
+  if (spots.length > 0) {
+    contents['x'] = spots.map(({ kind, name, position }) => ({
+      k: kind,
+      n: name,
+      c: [...position],
+    }));
+  }
+  return `${JSON.stringify(contents, null, 2)}\n`;
 }
 
 /** A file name that says which site the places belong to. */
@@ -98,7 +117,20 @@ function ids(value: unknown): string[] | null {
   return found;
 }
 
-function parse(json: string): Transfer | null {
+/** The spots in a file's `x`, read as strictly as spots kept on the device are. */
+function spotsIn(value: unknown): Spot[] {
+  if (!Array.isArray(value) || value.length > MAX_ITEMS) return [];
+  const listed = (value as unknown[]).map((entry, index) => {
+    const { k, n, c } = (typeof entry === 'object' && entry !== null ? entry : {}) as Record<
+      string,
+      unknown
+    >;
+    return { id: `arrived-${index}`, kind: k, name: n, position: c };
+  });
+  return readSpots({ spots: listed });
+}
+
+function parse(json: string, withSpots = false): Transfer | null {
   let value: unknown;
   try {
     value = JSON.parse(json);
@@ -106,7 +138,13 @@ function parse(json: string): Transfer | null {
     return null;
   }
   if (typeof value !== 'object' || value === null) return null;
-  const { v, s, p, r } = value as { v?: unknown; s?: unknown; p?: unknown; r?: unknown };
+  const { v, s, p, r, x } = value as {
+    v?: unknown;
+    s?: unknown;
+    p?: unknown;
+    r?: unknown;
+    x?: unknown;
+  };
   if (v !== 1 || typeof s !== 'string' || !ID.test(s)) return null;
   const saved = ids(p ?? []);
   if (saved === null || !Array.isArray(r ?? []) || ((r ?? []) as unknown[]).length > MAX_ITEMS) {
@@ -122,7 +160,8 @@ function parse(json: string): Transfer | null {
     if ((entry as unknown[]).length !== 2) return null;
     if (!routes.some((route) => route.from === from && route.to === to)) routes.push({ from, to });
   }
-  return { site: s, saved, routes };
+  const spots = withSpots ? spotsIn(x) : [];
+  return spots.length > 0 ? { site: s, saved, routes, spots } : { site: s, saved, routes };
 }
 
 /**
@@ -132,7 +171,8 @@ function parse(json: string): Transfer | null {
 export function readTransfer(text: string): Transfer | null {
   const trimmed = text.trim();
   if (trimmed === '' || trimmed.length > MAX_TEXT) return null;
-  if (trimmed.startsWith('{')) return parse(trimmed);
+  // Only a file's own text may carry spots; whatever a link holds, its spots are ignored.
+  if (trimmed.startsWith('{')) return parse(trimmed, true);
   const marker = `${LINK_KEY}=`;
   const at = trimmed.lastIndexOf(marker);
   const code = at >= 0 ? trimmed.slice(at + marker.length) : trimmed;
@@ -152,6 +192,8 @@ export interface Merge {
   readonly addedRoutes: number;
   /** How many were left out because the site does not have their places. */
   readonly unknown: number;
+  /** How many marked spots were new to this device, when a file carried any. */
+  readonly addedSpots?: number;
 }
 
 /** Adds what arrived to what the device holds. Nothing already held is removed. */
@@ -182,6 +224,12 @@ export function mergeTransfer(
   };
 }
 
+/** "a", "a and b", "a, b and c". */
+function inWords(parts: readonly string[]): string {
+  if (parts.length < 2) return parts.join('');
+  return `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+}
+
 function counted(count: number, one: string, many: string): string {
   return count === 1 ? `1 ${one}` : `${count} ${many}`;
 }
@@ -191,8 +239,9 @@ export function mergeMessage(merge: Merge): string {
   const parts: string[] = [];
   if (merge.addedPlaces > 0) parts.push(counted(merge.addedPlaces, 'place', 'places'));
   if (merge.addedRoutes > 0) parts.push(counted(merge.addedRoutes, 'route', 'routes'));
+  if ((merge.addedSpots ?? 0) > 0) parts.push(counted(merge.addedSpots ?? 0, 'spot', 'spots'));
   const added =
-    parts.length > 0 ? `Added ${parts.join(' and ')}.` : 'Nothing new: you already have these.';
+    parts.length > 0 ? `Added ${inWords(parts)}.` : 'Nothing new: you already have these.';
   const left =
     merge.unknown > 0
       ? ` ${counted(merge.unknown, 'was', 'were')} left out because this map does not have ${merge.unknown === 1 ? 'that place' : 'those places'}.`

@@ -221,13 +221,24 @@
           Scan this with the other device’s camera, or send it the link or the file. They hold the
           names of your saved places and routes, and nothing else.
         </p>
-        <div id="my-places-code" class="my-places-code"></div>
-        <label class="field">
-          <span>Link</span>
-          <input id="my-places-link" type="text" readonly />
+        <div id="my-places-link-parts">
+          <div id="my-places-code" class="my-places-code"></div>
+          <label class="field">
+            <span>Link</span>
+            <input id="my-places-link" type="text" readonly />
+          </label>
+          <div class="button-row">
+            <button id="my-places-copy" class="plain-button" type="button">Copy link</button>
+          </div>
+        </div>
+        <label id="my-places-with-spots-row" class="check-row" hidden>
+          <input id="my-places-with-spots" type="checkbox" />
+          <span>
+            Include my spots in the file. These are positions; the code and the link never carry
+            them.
+          </span>
         </label>
         <div class="button-row">
-          <button id="my-places-copy" class="plain-button" type="button">Copy link</button>
           <button id="my-places-save-file" class="plain-button" type="button">
             Save as a file
           </button>

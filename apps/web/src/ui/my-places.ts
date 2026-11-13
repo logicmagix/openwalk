@@ -15,10 +15,15 @@ export interface MyPlacesElements {
   readonly clearRecent: HTMLButtonElement;
   /** Everything about sending, hidden when there is nothing to send. */
   readonly share: HTMLElement;
+  /** The code, the link and its button: hidden when there is nothing a link may carry. */
+  readonly linkParts: HTMLElement;
   readonly code: HTMLElement;
   readonly link: HTMLInputElement;
   readonly copy: HTMLButtonElement;
   readonly saveFile: HTMLButtonElement;
+  /** The choice to put marked spots in the file, and the label that holds it. */
+  readonly withSpots: HTMLInputElement;
+  readonly withSpotsRow: HTMLElement;
   readonly pasted: HTMLInputElement;
   readonly add: HTMLButtonElement;
   readonly file: HTMLInputElement;
@@ -40,8 +45,10 @@ export interface MyPlacesOptions {
   readonly clearRecent: () => void;
   /** A link carrying everything saved, or null when nothing is. */
   readonly link: () => string | null;
-  /** A file carrying everything saved. */
-  readonly file: () => { readonly name: string; readonly text: string };
+  /** A file carrying everything saved, with the marked spots too when asked. */
+  readonly file: (withSpots: boolean) => { readonly name: string; readonly text: string };
+  /** How many spots are marked; the choice to include them is offered when there are any. */
+  readonly spotCount: () => number;
   /** Adds what the text holds; returns what to tell the person. */
   readonly add: (text: string) => string;
   /** Told when the panel opens and when it closes. */
@@ -105,7 +112,12 @@ export function setupMyPlaces(elements: MyPlacesElements, options: MyPlacesOptio
     elements.clearRecent.hidden = options.recentCount() === 0;
 
     const link = options.link();
-    elements.share.hidden = link === null;
+    const spotCount = options.spotCount();
+    // Spots alone are worth a file, so the section shows for them too.
+    elements.share.hidden = link === null && spotCount === 0;
+    elements.withSpotsRow.hidden = spotCount === 0;
+    if (spotCount === 0) elements.withSpots.checked = false;
+    elements.linkParts.hidden = link === null;
     if (link !== null) {
       elements.link.value = link;
       const picture = qrPicture(link, 'A code that carries your saved places');
@@ -152,7 +164,7 @@ export function setupMyPlaces(elements: MyPlacesElements, options: MyPlacesOptio
   });
 
   elements.saveFile.addEventListener('click', () => {
-    const { name, text } = options.file();
+    const { name, text } = options.file(elements.withSpots.checked);
     const address = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
     const anchor = document.createElement('a');
     anchor.href = address;

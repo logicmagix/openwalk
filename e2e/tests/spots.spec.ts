@@ -163,3 +163,67 @@ test('the menu works from the keyboard and Escape closes it', async ({ page, con
   await expect(menu).toBeHidden();
   await expect(button).toBeFocused();
 });
+
+test.describe('a copy of one’s spots in a file', () => {
+  const myPlaces = (page: Page) => page.getByRole('dialog', { name: 'My places' });
+
+  async function openMyPlaces(page: Page): Promise<void> {
+    await page.getByRole('button', { name: 'Map legend' }).click();
+    await page.getByRole('button', { name: 'My places' }).click();
+    await expect(myPlaces(page)).toBeVisible();
+  }
+
+  /** Marks the car, then saves a file from "My places", with spots or without. */
+  async function saveFile(page: Page, withSpots: boolean): Promise<{ path: string; text: string }> {
+    await openMenu(page);
+    await spots(page).park.click();
+    await expect(spots(page).markers).toHaveCount(1);
+    await openMyPlaces(page);
+    const tick = myPlaces(page).getByRole('checkbox', { name: /Include my spots/ });
+    await expect(tick).not.toBeChecked();
+    if (withSpots) await tick.check();
+    const download = page.waitForEvent('download');
+    await myPlaces(page).getByRole('button', { name: 'Save as a file' }).click();
+    const path = await (await download).path();
+    const { readFileSync } = await import('node:fs');
+    return { path, text: readFileSync(path, 'utf8') };
+  }
+
+  test('spots stay out of the file unless asked for, and never appear in a link', async ({
+    page,
+    context,
+  }) => {
+    await context.setGeolocation(reading(arrivalPoint(from)));
+    await openMap(page);
+    const { text } = await saveFile(page, false);
+    expect(JSON.parse(text)).not.toHaveProperty('x');
+    // With only a spot marked there is nothing a link may carry, so none is offered.
+    await expect(myPlaces(page).getByRole('textbox', { name: 'Link', exact: true })).toBeHidden();
+  });
+
+  test('a file with spots brings them to another device', async ({ page, context, browser }) => {
+    const start = arrivalPoint(from);
+    await context.setGeolocation(reading(start));
+    await openMap(page);
+    const { path, text } = await saveFile(page, true);
+    const [spot] = (JSON.parse(text) as { x: { k: string; n: string; c: number[] }[] }).x;
+    expect(spot).toMatchObject({ k: 'car', n: 'My car' });
+    expect(spot?.c[0]).toBeCloseTo(start[0], 5);
+
+    const other = await browser.newContext();
+    const otherPage = await other.newPage();
+    await openMap(otherPage);
+    await openMyPlaces(otherPage);
+    await otherPage.locator('#my-places-file').setInputFiles(path);
+    await expect(myPlaces(otherPage).getByRole('status')).toHaveText('Added 1 spot.');
+    await myPlaces(otherPage).getByRole('button', { name: 'Close my places' }).click();
+    await expect(spots(otherPage).markers).toHaveCount(1);
+    // Choosing the same file again adds nothing.
+    await openMyPlaces(otherPage);
+    await otherPage.locator('#my-places-file').setInputFiles(path);
+    await expect(myPlaces(otherPage).getByRole('status')).toHaveText(
+      'Nothing new: you already have these.',
+    );
+    await other.close();
+  });
+});

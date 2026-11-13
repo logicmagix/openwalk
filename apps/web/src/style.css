@@ -1379,3 +1379,25 @@ body.no-nearest .spots-panel {
   content: '\25C9\00a0';
   color: var(--accent);
 }
+
+/* A tick box with its words beside it, in the "My places" panel. */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 4px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.check-row[hidden] {
+  display: none;
+}
+
+.check-row input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+}

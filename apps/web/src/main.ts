@@ -55,6 +55,7 @@ import {
   isFull,
   isSpotId,
   keptSpots,
+  mergeSpots,
   parkCar,
   readSpots,
   removeSpot,
@@ -685,6 +686,9 @@ async function start(): Promise<void> {
       link: element('my-places-link'),
       copy: element('my-places-copy'),
       saveFile: element('my-places-save-file'),
+      linkParts: element('my-places-link-parts'),
+      withSpots: element('my-places-with-spots'),
+      withSpotsRow: element('my-places-with-spots-row'),
       pasted: element('my-places-pasted'),
       add: element('my-places-add'),
       file: element('my-places-file'),
@@ -709,17 +713,24 @@ async function start(): Promise<void> {
         const transfer = toTransfer(siteId, personal);
         return isEmpty(transfer) ? null : transferLink(location.origin, transfer);
       },
-      file: () => ({
+      file: (withSpots) => ({
         name: transferFileName(siteId),
-        text: transferFile(toTransfer(siteId, personal)),
+        text: transferFile(toTransfer(siteId, personal), withSpots ? spots : []),
       }),
+      spotCount: () => spots.length,
       add: (text) => {
         const incoming = readTransfer(text);
         if (incoming === null) return 'That is not a link or a file of saved places.';
         if (incoming.site !== siteId) return 'Those places belong to a different map.';
         const merge = mergeTransfer(personal, incoming, placesById.keys());
         forget(merge.personal);
-        return mergeMessage(merge);
+        // Spots come only from a file, and only those that lie on this site are taken.
+        const arrived = (incoming.spots ?? []).filter(
+          (spot) => extent === null || isOnSite(spot.position, 0, extent),
+        );
+        const merged = mergeSpots(spots, arrived, () => crypto.randomUUID());
+        if (merged.added > 0) keepSpots(merged.spots);
+        return mergeMessage({ ...merge, addedSpots: merged.added });
       },
       // A phone may start the app afresh when it is returned to from another,
       // which happens in the middle of copying a link across. When the panel
