@@ -9,7 +9,7 @@ export interface TrackPoint {
   readonly position: Position;
   /** Milliseconds since the epoch, or null when the file carries no times. */
   readonly time: number | null;
-  /** Horizontal accuracy in metres, if the file carries one. */
+  /** Horizontal accuracy in meters, if the file carries one. */
   readonly accuracyM: number | null;
 }
 
@@ -32,7 +32,7 @@ export function parseGpx(xml: string): TrackPoint[] {
     points.push({
       position: [lon, lat],
       time: Number.isNaN(stamp) ? null : stamp,
-      // Loggers write either an accuracy in metres or a dilution of precision; a
+      // Loggers write either an accuracy in meters or a dilution of precision; a
       // dilution of 1 is roughly 5 m for a phone.
       accuracyM: accuracy !== null ? Number(accuracy) : hdop !== null ? Number(hdop) * 5 : null,
     });

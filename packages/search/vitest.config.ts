@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [
     {
-      // Site data is GeoJSON, which Vite does not recognise as JSON by extension.
+      // Site data is GeoJSON, which Vite does not recognize as JSON by extension.
       // Wrapping the file as a module lets tests import it like any JSON file.
       name: 'geojson-as-json',
       transform(code, id) {

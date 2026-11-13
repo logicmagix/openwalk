@@ -1,4 +1,4 @@
-/* The privacy page: plain text, readable on a phone, in the app's colours. */
+/* The privacy page: plain text, readable on a phone, in the app's colors. */
 
 :root {
   color-scheme: light dark;
@@ -27,7 +27,7 @@
   color-scheme: light;
 }
 
-/* The high contrast colours chosen in the app's settings: plain surfaces, the
+/* The high contrast colors chosen in the app's settings: plain surfaces, the
    darkest or lightest ink, and a stronger accent. */
 :root[data-scheme='contrast'] {
   --surface: #ffffff;

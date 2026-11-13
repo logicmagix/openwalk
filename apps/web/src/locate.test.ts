@@ -16,7 +16,7 @@ function harness(provider: PositionProvider) {
 }
 
 describe('Locator', () => {
-  it('starts the provider on toggle, centres once, and clears on toggle off', () => {
+  it('starts the provider on toggle, centers once, and clears on toggle off', () => {
     const provider = new FixedPositionProvider(FIX);
     const { locator, log } = harness(provider);
     expect(locator.toggle()).toBe(true);
@@ -27,7 +27,7 @@ describe('Locator', () => {
     expect(log).toEqual(['fix 1,2 first', 'cleared']);
   });
 
-  it('pauses while hidden and resumes, centring again', () => {
+  it('pauses while hidden and resumes, centering again', () => {
     const provider = new FixedPositionProvider(FIX);
     const { locator, log } = harness(provider);
     locator.toggle();

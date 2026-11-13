@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlacesDocument } from '@openwalk/search';
-import { humanise, siteCategories } from './categories';
+import { humanize, siteCategories } from './categories';
 
 const places = (categories: string[]): PlacesDocument => ({
   type: 'FeatureCollection',
@@ -12,10 +12,10 @@ const places = (categories: string[]): PlacesDocument => ({
   })),
 });
 
-describe('humanise', () => {
+describe('humanize', () => {
   it('turns a category value into words', () => {
-    expect(humanise('call_box')).toBe('Call box');
-    expect(humanise('building')).toBe('Building');
+    expect(humanize('call_box')).toBe('Call box');
+    expect(humanize('building')).toBe('Building');
   });
 });
 
@@ -45,19 +45,19 @@ describe('siteCategories', () => {
     expect(siteCategories(config, places(['building'])).map((c) => c.id)).toEqual(['building']);
   });
 
-  it('gives each kind its own colour in both themes', () => {
+  it('gives each kind its own color in both themes', () => {
     const found = siteCategories({}, places(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']));
-    expect(new Set(found.map((c) => c.colour.light)).size).toBe(8);
-    expect(new Set(found.map((c) => c.colour.dark)).size).toBe(8);
+    expect(new Set(found.map((c) => c.color.light)).size).toBe(8);
+    expect(new Set(found.map((c) => c.color.dark)).size).toBe(8);
     for (const category of found) {
-      expect(category.colour.light).toMatch(/^#[0-9a-f]{6}$/);
-      expect(category.colour.dark).toMatch(/^#[0-9a-f]{6}$/);
+      expect(category.color.light).toMatch(/^#[0-9a-f]{6}$/);
+      expect(category.color.dark).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
-  it('starts the colours again when a site has more kinds than colours', () => {
+  it('starts the colors again when a site has more kinds than colors', () => {
     const found = siteCategories({}, places(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']));
-    expect(found[8]?.colour).toEqual(found[0]?.colour);
+    expect(found[8]?.color).toEqual(found[0]?.color);
   });
 
   it('is empty for a site with no places', () => {

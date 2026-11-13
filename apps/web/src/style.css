@@ -6,8 +6,8 @@
   --ink: #1a202c;
   --accent: #1a73e8;
   --shadow: 0 1px 4px rgb(0 0 0 / 0.3);
-  /* Around a focus ring. The ring is the accent colour, which can vanish over
-     a blue part of the map; a band of the surface colour inside and outside it
+  /* Around a focus ring. The ring is the accent color, which can vanish over
+     a blue part of the map; a band of the surface color inside and outside it
      keeps it visible on anything. The ring is 3px wide and stands 2px off. */
   --focus-halo: 0 0 0 2px var(--surface), 0 0 0 7px var(--surface);
 }
@@ -272,7 +272,7 @@ li {
   border-radius: 0 0 22px 22px;
 }
 
-/* At a limit the button stays in place, greyed, so the pair does not jump. */
+/* At a limit the button stays in place, grayed, so the pair does not jump. */
 .zoom button:disabled {
   color: var(--ink);
   opacity: 0.35;
@@ -310,7 +310,7 @@ li {
 
 /* MapLibre's own controls. The selectors carry #map so they outrank the library's
    stylesheet, which is loaded after this one. The compass sits below the locate
-   button and takes the page's colours. */
+   button and takes the page's colors. */
 #map .maplibregl-ctrl-top-right {
   top: calc(env(safe-area-inset-top, 0px) + 58px);
   right: calc(env(safe-area-inset-right, 0px) + 2px);
@@ -406,7 +406,7 @@ li {
   font-size: 16px; /* 16px stops iOS zooming into the field */
 }
 
-/* The browser's own placeholder grey is too pale to read on white. */
+/* The browser's own placeholder gray is too pale to read on white. */
 #search-input::placeholder {
   color: var(--ink);
   opacity: 0.7;
@@ -485,7 +485,7 @@ li {
 }
 
 /* The row the keyboard is on. The tint alone is too faint to tell apart, so a
-   solid bar in the accent colour marks it. */
+   solid bar in the accent color marks it. */
 #search-list li.active {
   box-shadow: inset 4px 0 0 var(--accent);
 }
@@ -767,7 +767,7 @@ li {
 }
 
 /* Offline cues: the brief "ready offline" confirmation and the "update
-   available" prompt share this accent banner, bottom-centre, above the map. */
+   available" prompt share this accent banner, bottom-center, above the map. */
 .offline-note {
   position: fixed;
   left: 50%;
@@ -974,7 +974,7 @@ body.picking .zoom {
   box-shadow: var(--focus-halo);
 }
 
-/* A dot like the ones on the map: the kind's colour with a contrasting outline.
+/* A dot like the ones on the map: the kind's color with a contrasting outline.
    Used in the legend and in the search list. */
 .kind-swatch {
   flex: none;
@@ -1037,7 +1037,7 @@ body.picking .zoom {
 }
 
 /* A link in the legend's foot that opens something within the page is a button
-   made to look like its neighbours. */
+   made to look like its neighbors. */
 .legend-links button {
   border: 0;
   background: none;
@@ -1047,7 +1047,7 @@ body.picking .zoom {
   cursor: pointer;
 }
 
-/* "My places": a sheet over the map. A dialog element is centred and laid over
+/* "My places": a sheet over the map. A dialog element is centered and laid over
    everything by the browser, with the page behind it dimmed. */
 .my-places {
   box-sizing: border-box;

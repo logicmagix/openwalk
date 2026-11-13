@@ -2,7 +2,7 @@
 // site and opening on its own map. A phone decides an installed app's name and
 // starting address from what the server sends for the page: the page's title
 // tags and the web app manifest it links to. Setting them later from script is
-// not honoured, so every site is given its own copy of the page and its own
+// not honored, so every site is given its own copy of the page and its own
 // manifest file. The image build writes them for the sites it carries, and the
 // development server produces the same on request.
 //
@@ -11,9 +11,9 @@
 
 export const APP_NAME = 'OpenWalk';
 
-/** Colours the phone paints around an installed app before the page draws. */
-const THEME_COLOUR = '#1a73e8';
-const BACKGROUND_COLOUR = '#ffffff';
+/** Colors the phone paints around an installed app before the page draws. */
+const THEME_COLOR = '#1a73e8';
+const BACKGROUND_COLOR = '#ffffff';
 
 /** The icons every site shares. */
 const ICONS = [
@@ -105,8 +105,8 @@ export function siteManifest(config: SiteIdentity): WebAppManifest {
     start_url: page,
     scope: page,
     display: 'standalone',
-    background_color: BACKGROUND_COLOUR,
-    theme_color: THEME_COLOUR,
+    background_color: BACKGROUND_COLOR,
+    theme_color: THEME_COLOR,
     icons: ICONS,
   };
 }

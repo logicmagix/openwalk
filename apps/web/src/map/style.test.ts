@@ -43,7 +43,7 @@ describe('buildStyle', () => {
     expect(style.sprite).toBe(`${origin}/basemap/sprites/light`);
   });
 
-  it('switches sprites and colours with the theme', () => {
+  it('switches sprites and colors with the theme', () => {
     const light = buildStyle({ ...base, theme: 'light' });
     const dark = buildStyle({ ...base, theme: 'dark' });
     expect(dark.sprite).toBe(`${origin}/basemap/sprites/dark`);
@@ -143,12 +143,12 @@ describe('style validity', () => {
 
 describe('kinds of place', () => {
   const categories = [
-    { id: 'building', label: 'Buildings', count: 2, colour: { light: '#111111', dark: '#eeeeee' } },
+    { id: 'building', label: 'Buildings', count: 2, color: { light: '#111111', dark: '#eeeeee' } },
     {
       id: 'call_box',
       label: 'Call boxes',
       count: 1,
-      colour: { light: '#222222', dark: '#dddddd' },
+      color: { light: '#222222', dark: '#dddddd' },
     },
   ];
   const layer = (inputs: Partial<Parameters<typeof buildStyle>[0]>, id: string) =>
@@ -157,7 +157,7 @@ describe('kinds of place', () => {
       filter?: unknown;
     };
 
-  it("colours each dot by its kind, in the theme's shade", () => {
+  it("colors each dot by its kind, in the theme's shade", () => {
     expect(layer({ categories }, 'places-dot').paint?.['circle-color']).toEqual([
       'match',
       ['get', 'category'],
@@ -171,7 +171,7 @@ describe('kinds of place', () => {
     expect(dark).toContain('#eeeeee');
   });
 
-  it('uses one plain colour when no kinds are given', () => {
+  it('uses one plain color when no kinds are given', () => {
     expect(typeof layer({}, 'places-dot').paint?.['circle-color']).toBe('string');
   });
 
@@ -194,7 +194,7 @@ describe('kinds of place', () => {
     expect(validateStyleMin(buildStyle({ ...base, theme: 'light', ...chosen }))).toEqual([]);
   });
 
-  it('builds a style MapLibre accepts, with kinds coloured and hidden', () => {
+  it('builds a style MapLibre accepts, with kinds colored and hidden', () => {
     for (const theme of ['light', 'dark'] as const) {
       for (const hiddenCategories of [[], ['call_box'], ['building', 'call_box']]) {
         const style = buildStyle({ ...base, theme, categories, hiddenCategories });
@@ -281,7 +281,7 @@ describe('positionCollection', () => {
   });
 });
 
-describe('colour schemes', () => {
+describe('color schemes', () => {
   const schemes = ['standard', 'contrast', 'muted'] as const;
   const themes = ['light', 'dark'] as const;
 
@@ -291,7 +291,7 @@ describe('colour schemes', () => {
     return (found as { paint?: Record<string, unknown> } | undefined)?.paint?.[property];
   }
 
-  /** How strongly two colours differ, from 1 (the same) to 21 (black on white). */
+  /** How strongly two colors differ, from 1 (the same) to 21 (black on white). */
   function contrast(a: string, b: string): number {
     const luminance = (hex: string): number => {
       const channel = (index: number): number => {
@@ -348,12 +348,12 @@ describe('colour schemes', () => {
     }
   });
 
-  it('gives each kind of place the same colour in every scheme', () => {
-    const colours = schemes.map((scheme) =>
+  it('gives each kind of place the same color in every scheme', () => {
+    const colors = schemes.map((scheme) =>
       paint(buildStyle({ ...base, theme: 'light', scheme }), 'places-dot', 'circle-color'),
     );
-    expect(colours[1]).toEqual(colours[0]);
-    expect(colours[2]).toEqual(colours[0]);
+    expect(colors[1]).toEqual(colors[0]);
+    expect(colors[2]).toEqual(colors[0]);
   });
 
   it('changes the base map itself for the two schemes that are not the standard', () => {

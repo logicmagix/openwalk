@@ -62,13 +62,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-gap",
         type=float,
         default=gaps.DEFAULT_MAX_GAP_M,
-        help="how close a dead end must be to another walkway to be listed, in metres",
+        help="how close a dead end must be to another walkway to be listed, in meters",
     )
     breaks.add_argument(
         "--min-detour",
         type=float,
         default=gaps.DEFAULT_MIN_DETOUR_M,
-        help="list a spot only when the walk round it today is at least this long, in metres",
+        help="list a spot only when the walk round it today is at least this long, in meters",
     )
 
     check = commands.add_parser("debug", help="write a map page for checking the generated files by eye")
@@ -78,13 +78,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-gap",
         type=float,
         default=gaps.DEFAULT_MAX_GAP_M,
-        help="draw a suspected gap when a dead end is this close to another walkway, in metres",
+        help="draw a suspected gap when a dead end is this close to another walkway, in meters",
     )
     check.add_argument(
         "--min-detour",
         type=float,
         default=gaps.DEFAULT_MIN_DETOUR_M,
-        help="draw a suspected gap only when the walk round it today is at least this long, in metres",
+        help="draw a suspected gap only when the walk round it today is at least this long, in meters",
     )
     return parser
 

@@ -15,7 +15,7 @@
       "reachable": true,
       "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154],
       "cost": 285.94,
-      "metres": 175.26
+      "meters": 175.26
     },
     {
       "from": "baseball-field",
@@ -26,7 +26,7 @@
         37, 36, 33, 32, 31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
       ],
       "cost": 711.55,
-      "metres": 600.87
+      "meters": 600.87
     },
     {
       "from": "baseball-field",
@@ -37,7 +37,7 @@
         129, 130, 150, 151
       ],
       "cost": 798.06,
-      "metres": 345.42
+      "meters": 345.42
     },
     {
       "from": "baseball-field",
@@ -45,7 +45,7 @@
       "reachable": true,
       "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 157],
       "cost": 227.22,
-      "metres": 116.54
+      "meters": 116.54
     },
     {
       "from": "baseball-field",
@@ -53,7 +53,7 @@
       "reachable": true,
       "nodes": [156, 155, 17, 16, 7, 6, 5, 4, 3, 92, 91, 158, 159],
       "cost": 232.65,
-      "metres": 121.97
+      "meters": 121.97
     },
     {
       "from": "baseball-field",
@@ -61,7 +61,7 @@
       "reachable": true,
       "nodes": [156, 155, 18, 152, 153],
       "cost": 399.49,
-      "metres": 154.69
+      "meters": 154.69
     },
     {
       "from": "basketball-courts",
@@ -69,7 +69,7 @@
       "reachable": true,
       "nodes": [154, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156],
       "cost": 285.94,
-      "metres": 175.26
+      "meters": 175.26
     },
     {
       "from": "basketball-courts",
@@ -80,7 +80,7 @@
         145, 146, 147, 148
       ],
       "cost": 476.73,
-      "metres": 476.73
+      "meters": 476.73
     },
     {
       "from": "basketball-courts",
@@ -91,7 +91,7 @@
         124, 125, 126, 127, 128, 129, 130, 150, 151
       ],
       "cost": 724.56,
-      "metres": 382.6
+      "meters": 382.6
     },
     {
       "from": "basketball-courts",
@@ -99,7 +99,7 @@
       "reachable": true,
       "nodes": [154, 84, 85, 86, 87, 94, 157],
       "cost": 81.34,
-      "metres": 81.34
+      "meters": 81.34
     },
     {
       "from": "basketball-courts",
@@ -107,7 +107,7 @@
       "reachable": true,
       "nodes": [154, 84, 85, 86, 87, 88, 89, 90, 158, 159],
       "cost": 90.6,
-      "metres": 90.6
+      "meters": 90.6
     },
     {
       "from": "basketball-courts",
@@ -115,7 +115,7 @@
       "reachable": true,
       "nodes": [154, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
       "cost": 658.03,
-      "metres": 302.55
+      "meters": 302.55
     },
     {
       "from": "downtown-art-park",
@@ -126,7 +126,7 @@
         81, 82, 83, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156
       ],
       "cost": 711.55,
-      "metres": 600.87
+      "meters": 600.87
     },
     {
       "from": "downtown-art-park",
@@ -137,7 +137,7 @@
         81, 82, 83, 84, 154
       ],
       "cost": 476.73,
-      "metres": 476.73
+      "meters": 476.73
     },
     {
       "from": "downtown-art-park",
@@ -149,7 +149,7 @@
         123, 124, 125, 126, 127, 128, 129, 130, 150, 151
       ],
       "cost": 1150.17,
-      "metres": 808.21
+      "meters": 808.21
     },
     {
       "from": "downtown-art-park",
@@ -160,7 +160,7 @@
         81, 82, 83, 84, 85, 86, 87, 94, 157
       ],
       "cost": 506.95,
-      "metres": 506.95
+      "meters": 506.95
     },
     {
       "from": "downtown-art-park",
@@ -171,7 +171,7 @@
         81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 158, 159
       ],
       "cost": 516.21,
-      "metres": 516.21
+      "meters": 516.21
     },
     {
       "from": "downtown-art-park",
@@ -182,7 +182,7 @@
         81, 82, 83, 84, 85, 86, 87, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153
       ],
       "cost": 1083.64,
-      "metres": 728.16
+      "meters": 728.16
     },
     {
       "from": "reilly-arts-center",
@@ -193,7 +193,7 @@
         16, 17, 155, 156
       ],
       "cost": 798.06,
-      "metres": 345.42
+      "meters": 345.42
     },
     {
       "from": "reilly-arts-center",
@@ -204,7 +204,7 @@
         6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154
       ],
       "cost": 724.56,
-      "metres": 382.6
+      "meters": 382.6
     },
     {
       "from": "reilly-arts-center",
@@ -216,7 +216,7 @@
         30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
       ],
       "cost": 1150.17,
-      "metres": 808.21
+      "meters": 808.21
     },
     {
       "from": "reilly-arts-center",
@@ -227,7 +227,7 @@
         6, 5, 4, 3, 93, 94, 157
       ],
       "cost": 665.84,
-      "metres": 323.88
+      "meters": 323.88
     },
     {
       "from": "reilly-arts-center",
@@ -238,7 +238,7 @@
         6, 5, 4, 3, 92, 91, 158, 159
       ],
       "cost": 671.27,
-      "metres": 329.31
+      "meters": 329.31
     },
     {
       "from": "reilly-arts-center",
@@ -249,7 +249,7 @@
         16, 17, 155, 18, 152, 153
       ],
       "cost": 1170.15,
-      "metres": 472.71
+      "meters": 472.71
     },
     {
       "from": "shelter-north",
@@ -257,7 +257,7 @@
       "reachable": true,
       "nodes": [157, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 156],
       "cost": 227.22,
-      "metres": 116.54
+      "meters": 116.54
     },
     {
       "from": "shelter-north",
@@ -265,7 +265,7 @@
       "reachable": true,
       "nodes": [157, 94, 87, 86, 85, 84, 154],
       "cost": 81.34,
-      "metres": 81.34
+      "meters": 81.34
     },
     {
       "from": "shelter-north",
@@ -276,7 +276,7 @@
         2, 1, 0, 144, 145, 146, 147, 148
       ],
       "cost": 506.95,
-      "metres": 506.95
+      "meters": 506.95
     },
     {
       "from": "shelter-north",
@@ -287,7 +287,7 @@
         128, 129, 130, 150, 151
       ],
       "cost": 665.84,
-      "metres": 323.88
+      "meters": 323.88
     },
     {
       "from": "shelter-north",
@@ -295,7 +295,7 @@
       "reachable": true,
       "nodes": [157, 94, 93, 3, 92, 91, 158, 159],
       "cost": 48.31,
-      "metres": 48.31
+      "meters": 48.31
     },
     {
       "from": "shelter-north",
@@ -303,7 +303,7 @@
       "reachable": true,
       "nodes": [157, 94, 93, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
       "cost": 599.31,
-      "metres": 243.83
+      "meters": 243.83
     },
     {
       "from": "shelter-south",
@@ -311,7 +311,7 @@
       "reachable": true,
       "nodes": [159, 158, 91, 92, 3, 4, 5, 6, 7, 16, 17, 155, 156],
       "cost": 232.65,
-      "metres": 121.97
+      "meters": 121.97
     },
     {
       "from": "shelter-south",
@@ -319,7 +319,7 @@
       "reachable": true,
       "nodes": [159, 158, 90, 89, 88, 87, 86, 85, 84, 154],
       "cost": 90.6,
-      "metres": 90.6
+      "meters": 90.6
     },
     {
       "from": "shelter-south",
@@ -330,7 +330,7 @@
         31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
       ],
       "cost": 516.21,
-      "metres": 516.21
+      "meters": 516.21
     },
     {
       "from": "shelter-south",
@@ -341,7 +341,7 @@
         127, 128, 129, 130, 150, 151
       ],
       "cost": 671.27,
-      "metres": 329.31
+      "meters": 329.31
     },
     {
       "from": "shelter-south",
@@ -349,7 +349,7 @@
       "reachable": true,
       "nodes": [159, 158, 91, 92, 3, 93, 94, 157],
       "cost": 48.31,
-      "metres": 48.31
+      "meters": 48.31
     },
     {
       "from": "shelter-south",
@@ -357,7 +357,7 @@
       "reachable": true,
       "nodes": [159, 158, 91, 92, 3, 4, 5, 6, 7, 16, 17, 155, 18, 152, 153],
       "cost": 604.74,
-      "metres": 249.26
+      "meters": 249.26
     },
     {
       "from": "tennis-courts",
@@ -365,7 +365,7 @@
       "reachable": true,
       "nodes": [153, 152, 18, 155, 156],
       "cost": 399.49,
-      "metres": 154.69
+      "meters": 154.69
     },
     {
       "from": "tennis-courts",
@@ -373,7 +373,7 @@
       "reachable": true,
       "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 87, 86, 85, 84, 154],
       "cost": 658.03,
-      "metres": 302.55
+      "meters": 302.55
     },
     {
       "from": "tennis-courts",
@@ -384,7 +384,7 @@
         40, 39, 38, 37, 36, 33, 32, 31, 30, 29, 28, 2, 1, 0, 144, 145, 146, 147, 148
       ],
       "cost": 1083.64,
-      "metres": 728.16
+      "meters": 728.16
     },
     {
       "from": "tennis-courts",
@@ -395,7 +395,7 @@
         127, 128, 129, 130, 150, 151
       ],
       "cost": 1170.15,
-      "metres": 472.71
+      "meters": 472.71
     },
     {
       "from": "tennis-courts",
@@ -403,7 +403,7 @@
       "reachable": true,
       "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 93, 94, 157],
       "cost": 599.31,
-      "metres": 243.83
+      "meters": 243.83
     },
     {
       "from": "tennis-courts",
@@ -411,7 +411,7 @@
       "reachable": true,
       "nodes": [153, 152, 18, 155, 17, 16, 7, 6, 5, 4, 3, 92, 91, 158, 159],
       "cost": 604.74,
-      "metres": 249.26
+      "meters": 249.26
     }
   ]
 }

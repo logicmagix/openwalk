@@ -33,7 +33,7 @@ test('search finds a place by the start of its name', async ({ page }) => {
 test('search forgives a typing slip', async ({ page }) => {
   await openMap(page);
   const { search, results } = controls(page);
-  // A long word from some place's name, with two neighbouring letters swapped.
+  // A long word from some place's name, with two neighboring letters swapped.
   const place = places.find((p) => /[a-z]{8,}/i.test(p.properties.name));
   test.skip(place === undefined, 'no place has a word long enough to mistype');
   const word = /[a-z]{8,}/i.exec(place!.properties.name)![0];

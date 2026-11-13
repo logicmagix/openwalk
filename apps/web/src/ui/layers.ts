@@ -19,12 +19,12 @@ export interface LayersOptions {
   }[];
   /** How the switches start: what was on when the person last used this site. */
   readonly initial?: LayerPrefs;
-  /** Called with the full, normalised preferences whenever a checkbox changes. */
+  /** Called with the full, normalized preferences whenever a checkbox changes. */
   readonly onChange: (prefs: LayerPrefs) => void;
 }
 
 /**
- * A labelled checkbox row. An overlay also credits its source beneath the label,
+ * A labeled checkbox row. An overlay also credits its source beneath the label,
  * since an image layer has nowhere to put attribution in the map's own credit line.
  */
 function checkbox(

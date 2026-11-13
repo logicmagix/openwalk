@@ -1,6 +1,6 @@
 // Keeping the map over the site. The site's extent is the box around everything
 // it contains, walkways and places together. The map is held there by limiting
-// where the centre of the screen may go, not what the screen may show: any point
+// where the center of the screen may go, not what the screen may show: any point
 // of the site can then be brought to the middle of the screen whichever way the
 // map is turned and whatever the shape of the screen or of the site.
 //
@@ -11,10 +11,10 @@ import type { PlacesDocument, Position, WalkwaysDocument } from '../site/types';
 /** A box on the ground: [[west, south], [east, north]] in degrees. */
 export type Extent = readonly [readonly [number, number], readonly [number, number]];
 
-/** Metres in one degree of latitude. */
-const METRES_PER_DEGREE = 111_320;
+/** Meters in one degree of latitude. */
+const METERS_PER_DEGREE = 111_320;
 
-/** Room left around the outermost walkway or place, in metres. */
+/** Room left around the outermost walkway or place, in meters. */
 const MARGIN_M = 60;
 
 /** Width of the whole world in screen pixels at zoom 0, as the map draws it. */
@@ -50,8 +50,8 @@ export function siteExtent(places: PlacesDocument, walkways: WalkwaysDocument): 
   if (west === Infinity) return null;
 
   // A degree of longitude shrinks towards the poles, so the same margin in
-  // metres is more degrees east-west than north-south.
-  const marginLat = MARGIN_M / METRES_PER_DEGREE;
+  // meters is more degrees east-west than north-south.
+  const marginLat = MARGIN_M / METERS_PER_DEGREE;
   const midLat = ((south + north) / 2) * (Math.PI / 180);
   const marginLon = marginLat / Math.max(Math.cos(midLat), 0.01);
   return [
@@ -71,23 +71,23 @@ export function clampToExtent(position: Position, extent: Extent): Position {
 
 /**
  * How far past the extent a position may be and still count as on site, in
- * metres: someone at the kerb or in a car park across the road is arriving.
+ * meters: someone at the curb or in a parking lot across the road is arriving.
  */
 const ON_SITE_REACH_M = 100;
 
 /**
- * The most a position's own uncertainty may add to that reach, in metres, so a
+ * The most a position's own uncertainty may add to that reach, in meters, so a
  * rough first reading near the site is not turned away while a rough reading
  * from far off still is.
  */
 const MAX_UNCERTAINTY_M = 500;
 
-/** Metres from a position to the extent; zero when it is inside. */
+/** Meters from a position to the extent; zero when it is inside. */
 export function distanceOutsideM(position: Position, extent: Extent): number {
   const [nearLon, nearLat] = clampToExtent(position, extent);
-  const north = (position[1] - nearLat) * METRES_PER_DEGREE;
+  const north = (position[1] - nearLat) * METERS_PER_DEGREE;
   const east =
-    (position[0] - nearLon) * METRES_PER_DEGREE * Math.cos(position[1] * (Math.PI / 180));
+    (position[0] - nearLon) * METERS_PER_DEGREE * Math.cos(position[1] * (Math.PI / 180));
   return Math.hypot(east, north);
 }
 

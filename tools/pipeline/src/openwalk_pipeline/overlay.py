@@ -3,7 +3,7 @@
 The image is tied to the ground by control points: a pixel in the image paired with the
 feature it depicts. An affine transform from pixels to a local metric plane is fitted by
 least squares, which absorbs rotation, uneven scale and shear, and the image's four
-corners are mapped through it. Residuals are reported in metres so a schematic map's
+corners are mapped through it. Residuals are reported in meters so a schematic map's
 distortion is visible rather than hidden.
 """
 
@@ -79,8 +79,8 @@ def fit_affine(
         raise OverlayError("at least three control points are needed")
     lon0 = sum(p[1][0] for p in pairs) / len(pairs)
     lat0 = sum(p[1][1] for p in pairs) / len(pairs)
-    # A local azimuthal equidistant plane: metres, centred on the control points, so
-    # the least-squares fit and its residuals are in metres rather than degrees.
+    # A local azimuthal equidistant plane: meters, centered on the control points, so
+    # the least-squares fit and its residuals are in meters rather than degrees.
     local = f"+proj=aeqd +lat_0={lat0} +lon_0={lon0} +units=m +datum=WGS84"
     to_local = Transformer.from_crs("EPSG:4326", local, always_xy=True)
     to_lonlat = Transformer.from_crs(local, "EPSG:4326", always_xy=True)

@@ -1,4 +1,4 @@
-// Light or dark (R4). The page's colours and the map's style both switch on it.
+// Light or dark (R4). The page's colors and the map's style both switch on it.
 // It follows the device unless the person chose one in Settings.
 
 import {
@@ -27,7 +27,7 @@ export interface ThemeControl {
   readonly appearance: Appearance;
   /** Changes the choice, keeps it for next time, and applies it at once. */
   choose(appearance: Appearance): void;
-  /** The set of colours in use. */
+  /** The set of colors in use. */
   readonly scheme: Scheme;
   chooseScheme(scheme: Scheme): void;
 }
@@ -71,7 +71,7 @@ export function watchTheme(onChange: (theme: Theme, scheme: Scheme) => void): Th
   }
 
   function applyScheme(): void {
-    // Absent for the standard scheme, so the stylesheet's own colours stand.
+    // Absent for the standard scheme, so the stylesheet's own colors stand.
     if (scheme === 'standard') document.documentElement.removeAttribute(SCHEME_ATTRIBUTE);
     else document.documentElement.setAttribute(SCHEME_ATTRIBUTE, scheme);
   }

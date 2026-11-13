@@ -32,7 +32,7 @@ describe('initialView', () => {
     expect(view).toEqual({ center: [1, 2], zoom: 16 });
   });
 
-  it('shows the world when there is nothing to centre on', () => {
+  it('shows the world when there is nothing to center on', () => {
     expect(initialView({ id: 'a', name: 'A' }, places([])).zoom).toBe(2);
   });
 });

@@ -5,7 +5,7 @@
 // ignored so filler does not drag good matches down.
 
 import { allowedEdits, editDistance } from './fuzzy';
-import { normalise, tokenise } from './normalise';
+import { normalize, tokenize } from './normalize';
 import type { PlaceFeature, PlacesDocument } from './places';
 
 /** Where the strongest match for a result came from, for the app to show. */
@@ -37,12 +37,12 @@ export function buildIndex(places: PlacesDocument): SearchIndex {
     const p = place.properties;
     return {
       place,
-      number: p.number === undefined ? null : normalise(p.number).replace(/ /g, ''),
-      name: normalise(p.name),
-      nameTokens: tokenise(p.name),
-      keywordTokens: p.keywords.flatMap(tokenise),
-      categoryTokens: tokenise(p.category),
-      annotationTokens: p.annotation === undefined ? [] : tokenise(p.annotation),
+      number: p.number === undefined ? null : normalize(p.number).replace(/ /g, ''),
+      name: normalize(p.name),
+      nameTokens: tokenize(p.name),
+      keywordTokens: p.keywords.flatMap(tokenize),
+      categoryTokens: tokenize(p.category),
+      annotationTokens: p.annotation === undefined ? [] : tokenize(p.annotation),
     };
   });
   return { entries };
@@ -80,7 +80,7 @@ export function search(
   options: SearchOptions = {},
 ): SearchResult[] {
   const limit = options.limit ?? 10;
-  const words = tokenise(query);
+  const words = tokenize(query);
   if (words.length === 0) return [];
   const wholeQuery = words.join(' ');
 

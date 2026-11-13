@@ -56,8 +56,8 @@ export function arrivalPoint(place: Place): LonLat {
   return position;
 }
 
-/** Rough distance in metres between two positions; good enough to compare them. */
-export function metresBetween(a: LonLat, b: LonLat): number {
+/** Rough distance in meters between two positions; good enough to compare them. */
+export function metersBetween(a: LonLat, b: LonLat): number {
   const east = (a[0] - b[0]) * 111_320 * Math.cos((a[1] * Math.PI) / 180);
   const north = (a[1] - b[1]) * 111_320;
   return Math.hypot(east, north);
@@ -68,11 +68,11 @@ export function metresBetween(a: LonLat, b: LonLat): number {
  * enough that arriving cannot be mistaken for starting.
  */
 export function farthestPair(): { from: Place; to: Place } {
-  let best: { from: Place; to: Place; metres: number } | null = null;
+  let best: { from: Place; to: Place; meters: number } | null = null;
   for (const from of places) {
     for (const to of places) {
-      const metres = metresBetween(arrivalPoint(from), arrivalPoint(to));
-      if (best === null || metres > best.metres) best = { from, to, metres };
+      const meters = metersBetween(arrivalPoint(from), arrivalPoint(to));
+      if (best === null || meters > best.meters) best = { from, to, meters };
     }
   }
   if (best === null) throw new Error('the site has no places');

@@ -5,7 +5,7 @@ import type { Position, SiteConfig } from './site/types';
 
 export { APP_NAME, pageTitle } from './site/pages';
 
-/** Zoom used when centring on the person; close enough to tell paths apart. */
+/** Zoom used when centering on the person; close enough to tell paths apart. */
 export const LOCATE_ZOOM = 17;
 
 /** Where the map opens: the configured view, or the middle of the places. */

@@ -1,4 +1,4 @@
-// Sets light or dark, and the set of colours, before the page is drawn, when
+// Sets light or dark, and the set of colors, before the page is drawn, when
 // the person has chosen them in Settings. It is a small file of its own,
 // loaded ahead of everything else, so the page never shows in one and then
 // switches to the other. The app's own code (src/appearance.ts) keeps the same

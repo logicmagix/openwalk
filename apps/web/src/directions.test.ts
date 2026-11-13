@@ -15,7 +15,7 @@ import {
   nextWaypoint,
   planRoute,
   planWalk,
-  summarise,
+  summarize,
 } from './directions';
 import type { PositionFix } from './position/provider';
 
@@ -214,10 +214,10 @@ describe('a walk between two places', () => {
     expect(planWalk(router, 'nowhere', at('corner'))).toBeNull();
   });
 
-  it('is summarised by how far and how long', () => {
+  it('is summarized by how far and how long', () => {
     const found = planWalk(router, 'top', at('corner'));
     if (found === null) throw new Error('no route');
-    expect(summarise(found)).toEqual({ distance: '112 m', duration: '2 min' });
+    expect(summarize(found)).toEqual({ distance: '112 m', duration: '2 min' });
   });
 });
 

@@ -10,10 +10,10 @@ import { MinHeap } from './heap';
 export interface PathResult {
   /** Node ids from start to goal inclusive. */
   readonly nodes: readonly number[];
-  /** Sum of metres times kind weight along the path. */
+  /** Sum of meters times kind weight along the path. */
   readonly cost: number;
-  /** Sum of metres along the path, unweighted. */
-  readonly metres: number;
+  /** Sum of meters along the path, unweighted. */
+  readonly meters: number;
   /** How many nodes the search settled, for comparing the algorithms. */
   readonly expanded: number;
 }
@@ -26,7 +26,7 @@ export interface SearchOptions {
  * The straight-line distance to the goal never exceeds the real path cost because
  * every kind weight is at least 1, which makes it a valid A* estimate. It is scaled
  * down slightly because the pipeline measures edges on a flat plane and rounds them
- * to centimetres, so an edge can be a hair shorter than the great-circle distance
+ * to centimeters, so an edge can be a hair shorter than the great-circle distance
  * between its ends.
  */
 const HEURISTIC_SCALE = 0.99;
@@ -71,7 +71,7 @@ function search(
   if (start < 0 || start >= nodeCount || goal < 0 || goal >= nodeCount) return null;
 
   const cost = new Float64Array(nodeCount).fill(Infinity);
-  const metres = new Float64Array(nodeCount);
+  const meters = new Float64Array(nodeCount);
   const previous = new Int32Array(nodeCount).fill(-1);
   const settled = new Uint8Array(nodeCount);
   const queue = new MinHeap<number>();
@@ -90,12 +90,12 @@ function search(
     if (node === goal) break;
 
     const here = cost[node] as number;
-    for (const edge of graph.neighbours[node] ?? []) {
+    for (const edge of graph.neighbors[node] ?? []) {
       if (settled[edge.node]) continue;
-      const candidate = here + edge.metres * weights[edge.kind];
+      const candidate = here + edge.meters * weights[edge.kind];
       if (candidate < (cost[edge.node] as number)) {
         cost[edge.node] = candidate;
-        metres[edge.node] = (metres[node] as number) + edge.metres;
+        meters[edge.node] = (meters[node] as number) + edge.meters;
         previous[edge.node] = node;
         queue.push(candidate + estimate(edge.node), edge.node);
       }
@@ -105,5 +105,5 @@ function search(
   const nodes: number[] = [];
   for (let node = goal; node !== -1; node = previous[node] as number) nodes.push(node);
   nodes.reverse();
-  return { nodes, cost: cost[goal] as number, metres: metres[goal] as number, expanded };
+  return { nodes, cost: cost[goal] as number, meters: meters[goal] as number, expanded };
 }

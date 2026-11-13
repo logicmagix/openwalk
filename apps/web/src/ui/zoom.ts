@@ -1,5 +1,5 @@
 // The zoom buttons: a plus and a minus for people who cannot, or would rather
-// not, pinch. Each steps the map one zoom level and goes grey at the limit.
+// not, pinch. Each steps the map one zoom level and goes gray at the limit.
 
 /** Whether the map can zoom further each way. */
 export interface ZoomRoom {

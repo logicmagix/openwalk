@@ -51,7 +51,7 @@ describe('initialBearing', () => {
 });
 
 describe('localPlane', () => {
-  it('maps the origin to zero and a latitude step to metres', () => {
+  it('maps the origin to zero and a latitude step to meters', () => {
     const plane = localPlane([0, 0]);
     expect(plane.toPlane([0, 0])).toEqual([0, 0]);
     const [x, y] = plane.toPlane([0, 0.001]);

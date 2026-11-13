@@ -24,7 +24,7 @@ def document(nodes: Nodes, edges: Sequence[Sequence[Any]]) -> dict[str, Any]:
 
 
 def edge(nodes: Nodes, a: int, b: int, kind: str = "walkway") -> list[Any]:
-    length = math.dist(nodes[a], nodes[b]) * gaps.METRES_PER_DEGREE
+    length = math.dist(nodes[a], nodes[b]) * gaps.METERS_PER_DEGREE
     return [a, b, round(length, 2), kind]
 
 

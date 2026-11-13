@@ -16,8 +16,8 @@ export const EDGE_KINDS: readonly EdgeKind[] = [
   'connector',
 ];
 
-/** One edge as stored: from node, to node, length in metres, kind. Undirected. */
-export type EdgeRecord = readonly [from: number, to: number, metres: number, kind: EdgeKind];
+/** One edge as stored: from node, to node, length in meters, kind. Undirected. */
+export type EdgeRecord = readonly [from: number, to: number, meters: number, kind: EdgeKind];
 
 /** graph.json. A node's id is its index in `nodes`. */
 export interface GraphDocument {
@@ -32,7 +32,7 @@ export interface GraphDocument {
 
 /**
  * Cost multipliers per edge kind. A route's cost is the sum over its edges of
- * metres times the kind's weight, so a weight of 3 makes a road worth walking only
+ * meters times the kind's weight, so a weight of 3 makes a road worth walking only
  * when the alternative is more than three times longer. Weights must be at least 1
  * for the A* heuristic to stay admissible.
  */
@@ -62,19 +62,19 @@ export function resolveWeights(overrides: Partial<KindWeights> = {}): KindWeight
 }
 
 /** One end of an edge as seen from a node. */
-export interface Neighbour {
+export interface Neighbor {
   readonly node: number;
-  readonly metres: number;
+  readonly meters: number;
   readonly kind: EdgeKind;
 }
 
 /**
- * The graph in the form the searches use: every node lists its neighbours. Treated as
+ * The graph in the form the searches use: every node lists its neighbors. Treated as
  * immutable; snapping produces a new graph rather than changing this one.
  */
 export interface Graph {
   readonly nodes: readonly Position[];
-  readonly neighbours: readonly (readonly Neighbour[])[];
+  readonly neighbors: readonly (readonly Neighbor[])[];
   /** Place id to its entrance nodes: always a list here, often of one. */
   readonly places: Readonly<Record<string, readonly number[]>>;
 }
@@ -86,13 +86,13 @@ export interface Graph {
  */
 export function loadGraph(document: GraphDocument): Graph {
   const nodeCount = document.nodes.length;
-  const neighbours: Neighbour[][] = Array.from({ length: nodeCount }, () => []);
-  for (const [from, to, metres, kind] of document.edges) {
+  const neighbors: Neighbor[][] = Array.from({ length: nodeCount }, () => []);
+  for (const [from, to, meters, kind] of document.edges) {
     if (!isNode(from, nodeCount) || !isNode(to, nodeCount)) {
       throw new RangeError(`edge [${from}, ${to}] refers to a node outside 0..${nodeCount - 1}`);
     }
-    neighbours[from]?.push({ node: to, metres, kind });
-    neighbours[to]?.push({ node: from, metres, kind });
+    neighbors[from]?.push({ node: to, meters, kind });
+    neighbors[to]?.push({ node: from, meters, kind });
   }
   const places: Record<string, readonly number[]> = {};
   for (const [place, found] of Object.entries(document.places)) {
@@ -104,7 +104,7 @@ export function loadGraph(document: GraphDocument): Graph {
     }
     places[place] = entrances;
   }
-  return { nodes: document.nodes, neighbours, places };
+  return { nodes: document.nodes, neighbors, places };
 }
 
 function isNode(index: number, nodeCount: number): boolean {

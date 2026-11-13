@@ -108,7 +108,7 @@ export function nearestInCategory(
 }
 
 /**
- * How close counts as arrived. GPS on a phone is rarely better than ten metres,
+ * How close counts as arrived. GPS on a phone is rarely better than ten meters,
  * and a poor fix should not need the person to stand on the exact spot, so the
  * radius grows with the reported accuracy up to a limit.
  */
@@ -157,25 +157,25 @@ export function compassPoint(bearing: number): string {
   return POINTS[index] as string;
 }
 
-const FEET_PER_METRE = 3.28084;
-const METRES_PER_MILE = 1609.344;
+const FEET_PER_METER = 3.28084;
+const METERS_PER_MILE = 1609.344;
 
 /**
- * Metres as a short distance in the site's units. Metric: whole metres below a
- * kilometre, then kilometres. Imperial: feet in steps of ten below a tenth of a
+ * Meters as a short distance in the site's units. Metric: whole meters below a
+ * kilometer, then kilometers. Imperial: feet in steps of ten below a tenth of a
  * mile, then miles with one decimal.
  */
-export function formatDistance(metres: number, units: Units = 'metric'): string {
+export function formatDistance(meters: number, units: Units = 'metric'): string {
   if (units === 'imperial') {
-    const miles = metres / METRES_PER_MILE;
+    const miles = meters / METERS_PER_MILE;
     if (miles < 0.1) {
-      const feet = Math.max(10, Math.round((metres * FEET_PER_METRE) / 10) * 10);
+      const feet = Math.max(10, Math.round((meters * FEET_PER_METER) / 10) * 10);
       return `${feet} ft`;
     }
     return `${miles.toFixed(miles < 10 ? 1 : 0)} mi`;
   }
-  if (metres < 1000) return `${Math.max(1, Math.round(metres))} m`;
-  return `${(metres / 1000).toFixed(metres < 10_000 ? 1 : 0)} km`;
+  if (meters < 1000) return `${Math.max(1, Math.round(meters))} m`;
+  return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)} km`;
 }
 
 /** Seconds as whole minutes, never less than one. */
@@ -199,7 +199,7 @@ export interface WalkSummary {
   readonly duration: string;
 }
 
-export function summarise(found: Route, units: Units = 'metric'): WalkSummary {
+export function summarize(found: Route, units: Units = 'metric'): WalkSummary {
   return {
     distance: formatDistance(found.distanceM, units),
     duration: formatDuration(found.durationS),

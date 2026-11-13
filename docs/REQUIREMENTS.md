@@ -15,7 +15,7 @@ other docs cite.
 - R3. Usable for real. A first-time visitor to a configured site can use it on a phone
   with no instructions.
 
-## User-facing behaviour
+## User-facing behavior
 
 - R4. Minimal interface. The map fills the screen. Controls: search box, "locate me",
   a dropdown of destinations with short annotations, a layers control, and a

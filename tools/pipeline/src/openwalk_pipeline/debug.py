@@ -150,7 +150,7 @@ const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 });
 document.getElementById('title').textContent = DATA.name;
 
-// Walkways, coloured by kind.
+// Walkways, colored by kind.
 const walkwayStyle = f => {
   const steps = f.properties.highway === 'steps';
   const area = f.geometry.type === 'Polygon';

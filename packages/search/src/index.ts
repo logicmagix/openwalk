@@ -3,7 +3,7 @@
 // places.geojson and passes it in.
 
 export { allowedEdits, editDistance } from './fuzzy';
-export { normalise, tokenise } from './normalise';
+export { normalize, tokenize } from './normalize';
 export type { PlaceFeature, PlaceProperties, PlacesDocument, Position } from './places';
 export {
   buildIndex,

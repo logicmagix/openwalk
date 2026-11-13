@@ -68,7 +68,7 @@ describe('search by keyword, category and annotation', () => {
 
   it('matches a multi-word keyword word by word', () => {
     const [top] = search(numberedIndex, 'first aid');
-    expect(top?.place.id).toBe('health-centre');
+    expect(top?.place.id).toBe('health-center');
   });
 
   it('finds places by category', () => {
@@ -98,19 +98,19 @@ describe('search by keyword, category and annotation', () => {
 
 describe('search by number', () => {
   it('puts the exact number first and numbers starting with it after', () => {
-    expect(ids(numberedIndex, '12')).toEqual(['library', 'health-centre']);
+    expect(ids(numberedIndex, '12')).toEqual(['library', 'health-center']);
     expect(search(numberedIndex, '12')[0]?.field).toBe('number');
     // The prefix matches tie and fall back to alphabetical order by name.
     expect(ids(numberedIndex, '1')).toEqual([
       'lecture-hall',
-      'health-centre',
+      'health-center',
       'library',
       'workshop',
     ]);
   });
 
   it('ignores a filler word that matches nothing', () => {
-    expect(ids(numberedIndex, 'bldg 12')).toEqual(['library', 'health-centre']);
+    expect(ids(numberedIndex, 'bldg 12')).toEqual(['library', 'health-center']);
     expect(search(parkIndex, 'xyz tennis')).toEqual(search(parkIndex, 'tennis'));
   });
 

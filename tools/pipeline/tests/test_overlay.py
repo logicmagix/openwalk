@@ -11,7 +11,7 @@ from openwalk_pipeline.validate import validate
 
 
 def write_png(path: Path, width: int, height: int) -> None:
-    """A minimal valid PNG: enough header for the size reader, one grey row repeated."""
+    """A minimal valid PNG: enough header for the size reader, one gray row repeated."""
     raw = b"".join(b"\x00" + b"\x80" * width for _ in range(height))
 
     def chunk(kind: bytes, data: bytes) -> bytes:

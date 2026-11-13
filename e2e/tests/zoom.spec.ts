@@ -8,7 +8,7 @@ test('the zoom buttons step the map and stop at its limits', async ({ page }) =>
   await expect(zoomIn).toBeEnabled();
   await expect(zoomOut).toBeEnabled();
 
-  // Zooming out ends where the whole site is in view; the button then goes grey.
+  // Zooming out ends where the whole site is in view; the button then goes gray.
   for (let step = 0; step < 12 && (await zoomOut.isEnabled()); step += 1) {
     await zoomOut.click();
     await page.waitForTimeout(350);

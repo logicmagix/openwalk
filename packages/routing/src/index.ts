@@ -22,7 +22,7 @@ export {
   type Graph,
   type GraphDocument,
   type KindWeights,
-  type Neighbour,
+  type Neighbor,
 } from './graph';
 export { insertSnapPoint, snapToGraph, type SnapPoint } from './snap';
 export { aStar, dijkstra, type PathResult, type SearchOptions } from './shortestPath';

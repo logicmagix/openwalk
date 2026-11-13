@@ -40,7 +40,7 @@ export interface MapViewOptions {
   readonly style: StyleSpecification;
   readonly center: Position;
   readonly zoom: number;
-  /** The site's extent; the centre of the map is held inside it. */
+  /** The site's extent; the center of the map is held inside it. */
   readonly extent?: Extent;
 }
 
@@ -70,7 +70,7 @@ export class MapView {
       maxZoom: MAX_ZOOM,
       // MapLibre's own bounds limit keeps the screen inside a box, measuring the
       // screen as if the map always faced north; turned sideways it stops short
-      // of the box's edges. This replaces that rule: only the centre is held
+      // of the box's edges. This replaces that rule: only the center is held
       // inside the site's extent, which is the same at every rotation. MapLibre
       // runs the function on every camera change and uses what it returns.
       ...(extent
@@ -196,7 +196,7 @@ export class MapView {
   }
 
   /** Glide to a position without changing the zoom, to keep a walker in view. */
-  centreOn(center: Position): void {
+  centerOn(center: Position): void {
     this.map.easeTo({ center: [center[0], center[1]], duration: 400 });
   }
 

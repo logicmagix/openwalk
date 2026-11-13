@@ -73,8 +73,8 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       const swatch = document.createElement('span');
       swatch.className = 'kind-swatch';
       swatch.setAttribute('aria-hidden', 'true');
-      swatch.style.setProperty('--swatch-light', item.category.colour.light);
-      swatch.style.setProperty('--swatch-dark', item.category.colour.dark);
+      swatch.style.setProperty('--swatch-light', item.category.color.light);
+      swatch.style.setProperty('--swatch-dark', item.category.color.dark);
       option.append(swatch);
     }
     const label = document.createElement('span');

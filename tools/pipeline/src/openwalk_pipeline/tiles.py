@@ -25,10 +25,10 @@ from openwalk_pipeline import __version__
 USER_AGENT = f"openwalk-pipeline/{__version__} (https://openwalk.app)"
 OUTPUT_NAME = "basemap.pmtiles"
 
-# Web Mercator cannot show latitudes beyond this; tile maths clamps to it.
+# Web Mercator cannot show latitudes beyond this; tile math clamps to it.
 MAX_LATITUDE = 85.05112878
 
-# The app holds the centre of the map inside the site, so the screen can show
+# The app holds the center of the map inside the site, so the screen can show
 # ground up to half a screen beyond it, in any direction, at any zoom the app
 # allows. A tile is drawn at least TILE_PX wide on screen at its own zoom level,
 # so a ring of VIEW_RING tiles around the site's own tiles is at least
@@ -44,7 +44,7 @@ VIEW_RING = 2
 # larger on the ground and one per zoom level is kept as before.
 NARROWEST_SCREEN_PX = 300
 ZOOM_OUT_ALLOWANCE = 0.75
-# The room the app leaves around a site's outermost walkway or place, in metres.
+# The room the app leaves around a site's outermost walkway or place, in meters.
 VIEW_MARGIN_M = 60.0
 
 GetBytes = Callable[[int, int], bytes]
@@ -59,9 +59,9 @@ class Extent:
     east: float
     north: float
 
-    def expand(self, metres: float) -> Extent:
-        """The box grown by ``metres`` on every side."""
-        lat_degrees = metres / 111_195.0
+    def expand(self, meters: float) -> Extent:
+        """The box grown by ``meters`` on every side."""
+        lat_degrees = meters / 111_195.0
         mid = math.radians((self.south + self.north) / 2)
         lon_degrees = lat_degrees / max(math.cos(mid), 1e-6)
         return Extent(
@@ -235,7 +235,7 @@ def extract(
 
     At the zoom levels the app can show, a ring of tiles around the extent is
     included as well (see ``VIEW_RING``). ``view`` is the box the app holds the
-    map's centre in, which decides how far out it can zoom; ``extent`` when omitted.
+    map's center in, which decides how far out it can zoom; ``extent`` when omitted.
 
     The source's tile format, compression, layer list and attribution are carried
     over unchanged, so the result renders with the same style as the source.
