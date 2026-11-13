@@ -47,7 +47,9 @@ import {
   privacyPathFor,
   type SiteIndex,
 } from './site/pages';
+import { openStore } from './store/kv';
 import { watchTheme } from './theme';
+import { prefsKey, readPrefs, savedPrefs, type SitePrefs } from './prefs';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
 import { listFor } from './ui/listing';
@@ -151,6 +153,17 @@ async function start(): Promise<void> {
 
   const categories = siteCategories(site.config, site.places);
 
+  // How the person left this site's map last time, kept on the device.
+  const store = await openStore();
+  let prefs: SitePrefs = readPrefs(await store.get(prefsKey(siteId)), {
+    overlays: overlays.map((overlay) => overlay.id),
+    categories: categories.map((category) => category.id),
+  });
+  const remember = (change: Partial<SitePrefs>): void => {
+    prefs = { ...prefs, ...change };
+    void store.set(prefsKey(siteId), savedPrefs(prefs));
+  };
+
   // --- the map ---------------------------------------------------------------
   const inputs: { current: StyleInputs } = {
     current: {
@@ -162,9 +175,9 @@ async function start(): Promise<void> {
       walkways: site.walkways,
       places: site.places,
       overlays,
-      layerPrefs: { overlays: [], walkways: true, labels: true },
+      layerPrefs: prefs.layers,
       categories,
-      hiddenCategories: [],
+      hiddenCategories: prefs.hiddenCategories,
       position: null,
       route: null,
       destination: null,
@@ -428,7 +441,11 @@ async function start(): Promise<void> {
     { button: element<HTMLButtonElement>('layers'), panel: element('layers-panel') },
     {
       overlays: overlays.map(({ id, name, attribution }) => ({ id, name, attribution })),
-      onChange: (prefs) => restyle({ layerPrefs: prefs }),
+      initial: prefs.layers,
+      onChange: (layers) => {
+        remember({ layers });
+        restyle({ layerPrefs: layers });
+      },
     },
   );
   inputs.current = { ...inputs.current, layerPrefs: initialPrefs };
@@ -436,7 +453,14 @@ async function start(): Promise<void> {
   // --- legend -------------------------------------------------------------------
   const legend = setupLegend(
     { button: element<HTMLButtonElement>('legend'), panel: element('legend-panel') },
-    { categories, onChange: (hidden) => restyle({ hiddenCategories: hidden }) },
+    {
+      categories,
+      hidden: prefs.hiddenCategories,
+      onChange: (hidden) => {
+        remember({ hiddenCategories: hidden });
+        restyle({ hiddenCategories: hidden });
+      },
+    },
   );
   legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });
   // On a host with more than one site, the legend's foot leads to the others.

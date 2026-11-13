@@ -12,6 +12,8 @@ export interface LegendElements {
 
 export interface LegendOptions {
   readonly categories: readonly Category[];
+  /** The kinds hidden to begin with: those the person had hidden last time. */
+  readonly hidden?: readonly string[];
   /** Called with the ids of the kinds now hidden whenever a checkbox changes. */
   readonly onChange: (hidden: string[]) => void;
 }
@@ -28,12 +30,12 @@ export interface Legend {
 }
 
 /** One kind of place: its colour, its name, how many there are, and its switch. */
-function row(category: Category, onToggle: (shown: boolean) => void): HTMLElement {
+function row(category: Category, shown: boolean, onToggle: (shown: boolean) => void): HTMLElement {
   const label = document.createElement('label');
   label.className = 'legend-row';
   const input = document.createElement('input');
   input.type = 'checkbox';
-  input.checked = true;
+  input.checked = shown;
   input.addEventListener('change', () => onToggle(input.checked));
   // The swatch carries both shades; the stylesheet shows the one for the theme.
   const swatch = document.createElement('span');
@@ -53,13 +55,13 @@ function row(category: Category, onToggle: (shown: boolean) => void): HTMLElemen
 
 export function setupLegend(elements: LegendElements, options: LegendOptions): Legend {
   const { button, panel } = elements;
-  const hidden = new Set<string>();
+  const hidden = new Set<string>(options.hidden ?? []);
 
   const rows = document.createElement('div');
   rows.className = 'legend-rows';
   for (const category of options.categories) {
     rows.append(
-      row(category, (shown) => {
+      row(category, !hidden.has(category.id), (shown) => {
         if (shown) hidden.delete(category.id);
         else hidden.add(category.id);
         options.onChange([...hidden]);
