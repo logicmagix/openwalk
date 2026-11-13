@@ -100,6 +100,7 @@ import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
 import { ROUGH_MESSAGE, isRough, roughNoteStep } from './position/accuracy';
+import { Compass, bestHeading } from './position/compass';
 import { setupSearch } from './ui/search';
 import { setupSettings } from './ui/settings';
 import { setupSpots, spotSign } from './ui/spots';
@@ -293,6 +294,10 @@ async function start(): Promise<void> {
   let fitted = false;
   // A "nearest" request made before a position was known, resolved on the next fix.
   let pendingNearest: { category: string; label: string } | null = null;
+  // The compass, the heading it last gave, and a drawing of it waiting for the next frame.
+  const compass = new Compass();
+  let compassHeading: number | null = null;
+  let headingFrame = 0;
   // Whether the last reading was too uncertain to trust the dot's place, and
   // whether the person has closed the message that says so.
   let positionRough = false;
@@ -552,6 +557,7 @@ async function start(): Promise<void> {
       lastFix = fix;
       inputs.current = { ...inputs.current, position: fix };
       map.setPosition(positionCollection(fix));
+      showHeading();
       // A first reading can be a street out; say so until it tightens.
       // A reading has come, so a message that none could be had is out of date.
       if (positionProblem !== null && notice.message === positionProblem) showStatus(null);
@@ -585,6 +591,9 @@ async function start(): Promise<void> {
     },
     onCleared() {
       lastFix = null;
+      compass.stop();
+      compassHeading = null;
+      map.setHeading(null, null);
       // Location is off: a spot still waiting for a reading is given up.
       pendingSpot = null;
       window.clearTimeout(spotWait);
@@ -621,7 +630,39 @@ async function start(): Promise<void> {
     showStatus(null);
     const on = locator.toggle();
     showLocate();
-    if (on) guide();
+    if (on) {
+      startCompass();
+      guide();
+    }
+  }
+
+  /**
+   * Begins reading the compass. An iPhone asks the person's leave, and only in
+   * answer to a press, which turning location on is. Refused, or with no
+   * compass, the wedge follows the direction of travel instead.
+   */
+  function startCompass(): void {
+    void Compass.request().then((allowed) => {
+      if (!allowed || !locator.on) return;
+      compass.start((heading) => {
+        compassHeading = heading;
+        // Compass readings come many times a second; draw at most once a frame.
+        if (headingFrame !== 0) return;
+        headingFrame = requestAnimationFrame(() => {
+          headingFrame = 0;
+          showHeading();
+        });
+      });
+    });
+  }
+
+  /** Draws the wedge for the best heading there is, or takes it away. */
+  function showHeading(): void {
+    if (lastFix === null || !locator.on) {
+      map.setHeading(null, null);
+      return;
+    }
+    map.setHeading(lastFix.position, bestHeading(compassHeading, lastFix.heading));
   }
 
   /** Show on the button whether locating is on and whether the map is following. */
