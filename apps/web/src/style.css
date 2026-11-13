@@ -474,6 +474,15 @@ li {
   color: var(--accent);
 }
 
+#search-list li.here {
+  font-weight: 600;
+  border-bottom: 1px solid rgb(128 128 128 / 0.3);
+}
+
+#search-list li.here .detail {
+  font-weight: normal;
+}
+
 #search-list li.recent .label::before {
   content: '\21BA\00a0';
   opacity: 0.75;
@@ -548,6 +557,38 @@ li {
 
 #panel-detail {
   opacity: 0.75;
+}
+
+/* Where the walk starts. It reads as a line of the panel and acts as a button:
+   pressing it chooses another start. */
+.panel-from {
+  display: block;
+  min-height: 36px;
+  margin: 2px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panel-from span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.panel-from::after {
+  content: '\00a0\25BE';
+  color: var(--accent);
+}
+
+.panel-from:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-halo);
 }
 
 .panel-arrow {

@@ -14,6 +14,10 @@ export interface PanelElements {
   readonly announce: HTMLElement;
   readonly arrow: HTMLElement;
   readonly action: HTMLButtonElement;
+  /** The line that says where the walk starts; pressing it chooses another start. */
+  readonly from: HTMLButtonElement;
+  /** The part of that line that names the start. */
+  readonly fromName: HTMLElement;
   /** The star: saves the place shown, or forgets it. */
   readonly save: HTMLButtonElement;
   readonly close: HTMLButtonElement;
@@ -25,6 +29,8 @@ export interface PanelHandlers {
   readonly onAction: () => void;
   /** The star was pressed for the place shown. */
   readonly onSave: () => void;
+  /** The From line was pressed: the person wants to choose where the walk starts. */
+  readonly onFrom: () => void;
 }
 
 export type PanelState =
@@ -33,6 +39,13 @@ export type PanelState =
   | { readonly kind: 'away'; readonly siteName: string }
   | { readonly kind: 'waiting' }
   | { readonly kind: 'guiding'; readonly guidance: Guidance; readonly mapBearing: number }
+  /** A walk from a chosen place, shown whole: no arrow, and no arriving. */
+  | {
+      readonly kind: 'planned';
+      readonly from: string;
+      readonly distance: string;
+      readonly duration: string;
+    }
   | { readonly kind: 'arrived' }
   | { readonly kind: 'unreachable' };
 
@@ -49,6 +62,8 @@ export function statusText(state: PanelState): string {
       return [`${state.guidance.distance}, ${state.guidance.duration}`, state.guidance.instruction]
         .filter((part) => part !== '')
         .join(' · ');
+    case 'planned':
+      return `${state.distance}, ${state.duration}`;
     case 'arrived':
       return 'You have arrived.';
     case 'unreachable':
@@ -62,12 +77,16 @@ export function statusText(state: PanelState): string {
  * only a new instruction ("Head north" becoming "Head east") counts as news.
  */
 export function spokenChange(state: PanelState): string {
-  return state.kind === 'guiding' ? `guiding ${state.guidance.instruction}` : state.kind;
+  if (state.kind === 'guiding') return `guiding ${state.guidance.instruction}`;
+  if (state.kind === 'planned') return `planned ${state.from}`;
+  return state.kind;
 }
 
 export interface Panel {
   show(place: PlaceFeature): void;
   update(state: PanelState): void;
+  /** Names where the walk starts on the From line. */
+  setFrom(name: string): void;
   /** Shows the star filled for a saved place and hollow otherwise. */
   setSaved(saved: boolean): void;
   hide(): void;
@@ -87,6 +106,7 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
   elements.close.addEventListener('click', handlers.onClose);
   elements.action.addEventListener('click', handlers.onAction);
   elements.save.addEventListener('click', handlers.onSave);
+  elements.from.addEventListener('click', handlers.onFrom);
 
   function setArrow(bearing: number | null, mapBearing: number): void {
     elements.arrow.hidden = bearing === null;
@@ -123,9 +143,13 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
       if (change !== spoken) {
         spoken = change;
         // A new destination is named once, ahead of its first status.
-        elements.announce.textContent = unnamed === null ? text : `${unnamed}. ${text}`;
+        const said = state.kind === 'planned' ? `From ${state.from}: ${text}` : text;
+        elements.announce.textContent = unnamed === null ? said : `${unnamed}. ${said}`;
         unnamed = null;
       }
+    },
+    setFrom(name) {
+      elements.fromName.textContent = name;
     },
     setSaved(saved) {
       elements.save.setAttribute('aria-pressed', String(saved));

@@ -62,6 +62,19 @@ export function planRoute(router: Router, fix: PositionFix, placeId: string): Ro
   );
 }
 
+/** The walk from one place to another, wherever the person is, or null when none exists. */
+export function planWalk(router: Router, fromPlaceId: string, toPlaceId: string): Route | null {
+  return route(
+    router.graph,
+    { place: fromPlaceId },
+    { place: toPlaceId },
+    {
+      weights: router.weights,
+      ...(router.walkingSpeedMps === undefined ? {} : { walkingSpeedMps: router.walkingSpeedMps }),
+    },
+  );
+}
+
 export interface NearestMatch {
   readonly place: PlaceFeature;
   readonly route: Route;
@@ -176,6 +189,19 @@ export interface Guidance {
   readonly bearing: number | null;
   /** "Head north-east", or an empty string without a bearing. */
   readonly instruction: string;
+}
+
+/** How far and how long a planned walk is. */
+export interface WalkSummary {
+  readonly distance: string;
+  readonly duration: string;
+}
+
+export function summarise(found: Route, units: Units = 'metric'): WalkSummary {
+  return {
+    distance: formatDistance(found.distanceM, units),
+    duration: formatDuration(found.durationS),
+  };
 }
 
 /** What the panel says about a route from the current fix. */

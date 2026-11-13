@@ -11,6 +11,8 @@ import {
   makeRouter,
   nearestInCategory,
   planRoute,
+  planWalk,
+  summarise,
 } from './directions';
 import { siteCategories } from './categories';
 import { Locator } from './locate';
@@ -61,7 +63,7 @@ import {
 import { prefsKey, readPrefs, savedPrefs, type SitePrefs } from './prefs';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
-import { listFor } from './ui/listing';
+import { HERE_LABEL, labelOf, listFor } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
 import { showPicker } from './ui/picker';
@@ -218,6 +220,8 @@ async function start(): Promise<void> {
 
   // --- directions state --------------------------------------------------------
   let destination: PlaceFeature | null = null;
+  // Where a planned walk starts; null while directions follow the person.
+  let origin: PlaceFeature | null = null;
   let lastFix: PositionFix | null = null;
   let fitted = false;
   // A "nearest" request made before a position was known, resolved on the next fix.
@@ -235,6 +239,8 @@ async function start(): Promise<void> {
       announce: element('panel-announce'),
       arrow: element('panel-arrow'),
       action: element('panel-action'),
+      from: element('panel-from'),
+      fromName: element('panel-from-name'),
       save: element('panel-save'),
       close: element('panel-close'),
     },
@@ -243,6 +249,7 @@ async function start(): Promise<void> {
       onAction: () => {
         if (!locator.on) toggleLocate();
       },
+      onFrom: () => search.pickStart(),
       onSave: () => {
         if (destination === null) return;
         keep(toggleSaved(personal, destination.id));
@@ -254,6 +261,10 @@ async function start(): Promise<void> {
   /** Recompute the route and the panel from the latest fix and destination. */
   function guide(): void {
     if (destination === null) return;
+    if (origin !== null) {
+      showPlannedWalk(origin, destination);
+      return;
+    }
     if (lastFix === null || !locator.on) {
       inputs.current = { ...inputs.current, route: null };
       map.setRoute(routeCollection(null));
@@ -288,9 +299,45 @@ async function start(): Promise<void> {
     }
   }
 
+  /**
+   * A walk from a chosen place: drawn whole and described by its length. It
+   * does not follow the person, so there is no arrow and no arriving.
+   */
+  function showPlannedWalk(from: PlaceFeature, to: PlaceFeature): void {
+    const found = planWalk(router, from.id, to.id);
+    inputs.current = { ...inputs.current, route: found };
+    map.setRoute(routeCollection(found));
+    if (found === null) {
+      panel.update({ kind: 'unreachable' });
+      return;
+    }
+    panel.update({ kind: 'planned', from: labelOf(from), ...summarise(found, router.units) });
+    if (!fitted) {
+      fitted = true;
+      // A walk of no length has nothing to fit; show its one spot instead.
+      if (found.distanceM > 0) map.fitPositions(found.positions, ROUTE_PADDING);
+      else map.easeTo(to.geometry.coordinates, LOCATE_ZOOM);
+      locator.pause();
+      showLocate();
+    }
+  }
+
+  /** Sets where the walk starts: a place, or null for the person's own position. */
+  function chooseStart(place: PlaceFeature | null): void {
+    origin = place;
+    fitted = false;
+    panel.setFrom(place === null ? HERE_LABEL : labelOf(place));
+    guide();
+  }
+
   function chooseDestination(place: PlaceFeature | null): void {
     destination = place;
     fitted = false;
+    // Closing the directions ends any planning; the next ones start from the person.
+    if (place === null && origin !== null) {
+      origin = null;
+      panel.setFrom(HERE_LABEL);
+    }
     // Restyling keeps the chosen place on the map when its kind is hidden.
     restyle({
       destination: place === null ? null : place.geometry.coordinates,
@@ -426,14 +473,14 @@ async function start(): Promise<void> {
 
   // --- search and taps ----------------------------------------------------------
   const searchInput = element<HTMLInputElement>('search-input');
-  setupSearch(
+  const search = setupSearch(
     {
       input: searchInput,
       list: element('search-list'),
       clear: element('search-clear'),
     },
     {
-      listFor: (query, browsing) =>
+      listFor: (query, browsing, forStart) =>
         listFor(
           {
             places: site.places,
@@ -441,11 +488,13 @@ async function start(): Promise<void> {
             categories,
             saved: personal.saved,
             recent: personal.recent,
+            offerHere: forStart,
           },
           query,
           browsing,
         ),
       onChoose: (place) => chooseDestination(place),
+      onChooseStart: (place) => chooseStart(place),
     },
   );
   searchInput.disabled = false;

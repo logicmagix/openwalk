@@ -14,6 +14,8 @@ import {
   nearestInCategory,
   nextWaypoint,
   planRoute,
+  planWalk,
+  summarise,
 } from './directions';
 import type { PositionFix } from './position/provider';
 
@@ -188,5 +190,25 @@ describe('formatting', () => {
     expect(compassPoint(180)).toBe('south');
     expect(compassPoint(-90)).toBe('west');
     expect(compassPoint(359)).toBe('north');
+  });
+});
+
+describe('a walk between two places', () => {
+  it('starts at one place and ends at the other, wherever the person is', () => {
+    const found = planWalk(router, 'top', 'corner');
+    expect(found?.positions[0]).toEqual([0.002, 0.001]);
+    expect(found?.positions.at(-1)).toEqual([0.002, 0]);
+    expect(found?.approach).toEqual([]);
+  });
+
+  it('is null when no way exists', () => {
+    expect(planWalk(router, 'top', 'island')).toBeNull();
+    expect(planWalk(router, 'nowhere', 'corner')).toBeNull();
+  });
+
+  it('is summarised by how far and how long', () => {
+    const found = planWalk(router, 'top', 'corner');
+    if (found === null) throw new Error('no route');
+    expect(summarise(found)).toEqual({ distance: '112 m', duration: '2 min' });
   });
 });

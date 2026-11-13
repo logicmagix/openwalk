@@ -28,6 +28,8 @@ export type Listing =
       /** How many places it holds, in words. */
       readonly detail: string;
     }
+  /** Offered when choosing where a walk starts: the person's own position. */
+  | { readonly kind: 'here'; readonly label: string; readonly detail: string }
   /** Every place in one list, for someone who would rather scroll than choose a kind. */
   | { readonly kind: 'all'; readonly label: string; readonly detail: string }
   /** The way back from one kind's places to the list of kinds. */
@@ -41,6 +43,9 @@ export const RECENT_SHOWN = 3;
 
 export const SAVED_WORD = 'Saved';
 export const RECENT_WORD = 'Recent';
+
+export const HERE_LABEL = 'My location';
+export const HERE_DETAIL = 'Directions that follow you as you walk';
 
 export const BACK_LABEL = 'All categories';
 export const ALL_LABEL = 'All places';
@@ -107,6 +112,8 @@ export interface ListingSource {
   /** The person's saved places, oldest first, and recently chosen ones, newest first. */
   readonly saved?: readonly string[];
   readonly recent?: readonly string[];
+  /** Set while a start is being chosen: the list then leads with the person's position. */
+  readonly offerHere?: boolean;
 }
 
 /**
@@ -154,8 +161,12 @@ export function listFor(
     const inside = all.filter((place) => place.properties.category === open.id);
     return [{ kind: 'back', label: BACK_LABEL, detail: open.label }, ...inside.map(placeRow)];
   }
+  const here: Listing[] = source.offerHere
+    ? [{ kind: 'here', label: HERE_LABEL, detail: HERE_DETAIL }]
+    : [];
   if (grouped) {
     return [
+      ...here,
       ...ownRows(source),
       { kind: 'all', label: ALL_LABEL, detail: countOf(all.length) },
       ...source.categories.map((category): Listing => ({
@@ -166,5 +177,5 @@ export function listFor(
       })),
     ];
   }
-  return [...ownRows(source), ...all.map(placeRow)];
+  return [...here, ...ownRows(source), ...all.map(placeRow)];
 }

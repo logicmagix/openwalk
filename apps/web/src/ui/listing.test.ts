@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { buildIndex } from '@openwalk/search';
 import type { PlacesDocument } from '../site/types';
 import { siteCategories } from '../categories';
-import { ALL_LABEL, ALL_PLACES, BACK_LABEL, GROUP_ABOVE, labelOf, listFor } from './listing';
+import {
+  ALL_LABEL,
+  ALL_PLACES,
+  BACK_LABEL,
+  GROUP_ABOVE,
+  HERE_LABEL,
+  labelOf,
+  listFor,
+} from './listing';
 
 const places: PlacesDocument = {
   type: 'FeatureCollection',
@@ -205,5 +213,24 @@ describe("the person's own places", () => {
     ).toBe(true);
     const stale = { ...source, saved: ['gone'], recent: ['gone'] };
     expect(listFor(stale, '')).toEqual(listFor(source, ''));
+  });
+});
+
+describe('choosing where a walk starts', () => {
+  const starting = { ...source, saved: ['b12'], offerHere: true };
+
+  it("leads with the person's own position, then their places, then the rest", () => {
+    const [here, saved, next] = listFor(starting, '');
+    expect(here).toMatchObject({ kind: 'here', label: HERE_LABEL });
+    expect(saved).toMatchObject({ kind: 'place', mark: 'saved' });
+    expect(next).toMatchObject({ kind: 'place' });
+  });
+
+  it('offers only places once something is typed', () => {
+    expect(listFor(starting, 'library').every((row) => row.kind === 'place')).toBe(true);
+  });
+
+  it('is not offered when a destination is being chosen', () => {
+    expect(listFor(source, '').some((row) => row.kind === 'here')).toBe(false);
   });
 });
