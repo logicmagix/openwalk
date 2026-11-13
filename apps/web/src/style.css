@@ -12,12 +12,26 @@
   --focus-halo: 0 0 0 2px var(--surface), 0 0 0 7px var(--surface);
 }
 
+/* Dark follows the device, unless the person chose light in Settings; and
+   applies whatever the device prefers when they chose dark. The page's root
+   carries data-theme for a choice and nothing while following the device. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --surface: #202124;
     --ink: #e8eaed;
     --accent: #8ab4f8;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: #202124;
+  --ink: #e8eaed;
+  --accent: #8ab4f8;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 html,
@@ -946,9 +960,13 @@ body.picking .zoom {
 }
 
 @media (prefers-color-scheme: dark) {
-  .kind-swatch {
+  :root:not([data-theme='light']) .kind-swatch {
     background: var(--swatch-dark);
   }
+}
+
+:root[data-theme='dark'] .kind-swatch {
+  background: var(--swatch-dark);
 }
 
 .legend-name {
@@ -1051,7 +1069,8 @@ body.picking .zoom {
   font-weight: 600;
 }
 
-#my-places-close {
+#my-places-close,
+.dialog-close {
   flex: none;
   width: 40px;
   height: 40px;
@@ -1064,7 +1083,8 @@ body.picking .zoom {
   place-items: center;
 }
 
-#my-places-close svg {
+#my-places-close svg,
+.dialog-close svg {
   width: 22px;
   height: 22px;
   fill: currentColor;
@@ -1400,4 +1420,42 @@ body.no-nearest .spots-panel {
   height: 22px;
   margin: 0;
   accent-color: var(--accent);
+}
+
+/* Settings: groups of choices, each a row with its switch and its words. */
+.settings-group {
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-group legend {
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.settings-row input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* The optional buttons a person has taken off this map. */
+body.hide-zoom .zoom,
+body.hide-nearest .nearest,
+body.hide-spots #spots,
+body.hide-spots .spots-panel {
+  display: none;
 }

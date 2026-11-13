@@ -1,5 +1,6 @@
 // What the app remembers about how someone left a site's map: which optional
-// layers were on and which kinds of place were hidden. Kept on the device, per
+// layers were on, which kinds of place were hidden, and which of the optional
+// buttons they chose to show. Kept on the device, per
 // site, and read back on the next visit.
 //
 // What comes back from storage is treated as untrusted: it may be from an older
@@ -8,16 +9,28 @@
 
 import type { LayerPrefs } from './map/style';
 
+/** The buttons a person may take off a map, each shown unless they say otherwise. */
+export interface Controls {
+  /** The buttons that zoom in and out. */
+  readonly zoom: boolean;
+  /** The row of "nearest" buttons under the search box. */
+  readonly nearest: boolean;
+  /** The "My spots" button. */
+  readonly spots: boolean;
+}
+
 export interface SitePrefs {
   readonly layers: LayerPrefs;
   /** Ids of the kinds of place hidden with the legend. */
   readonly hiddenCategories: readonly string[];
+  readonly controls: Controls;
 }
 
 /** How a site's map opens for someone new: no overlays, everything else shown. */
 export const DEFAULT_PREFS: SitePrefs = {
   layers: { overlays: [], walkways: true, labels: true },
   hiddenCategories: [],
+  controls: { zoom: true, nearest: true, spots: true },
 };
 
 /** The key a site's preferences are kept under. */
@@ -49,6 +62,7 @@ function flag(value: unknown, fallback: boolean): boolean {
 export function readPrefs(saved: unknown, known: Known): SitePrefs {
   const kept = record(saved);
   const layers = record(kept['layers']);
+  const controls = record(kept['controls']);
   return {
     layers: {
       overlays: knownIds(layers['overlays'], known.overlays),
@@ -56,6 +70,11 @@ export function readPrefs(saved: unknown, known: Known): SitePrefs {
       labels: flag(layers['labels'], DEFAULT_PREFS.layers.labels ?? true),
     },
     hiddenCategories: knownIds(kept['hiddenCategories'], known.categories),
+    controls: {
+      zoom: flag(controls['zoom'], true),
+      nearest: flag(controls['nearest'], true),
+      spots: flag(controls['spots'], true),
+    },
   };
 }
 
@@ -69,5 +88,6 @@ export function savedPrefs(prefs: SitePrefs): unknown {
       labels: prefs.layers.labels ?? true,
     },
     hiddenCategories: [...prefs.hiddenCategories],
+    controls: { ...prefs.controls },
   };
 }

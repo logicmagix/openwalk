@@ -7,12 +7,24 @@
   --accent: #1a73e8;
 }
 
+/* Dark follows the device unless light or dark was chosen in the app's settings. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --surface: #202124;
     --ink: #e8eaed;
     --accent: #8ab4f8;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: #202124;
+  --ink: #e8eaed;
+  --accent: #8ab4f8;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {

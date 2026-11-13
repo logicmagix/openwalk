@@ -14,6 +14,7 @@ describe('readPrefs', () => {
     const prefs: SitePrefs = {
       layers: { overlays: ['aerial'], walkways: false, labels: true },
       hiddenCategories: ['parking'],
+      controls: { zoom: false, nearest: true, spots: false },
     };
     expect(readPrefs(savedPrefs(prefs), known)).toEqual(prefs);
   });
@@ -45,5 +46,23 @@ describe('readPrefs', () => {
 describe('prefsKey', () => {
   it('keeps each site apart', () => {
     expect(prefsKey('park')).not.toBe(prefsKey('campus'));
+  });
+});
+
+describe('the optional buttons', () => {
+  it('are all shown for someone new, and for what an older app kept', () => {
+    expect(readPrefs(undefined, known).controls).toEqual({
+      zoom: true,
+      nearest: true,
+      spots: true,
+    });
+    expect(readPrefs({ layers: {}, hiddenCategories: [] }, known).controls).toEqual(
+      DEFAULT_PREFS.controls,
+    );
+  });
+
+  it('keep each choice, and fall back to shown for anything of the wrong shape', () => {
+    const kept = { controls: { zoom: false, nearest: 'no', spots: false } };
+    expect(readPrefs(kept, known).controls).toEqual({ zoom: false, nearest: true, spots: false });
   });
 });
