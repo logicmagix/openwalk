@@ -468,6 +468,17 @@ li {
   flex: 1;
 }
 
+/* The person's own places head the list, each with a sign of why it is there. */
+#search-list li.saved .label::before {
+  content: '\2605\00a0';
+  color: var(--accent);
+}
+
+#search-list li.recent .label::before {
+  content: '\21BA\00a0';
+  opacity: 0.75;
+}
+
 /* "All places" heads the kinds and is set apart from them. */
 #search-list li.all {
   font-weight: 600;
@@ -577,6 +588,7 @@ li {
   cursor: pointer;
 }
 
+#panel-save,
 #panel-close {
   flex: none;
   width: 40px;
@@ -596,7 +608,24 @@ li {
   fill: currentColor;
 }
 
+/* The star is an outline until the place is saved, then filled in the accent. */
+#panel-save svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+}
+
+#panel-save[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+#panel-save[aria-pressed='true'] svg {
+  fill: currentColor;
+}
+
 #panel-action:focus-visible,
+#panel-save:focus-visible,
 #panel-close:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
