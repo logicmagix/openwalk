@@ -28,6 +28,15 @@ export type Listing =
       /** How many places it holds, in words. */
       readonly detail: string;
     }
+  /** A saved walk from one place to another; choosing it shows that walk. */
+  | {
+      readonly kind: 'route';
+      readonly from: PlaceFeature;
+      readonly to: PlaceFeature;
+      /** "Start → destination". */
+      readonly label: string;
+      readonly detail: string;
+    }
   /** Offered when choosing where a walk starts: the person's own position. */
   | { readonly kind: 'here'; readonly label: string; readonly detail: string }
   /** Every place in one list, for someone who would rather scroll than choose a kind. */
@@ -43,6 +52,7 @@ export const RECENT_SHOWN = 3;
 
 export const SAVED_WORD = 'Saved';
 export const RECENT_WORD = 'Recent';
+export const ROUTE_WORD = 'Saved route';
 
 export const HERE_LABEL = 'My location';
 export const HERE_DETAIL = 'Directions that follow you as you walk';
@@ -112,13 +122,17 @@ export interface ListingSource {
   /** The person's saved places, oldest first, and recently chosen ones, newest first. */
   readonly saved?: readonly string[];
   readonly recent?: readonly string[];
+  /** The person's saved walks, oldest first, each from one place id to another. */
+  readonly routes?: readonly { readonly from: string; readonly to: string }[];
   /** Set while a start is being chosen: the list then leads with the person's position. */
   readonly offerHere?: boolean;
 }
 
 /**
- * The person's own places, to head the list when nothing is typed: every saved
- * place by name, then the last few chosen that are not among them.
+ * The person's own, to head the list when nothing is typed: every saved place
+ * by name, their saved walks, then the last few places chosen that are not
+ * among the saved. Walks are left out while a start is being chosen, since a
+ * walk is not somewhere to start from.
  */
 function ownRows(source: ListingSource): Listing[] {
   const byId = new Map(source.places.features.map((place) => [place.id, place]));
@@ -129,8 +143,22 @@ function ownRows(source: ListingSource): Listing[] {
   const recent = find(source.recent ?? [])
     .filter((place) => !savedIds.has(place.id))
     .slice(0, RECENT_SHOWN);
+  const routes: Listing[] = [];
+  for (const { from, to } of source.offerHere ? [] : (source.routes ?? [])) {
+    const start = byId.get(from);
+    const end = byId.get(to);
+    if (start === undefined || end === undefined) continue;
+    routes.push({
+      kind: 'route',
+      from: start,
+      to: end,
+      label: `${labelOf(start)} \u2192 ${labelOf(end)}`,
+      detail: ROUTE_WORD,
+    });
+  }
   return [
     ...saved.map((place) => ownRow(place, 'saved')),
+    ...routes,
     ...recent.map((place) => ownRow(place, 'recent')),
   ];
 }

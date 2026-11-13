@@ -101,3 +101,76 @@ test.describe('with a position known', () => {
     await expect(controls(page).directions).not.toContainText('You have arrived.');
   });
 });
+
+test.describe('saving a walk', () => {
+  const saveRoute = (page: Page) => page.getByRole('button', { name: /Save route|Route saved/ });
+  const walkRow = (page: Page) => controls(page).results.locator('li.route');
+
+  test('the offer appears only for a walk from a chosen place', async ({ page }) => {
+    await openMap(page);
+    await choosePlace(page, to);
+    await expect(saveRoute(page)).toBeHidden();
+    await startFrom(page, from.properties.name, labelOf(from));
+    await expect(saveRoute(page)).toBeVisible();
+    await expect(saveRoute(page)).toHaveAttribute('aria-pressed', 'false');
+
+    await fromLine(page).click();
+    await controls(page)
+      .results.getByRole('option', { name: /My location/ })
+      .click();
+    await expect(saveRoute(page)).toBeHidden();
+  });
+
+  test('a saved walk heads the search list and opens as it was saved', async ({ page }) => {
+    await openMap(page);
+    await choosePlace(page, to);
+    await startFrom(page, from.properties.name, labelOf(from));
+    await saveRoute(page).click();
+    await expect(saveRoute(page)).toHaveAttribute('aria-pressed', 'true');
+    await expect(saveRoute(page)).toHaveText('Route saved');
+    // Saving the walk does not save its destination as a place.
+    await expect(page.getByRole('button', { name: 'Save this place' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    await page.waitForTimeout(250);
+    await page.reload();
+    await openMap(page);
+    await controls(page).search.click();
+    await expect(walkRow(page)).toHaveCount(1);
+    await expect(walkRow(page)).toContainText(labelOf(from));
+    await expect(walkRow(page)).toContainText(labelOf(to));
+    await expect(walkRow(page)).toContainText('Saved route');
+
+    await walkRow(page).click();
+    const { directions } = controls(page);
+    await expect(directions).toContainText(to.properties.name);
+    await expect(fromLine(page)).toContainText(labelOf(from));
+    await expect(directions).toContainText(/\d+ min/);
+    await expect(saveRoute(page)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('pressing it again forgets the walk', async ({ page }) => {
+    await openMap(page);
+    await choosePlace(page, to);
+    await startFrom(page, from.properties.name, labelOf(from));
+    await saveRoute(page).click();
+    await saveRoute(page).click();
+    await expect(saveRoute(page)).toHaveText('Save route');
+    await page.getByRole('button', { name: 'Close directions' }).click();
+    await controls(page).search.fill('');
+    await controls(page).search.click();
+    await expect(walkRow(page)).toHaveCount(0);
+  });
+
+  test('saved walks are not offered as somewhere to start from', async ({ page }) => {
+    await openMap(page);
+    await choosePlace(page, to);
+    await startFrom(page, from.properties.name, labelOf(from));
+    await saveRoute(page).click();
+    await fromLine(page).click();
+    await expect(startBox(page)).toBeFocused();
+    await expect(walkRow(page)).toHaveCount(0);
+  });
+});

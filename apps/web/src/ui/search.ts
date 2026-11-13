@@ -5,7 +5,7 @@
 // drive it.
 
 import type { PlaceFeature } from '@openwalk/search';
-import { ALL_PLACES, type Listing } from './listing';
+import { ALL_PLACES, labelOf, type Listing } from './listing';
 
 export interface SearchElements {
   readonly input: HTMLInputElement;
@@ -20,6 +20,8 @@ export interface SearchHandlers {
    */
   readonly listFor: (query: string, browsing: string | null, forStart: boolean) => Listing[];
   readonly onChoose: (place: PlaceFeature) => void;
+  /** A saved walk was chosen, from one place to another. */
+  readonly onChooseRoute: (from: PlaceFeature, to: PlaceFeature) => void;
   /** A start was chosen: a place, or null for the person's own position. */
   readonly onChooseStart: (place: PlaceFeature | null) => void;
 }
@@ -135,6 +137,13 @@ export function setupSearch(elements: SearchElements, handlers: SearchHandlers):
       return;
     }
     if (item.kind === 'here') return;
+    if (item.kind === 'route') {
+      input.value = labelOf(item.to);
+      close();
+      input.blur();
+      handlers.onChooseRoute(item.from, item.to);
+      return;
+    }
     if (item.kind === 'place') {
       input.value = item.label;
       close();

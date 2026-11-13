@@ -138,9 +138,20 @@
       <div class="panel-text">
         <h2 id="panel-name"></h2>
         <p id="panel-detail" hidden></p>
-        <button id="panel-from" class="panel-from" type="button">
-          From: <span id="panel-from-name">My location</span>
-        </button>
+        <div class="panel-start">
+          <button id="panel-from" class="panel-from" type="button">
+            From: <span id="panel-from-name">My location</span>
+          </button>
+          <button
+            id="panel-save-route"
+            class="panel-save-route"
+            type="button"
+            aria-pressed="false"
+            hidden
+          >
+            Save route
+          </button>
+        </div>
         <p id="panel-status"></p>
         <!-- Read out by a screen reader when the directions change in kind, not
              on every new distance; the line above changes too often for that. -->

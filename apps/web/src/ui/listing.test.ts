@@ -234,3 +234,34 @@ describe('choosing where a walk starts', () => {
     expect(listFor(source, '').some((row) => row.kind === 'here')).toBe(false);
   });
 });
+
+describe('saved walks', () => {
+  const own = {
+    ...source,
+    saved: ['b12'],
+    routes: [
+      { from: 'gate', to: 'b12' },
+      { from: 'gone', to: 'b12' },
+    ],
+    recent: ['b2'],
+  };
+
+  it('are listed after the saved places and before the recent ones', () => {
+    const kinds = listFor(own, '')
+      .slice(0, 3)
+      .map((row) => (row.kind === 'place' ? row.mark : row.kind));
+    expect(kinds).toEqual(['saved', 'route', 'recent']);
+  });
+
+  it('are named from their start to their destination', () => {
+    const walk = listFor(own, '').find((row) => row.kind === 'route');
+    expect(walk?.label).toBe('Main Gate \u2192 12 Library');
+    expect(walk?.detail).toBe('Saved route');
+  });
+
+  it('are left out when a place of theirs has gone, and while a start is chosen', () => {
+    expect(listFor(own, '').filter((row) => row.kind === 'route')).toHaveLength(1);
+    const starting = { ...own, offerHere: true };
+    expect(listFor(starting, '').some((row) => row.kind === 'route')).toBe(false);
+  });
+});

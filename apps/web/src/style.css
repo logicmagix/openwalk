@@ -483,6 +483,11 @@ li {
   font-weight: normal;
 }
 
+#search-list li.route .label::before {
+  content: '\2605\00a0';
+  color: var(--accent);
+}
+
 #search-list li.recent .label::before {
   content: '\21BA\00a0';
   opacity: 0.75;
@@ -573,6 +578,42 @@ li {
   font-size: 14px;
   text-align: left;
   cursor: pointer;
+}
+
+/* The From line and, beside it while a walk is planned, the offer to save it. */
+.panel-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.panel-save-route {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panel-save-route[hidden] {
+  display: none;
+}
+
+.panel-save-route[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.panel-save-route:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-halo);
 }
 
 .panel-from span {

@@ -18,6 +18,8 @@ export interface PanelElements {
   readonly from: HTMLButtonElement;
   /** The part of that line that names the start. */
   readonly fromName: HTMLElement;
+  /** Shown beside a planned walk: saves the walk from its start, or forgets it. */
+  readonly saveRoute: HTMLButtonElement;
   /** The star: saves the place shown, or forgets it. */
   readonly save: HTMLButtonElement;
   readonly close: HTMLButtonElement;
@@ -29,6 +31,8 @@ export interface PanelHandlers {
   readonly onAction: () => void;
   /** The star was pressed for the place shown. */
   readonly onSave: () => void;
+  /** "Save route" was pressed for the planned walk shown. */
+  readonly onSaveRoute: () => void;
   /** The From line was pressed: the person wants to choose where the walk starts. */
   readonly onFrom: () => void;
 }
@@ -87,6 +91,11 @@ export interface Panel {
   update(state: PanelState): void;
   /** Names where the walk starts on the From line. */
   setFrom(name: string): void;
+  /**
+   * Offers to save the planned walk, or shows it as saved. Null takes the offer
+   * away, which is how it stands whenever the walk starts from the person.
+   */
+  setRouteSaved(saved: boolean | null): void;
   /** Shows the star filled for a saved place and hollow otherwise. */
   setSaved(saved: boolean): void;
   hide(): void;
@@ -107,6 +116,7 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
   elements.action.addEventListener('click', handlers.onAction);
   elements.save.addEventListener('click', handlers.onSave);
   elements.from.addEventListener('click', handlers.onFrom);
+  elements.saveRoute.addEventListener('click', handlers.onSaveRoute);
 
   function setArrow(bearing: number | null, mapBearing: number): void {
     elements.arrow.hidden = bearing === null;
@@ -150,6 +160,11 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
     },
     setFrom(name) {
       elements.fromName.textContent = name;
+    },
+    setRouteSaved(saved) {
+      elements.saveRoute.hidden = saved === null;
+      elements.saveRoute.setAttribute('aria-pressed', String(saved === true));
+      elements.saveRoute.textContent = saved === true ? 'Route saved' : 'Save route';
     },
     setSaved(saved) {
       elements.save.setAttribute('aria-pressed', String(saved));

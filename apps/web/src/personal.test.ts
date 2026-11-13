@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   NOTHING_KEPT,
   RECENT_KEPT,
+  hasRoute,
   isSaved,
   keptPersonal,
   personalKey,
   readPersonal,
+  toggleRoute,
   toggleSaved,
   withRecent,
 } from './personal';
@@ -19,13 +21,17 @@ describe('readPersonal', () => {
   });
 
   it('gives back what was kept', () => {
-    const personal = { saved: ['gym', 'library'], recent: ['lot-1', 'gym'] };
+    const personal = {
+      saved: ['gym', 'library'],
+      routes: [{ from: 'lot-1', to: 'gym' }],
+      recent: ['lot-1', 'gym'],
+    };
     expect(readPersonal(keptPersonal(personal), places)).toEqual(personal);
   });
 
   it('drops places the site no longer has, and repeats', () => {
     const kept = { saved: ['gone', 'gym', 'gym'], recent: ['lot-1', 'gone'] };
-    expect(readPersonal(kept, places)).toEqual({ saved: ['gym'], recent: ['lot-1'] });
+    expect(readPersonal(kept, places)).toEqual({ saved: ['gym'], routes: [], recent: ['lot-1'] });
   });
 
   it('ignores anything of the wrong shape', () => {
@@ -46,7 +52,7 @@ describe('toggleSaved', () => {
   });
 
   it('leaves the recent places alone', () => {
-    const personal = toggleSaved({ saved: [], recent: ['lot-1'] }, 'gym');
+    const personal = toggleSaved({ saved: [], routes: [], recent: ['lot-1'] }, 'gym');
     expect(personal.recent).toEqual(['lot-1']);
   });
 });
@@ -68,5 +74,40 @@ describe('withRecent', () => {
 describe('personalKey', () => {
   it('keeps each site apart', () => {
     expect(personalKey('park')).not.toBe(personalKey('campus'));
+  });
+});
+
+describe('saved walks', () => {
+  const walk = { from: 'lot-1', to: 'gym' };
+
+  it('are saved, then forgotten, by the same pair', () => {
+    const once = toggleRoute(NOTHING_KEPT, walk);
+    expect(hasRoute(once, { from: 'lot-1', to: 'gym' })).toBe(true);
+    expect(hasRoute(toggleRoute(once, walk), walk)).toBe(false);
+  });
+
+  it('tell one direction from the other', () => {
+    const once = toggleRoute(NOTHING_KEPT, walk);
+    expect(hasRoute(once, { from: 'gym', to: 'lot-1' })).toBe(false);
+  });
+
+  it('are read back only when the site still has both places, and once each', () => {
+    const kept = {
+      routes: [
+        walk,
+        walk,
+        { from: 'gone', to: 'gym' },
+        { from: 'gym', to: 'gone' },
+        'nonsense',
+        {},
+      ],
+    };
+    expect(readPersonal(kept, places).routes).toEqual([walk]);
+  });
+
+  it('leave saved places and recent ones alone', () => {
+    const personal = toggleRoute({ saved: ['gym'], routes: [], recent: ['lot-2'] }, walk);
+    expect(personal.saved).toEqual(['gym']);
+    expect(personal.recent).toEqual(['lot-2']);
   });
 });

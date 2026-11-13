@@ -52,10 +52,12 @@ import {
 import { openStore } from './store/kv';
 import { watchTheme } from './theme';
 import {
+  hasRoute,
   isSaved,
   keptPersonal,
   personalKey,
   readPersonal,
+  toggleRoute,
   toggleSaved,
   withRecent,
   type Personal,
@@ -241,6 +243,7 @@ async function start(): Promise<void> {
       action: element('panel-action'),
       from: element('panel-from'),
       fromName: element('panel-from-name'),
+      saveRoute: element('panel-save-route'),
       save: element('panel-save'),
       close: element('panel-close'),
     },
@@ -250,6 +253,12 @@ async function start(): Promise<void> {
         if (!locator.on) toggleLocate();
       },
       onFrom: () => search.pickStart(),
+      onSaveRoute: () => {
+        if (origin === null || destination === null) return;
+        const walk = { from: origin.id, to: destination.id };
+        keep(toggleRoute(personal, walk));
+        panel.setRouteSaved(hasRoute(personal, walk));
+      },
       onSave: () => {
         if (destination === null) return;
         keep(toggleSaved(personal, destination.id));
@@ -308,9 +317,11 @@ async function start(): Promise<void> {
     inputs.current = { ...inputs.current, route: found };
     map.setRoute(routeCollection(found));
     if (found === null) {
+      panel.setRouteSaved(null);
       panel.update({ kind: 'unreachable' });
       return;
     }
+    panel.setRouteSaved(hasRoute(personal, { from: from.id, to: to.id }));
     panel.update({ kind: 'planned', from: labelOf(from), ...summarise(found, router.units) });
     if (!fitted) {
       fitted = true;
@@ -327,7 +338,15 @@ async function start(): Promise<void> {
     origin = place;
     fitted = false;
     panel.setFrom(place === null ? HERE_LABEL : labelOf(place));
+    if (place === null) panel.setRouteSaved(null);
     guide();
+  }
+
+  /** Opens a saved walk: its start and its destination together. */
+  function chooseRoute(from: PlaceFeature, to: PlaceFeature): void {
+    origin = from;
+    panel.setFrom(labelOf(from));
+    chooseDestination(to);
   }
 
   function chooseDestination(place: PlaceFeature | null): void {
@@ -337,6 +356,7 @@ async function start(): Promise<void> {
     if (place === null && origin !== null) {
       origin = null;
       panel.setFrom(HERE_LABEL);
+      panel.setRouteSaved(null);
     }
     // Restyling keeps the chosen place on the map when its kind is hidden.
     restyle({
@@ -488,12 +508,14 @@ async function start(): Promise<void> {
             categories,
             saved: personal.saved,
             recent: personal.recent,
+            routes: personal.routes,
             offerHere: forStart,
           },
           query,
           browsing,
         ),
       onChoose: (place) => chooseDestination(place),
+      onChooseRoute: (from, to) => chooseRoute(from, to),
       onChooseStart: (place) => chooseStart(place),
     },
   );
