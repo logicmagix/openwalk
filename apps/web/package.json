@@ -15,7 +15,8 @@
     "@openwalk/search": "0.1.0",
     "@protomaps/basemaps": "5.7.2",
     "maplibre-gl": "6.16.0",
-    "pmtiles": "4.5.0"
+    "pmtiles": "4.5.0",
+    "qrcode-generator": "2.0.4"
   },
   "devDependencies": {
     "@types/geojson": "7946.0.16"

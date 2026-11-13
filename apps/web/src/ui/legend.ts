@@ -21,7 +21,9 @@ export interface LegendOptions {
 /** A link at the foot of the legend, for something that is not about the map itself. */
 export interface LegendLink {
   readonly label: string;
-  readonly path: string;
+  /** Where the link leads; or, for something that opens within the page, what to do. */
+  readonly path?: string;
+  readonly onPress?: () => void;
 }
 
 export interface Legend {
@@ -99,10 +101,22 @@ export function setupLegend(elements: LegendElements, options: LegendOptions): L
 
   return {
     addLink(link) {
-      const anchor = document.createElement('a');
-      anchor.href = link.path;
-      anchor.textContent = link.label;
-      links.append(anchor);
+      if (link.path !== undefined) {
+        const anchor = document.createElement('a');
+        anchor.href = link.path;
+        anchor.textContent = link.label;
+        links.append(anchor);
+      } else {
+        // Something that opens within the page is a button, not a link.
+        const opener = document.createElement('button');
+        opener.type = 'button';
+        opener.textContent = link.label;
+        opener.addEventListener('click', () => {
+          setOpen(false);
+          link.onPress?.();
+        });
+        links.append(opener);
+      }
       links.hidden = false;
       button.hidden = false;
     },
