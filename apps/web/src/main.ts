@@ -52,6 +52,17 @@ import {
 import { openStore } from './store/kv';
 import { watchTheme } from './theme';
 import {
+  isEmpty,
+  mergeMessage,
+  mergeTransfer,
+  readTransfer,
+  toTransfer,
+  transferFile,
+  transferFileName,
+  transferFromHash,
+  transferLink,
+} from './transfer';
+import {
   hasRoute,
   isSaved,
   keptPersonal,
@@ -65,6 +76,7 @@ import {
 import { prefsKey, readPrefs, savedPrefs, type SitePrefs } from './prefs';
 import { setupLayers } from './ui/layers';
 import { setupLegend } from './ui/legend';
+import { setupMyPlaces } from './ui/my-places';
 import { HERE_LABEL, labelOf, listFor } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
@@ -569,6 +581,78 @@ async function start(): Promise<void> {
       },
     },
   );
+  // --- my places ----------------------------------------------------------------
+  const labelFor = (placeId: string): string => {
+    const place = placesById.get(placeId);
+    return place === undefined ? placeId : labelOf(place);
+  };
+  const myPlaces = setupMyPlaces(
+    {
+      dialog: element<HTMLDialogElement>('my-places'),
+      close: element('my-places-close'),
+      list: element('my-places-list'),
+      clearRecent: element('my-places-clear-recent'),
+      share: element('my-places-share'),
+      code: element('my-places-code'),
+      link: element('my-places-link'),
+      copy: element('my-places-copy'),
+      saveFile: element('my-places-save-file'),
+      pasted: element('my-places-pasted'),
+      add: element('my-places-add'),
+      file: element('my-places-file'),
+      status: element('my-places-status'),
+    },
+    {
+      items: () => [
+        ...personal.saved.map((id) => ({
+          label: labelFor(id),
+          kind: 'Saved place',
+          remove: () => forget(toggleSaved(personal, id)),
+        })),
+        ...personal.routes.map((walk) => ({
+          label: `${labelFor(walk.from)} \u2192 ${labelFor(walk.to)}`,
+          kind: 'Saved route',
+          remove: () => forget(toggleRoute(personal, walk)),
+        })),
+      ],
+      recentCount: () => personal.recent.length,
+      clearRecent: () => keep({ ...personal, recent: [] }),
+      link: () => {
+        const transfer = toTransfer(siteId, personal);
+        return isEmpty(transfer) ? null : transferLink(location.origin, transfer);
+      },
+      file: () => ({
+        name: transferFileName(siteId),
+        text: transferFile(toTransfer(siteId, personal)),
+      }),
+      add: (text) => {
+        const incoming = readTransfer(text);
+        if (incoming === null) return 'That is not a link or a file of saved places.';
+        if (incoming.site !== siteId) return 'Those places belong to a different map.';
+        const merge = mergeTransfer(personal, incoming, placesById.keys());
+        forget(merge.personal);
+        return mergeMessage(merge);
+      },
+    },
+  );
+  /** Keeps a change made from the panel, and brings the open directions in line with it. */
+  function forget(next: Personal): void {
+    keep(next);
+    if (destination === null) return;
+    panel.setSaved(isSaved(personal, destination.id));
+    if (origin !== null) {
+      panel.setRouteSaved(hasRoute(personal, { from: origin.id, to: destination.id }));
+    }
+  }
+  legend.addLink({ label: 'My places', onPress: () => myPlaces.open() });
+  // A link that carries saved places is offered, never taken unasked, and is
+  // then removed from the address so a reload does not offer it again.
+  const carried = transferFromHash(location.hash);
+  if (carried !== null) {
+    const link = location.href;
+    history.replaceState(null, '', location.pathname + location.search);
+    myPlaces.offer(link, 'This link carries saved places. Press Add to keep them here.');
+  }
   legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });
   // On a host with more than one site, the legend's foot leads to the others.
   // The list is not needed for anything else, so its absence is not an error.

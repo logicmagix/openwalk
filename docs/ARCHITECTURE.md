@@ -199,11 +199,22 @@ The replay build flag is off in production images.
 
 ## Personalization lives on the device
 
-Saved places, saved routes, recent searches, preferred layers, theme, and any
-checklist progress are stored in the browser (IndexedDB) and never uploaded. An export
-and import feature (a small file, and a QR code one phone shows and another scans)
-moves that data between devices without a server. Saved routes are treated as the most
-sensitive data in the app and never leave the device under any option.
+How a site's map was left (layers, hidden kinds of place), saved places, saved walks
+between two places, and recently chosen places are stored in the browser (IndexedDB),
+per site, and never uploaded. What is read back is checked against what the site has
+now, so anything that has gone drops out.
+
+Saved places and walks move between devices without a server: as a small file, or as
+a link that carries them after its `#`, the part of an address a browser never sends
+to a host. The link is also shown as a QR code for another device's camera. An
+installed app on some phones keeps its own storage apart from the browser's, so a
+link opened by the camera may land in the browser and not the app; the link can
+therefore also be pasted into the app, and a file chosen from it. What arrives is read
+strictly, must name the same site, and is added to what the device holds, never put in
+its place. Only place ids travel: no position, and not the recent places.
+
+A walk is saved as two place ids. Nothing that records where a person has been leaves
+the device under any option.
 
 ## License and repository
 
