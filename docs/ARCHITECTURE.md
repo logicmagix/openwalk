@@ -141,7 +141,7 @@ packages/schema/   JSON Schema files shared by the pipeline and the frontend
 e2e/             browser tests (Playwright)
 sites/           the example site; real sites are separate repositories cloned here
 tools/pipeline/  Python data preparation
-deploy/          Dockerfile, compose file, nginx conf
+deploy/          Dockerfile, compose file, Swarm stack file, nginx conf
 docs/            this folder
 ```
 
@@ -170,14 +170,19 @@ npm workspaces, one lockfile, one `npm test` at the root.
   system packages each time it is built.
 - `deploy/compose.yaml` runs that image locally (`docker compose up`), with a read-only
   filesystem, no added privileges and a health check.
+- `deploy/stack.yaml` runs it under Docker Swarm (R21 to R23): two copies of the web
+  service, replaced one at a time with the new copy started and healthy before the
+  old one stops, and the previous image put back if the new one does not become
+  healthy. A crashed copy is restarted. The tunnel's token is a Swarm secret (R17).
+  `docs/DEPLOYMENT.md` gives the steps.
 - Domain: `openwalk.app` (`.app` is HTTPS-only by browser policy). Subdomains:
   `staging.openwalk.app` for the staging stack, `openwalk.app` for production; demo
   sites as paths.
 - Hosting: one small cloud VM is enough. An organization adopting OpenWalk can host
   it on its own infrastructure; a static site in one image makes that hand-off a
   configuration exercise.
-- Edge: Cloudflare DNS, proxied. Connectivity via a `cloudflared` tunnel container
-  beside the web container, so the host exposes no inbound ports. Origin certificates
+- Edge: Cloudflare DNS, proxied. Connectivity via a `cloudflared` tunnel service in
+  the same stack, so the host exposes no inbound ports. Origin certificates
   rejected for version 1 (a public IP and open port for no benefit).
 
 ## Testing
