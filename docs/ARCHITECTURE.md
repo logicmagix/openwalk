@@ -190,6 +190,19 @@ reload works by adding scripts and styles to the page. A browser test adds a scr
 from another host, and one written into the page, and checks neither runs; another
 checks the app itself asks for nothing the policy refuses.
 
+## Sharing a place
+
+A place's address, `/p/<site-id>/<place-id>`, opens the map on that place (R10). The
+directions panel hands it out: as a QR code for another phone's camera, as text to
+copy, and, where the browser has the Web Share API, through the device's own sharing
+sheet. The address names the site and the place and nothing else: not where the walk
+starts, and nothing about the person. A spot the person marked is a position, so it
+has no address and the panel offers none.
+
+Choosing a place does not change the address the browser shows. An installed app is
+bound to its site's map address, and some phones draw a browser bar over the app as
+soon as it leaves that address.
+
 ## Position provider abstraction
 
 All position reads pass through one interface with three implementations: the browser

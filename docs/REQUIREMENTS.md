@@ -34,7 +34,8 @@ other docs cite.
 - R9. Layers. Street base map, satellite imagery, and an optional georeferenced overlay
   of the site's official map image. Toggle walkways and building labels.
 - R10. Share a place. Every place has a stable URL (`/p/<site>/<place-id>`) that opens
-  the map centered on it.
+  the map centered on it. The app hands the URL out from the place itself, as text to
+  copy and as a QR code, and through the device's own sharing where the browser has it.
 - R11. Installable. Progressive web app: manifest, service worker, works after first
   load without a signal for the map UI, place data, and routing (base tiles cached
   only where the tile provider's terms allow).

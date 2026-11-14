@@ -776,6 +776,7 @@ li {
 }
 
 #panel-save,
+#panel-share,
 #panel-close {
   flex: none;
   width: 40px;
@@ -796,8 +797,23 @@ li {
 }
 
 /* Taken away for a destination that is not a place of the site. */
-#panel-save[hidden] {
+#panel-save[hidden],
+#panel-share[hidden] {
   display: none;
+}
+
+/* The star and the share button sit side by side; the gap between the panel's
+   parts is closed between them so the three buttons do not crowd the words. */
+#panel-save,
+#panel-share {
+  margin-right: -10px;
+}
+
+#panel-share svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
 }
 
 /* The star is an outline until the place is saved, then filled in the accent. */
@@ -818,6 +834,7 @@ li {
 
 #panel-action:focus-visible,
 #panel-save:focus-visible,
+#panel-share:focus-visible,
 #panel-close:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
@@ -1133,6 +1150,11 @@ body.picking .zoom {
 .my-places h3 {
   margin: 20px 0 4px;
   font-size: 16px;
+}
+
+/* The place's name follows the status line directly. */
+#share-place-name {
+  margin-top: 0;
 }
 
 .my-places p {

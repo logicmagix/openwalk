@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   loadSite,
   placeLinkFromPath,
+  placeLink,
   placeLinkPath,
   siteBaseUrl,
   siteIdFromPath,
@@ -49,6 +50,15 @@ describe('paths', () => {
     expect(sitePagePath('demo-site')).toBe('/s/demo-site/');
     expect(siteBaseUrl('demo-site')).toBe('/sites/demo-site/');
     expect(placeLinkPath('demo-site', 'east-hall')).toBe('/p/demo-site/east-hall');
+    expect(placeLink('https://maps.example', 'demo-site', 'east-hall')).toBe(
+      'https://maps.example/p/demo-site/east-hall',
+    );
+    // The link that is handed out is one the app reads back.
+    const handed = new URL(placeLink('https://maps.example', 'demo-site', 'east-hall'));
+    expect(placeLinkFromPath(handed.pathname)).toEqual({
+      siteId: 'demo-site',
+      placeId: 'east-hall',
+    });
   });
 });
 
