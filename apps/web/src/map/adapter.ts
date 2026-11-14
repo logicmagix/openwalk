@@ -49,6 +49,28 @@ const MAX_ZOOM = 22;
 
 const SVG = 'http://www.w3.org/2000/svg';
 
+/** How far, in pixels, a press may wander and still count as a press, not a drag. */
+const PRESS_SLACK_PX = 6;
+
+/**
+ * Makes a marker answer a press. A drag that starts on the marker still moves
+ * the map, and is not taken for a press when it ends. The press stops at the
+ * marker, so whatever lies under it on the map is not chosen as well.
+ */
+function answerPresses(element: HTMLElement, onPress: () => void): void {
+  let downAt: { x: number; y: number } | null = null;
+  element.addEventListener('pointerdown', (event) => {
+    downAt = { x: event.clientX, y: event.clientY };
+  });
+  element.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const moved =
+      downAt === null ? 0 : Math.hypot(event.clientX - downAt.x, event.clientY - downAt.y);
+    downAt = null;
+    if (moved <= PRESS_SLACK_PX) onPress();
+  });
+}
+
 /**
  * The wedge: a fan opening away from the position, drawn pointing north so
  * that turning it by a heading points it that way. Its narrow end starts
@@ -237,18 +259,23 @@ export class MapView {
 
   /**
    * Shows a marker at each given point, replacing those shown before. A marker
-   * is a small piece of the page pinned to a place on the map; these are for
-   * looking at only, so presses pass through them to the map.
+   * is a small piece of the page pinned to a place on the map. One given an
+   * `onPress` answers a press on it; the map can still be dragged by it.
    */
   setMarkers(
-    markers: readonly { readonly position: Position; readonly element: HTMLElement }[],
+    markers: readonly {
+      readonly position: Position;
+      readonly element: HTMLElement;
+      readonly onPress?: () => void;
+    }[],
   ): void {
     for (const marker of this.markers) marker.remove();
-    this.markers = markers.map(({ position, element }) =>
-      new Marker({ element, anchor: 'bottom' })
+    this.markers = markers.map(({ position, element, onPress }) => {
+      if (onPress !== undefined) answerPresses(element, onPress);
+      return new Marker({ element, anchor: 'bottom' })
         .setLngLat([position[0], position[1]])
-        .addTo(this.map),
-    );
+        .addTo(this.map);
+    });
   }
 
   /**
