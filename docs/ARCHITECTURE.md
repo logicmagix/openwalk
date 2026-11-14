@@ -105,10 +105,10 @@ script is, and the app offers to reload into it.
 
 The root address is for someone who arrives at the bare host: it lists the sites,
 read from a small index the image build writes beside them, and opens the site
-directly when there is only one. There is no control for changing site inside a map.
-An installed app is one site's app, and a site that has not been visited is not
-available offline, so moving between sites is done from the root address or from the
-home screen.
+directly when there is only one. In a browser, a map's legend links back to that
+list when the host has more than one site. An installed app is one site's app, and a
+site that has not been visited is not available offline, so the installed app offers
+no way to another site; that is done from the home screen.
 
 ## Repository layout
 

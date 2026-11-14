@@ -103,6 +103,7 @@ import { ROUGH_MESSAGE, isRough, roughNoteStep } from './position/accuracy';
 import { Compass, bestHeading } from './position/compass';
 import { setupSearch } from './ui/search';
 import { setupSettings } from './ui/settings';
+import { runsInstalled } from './installed';
 import { setupSpots, spotSign } from './ui/spots';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
@@ -871,7 +872,6 @@ async function start(): Promise<void> {
       panel.setRouteSaved(hasRoute(personal, { from: origin.id, to: destination.id }));
     }
   }
-  legend.addLink({ label: 'My places', onPress: () => myPlaces.open() });
   // A link that carries saved places is offered, never taken unasked, and is
   // then removed from the address so a reload does not offer it again.
   const carried = transferFromHash(location.hash);
@@ -880,17 +880,6 @@ async function start(): Promise<void> {
     history.replaceState(null, '', location.pathname + location.search);
     myPlaces.offer(link, 'This link carries saved places. Press Add to keep them here.');
   }
-  legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });
-  // On a host with more than one site, the legend's foot leads to the others.
-  // The list is not needed for anything else, so its absence is not an error.
-  fetchJson(SITE_INDEX_PATH)
-    .then((list) => {
-      if ((list as SiteIndex).sites.length > 1) {
-        legend.addLink({ label: 'Other locations', path: '/' });
-      }
-    })
-    .catch(() => undefined);
-
   // --- my spots -----------------------------------------------------------------
   const spotsMenu = setupSpots(
     { button: element<HTMLButtonElement>('spots'), panel: element('spots-panel') },
@@ -971,7 +960,25 @@ async function start(): Promise<void> {
       },
     },
   );
+  // --- the legend's foot ----------------------------------------------------------
+  // What a person keeps comes first, then the way to another map, then how the
+  // app is set, then what it does with their position.
+  legend.addLink({ label: 'My places', onPress: () => myPlaces.open() });
+  // An installed app is one site's app, and a phone opens any other address in
+  // a browser laid over it. So the way to the host's other sites is offered in
+  // a browser only, and only where the host has more than one. The list is not
+  // needed for anything else, so its absence is not an error.
+  const otherLocations = legend.addLink({ label: 'Other locations', path: '/' });
+  otherLocations.hidden = true;
+  if (!runsInstalled()) {
+    fetchJson(SITE_INDEX_PATH)
+      .then((list) => {
+        otherLocations.hidden = (list as SiteIndex).sites.length <= 1;
+      })
+      .catch(() => undefined);
+  }
   legend.addLink({ label: 'Settings', onPress: () => settings.open() });
+  legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });
 
   // A share link opens straight onto its place, with the panel ready.
   if (link !== null) {
