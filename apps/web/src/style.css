@@ -1452,8 +1452,8 @@ body.no-nearest .spots-panel {
   font-size: 16px;
 }
 
-/* A spot on the map: its sign on a small disc, standing on its point. Presses
-   pass through to the map. */
+/* A spot on the map: its sign on a small disc, standing on its point. It can
+   be pressed. */
 .spot-marker {
   width: 30px;
   height: 30px;
@@ -1464,7 +1464,7 @@ body.no-nearest .spots-panel {
   box-shadow: var(--shadow);
   display: grid;
   place-items: center;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .spot-marker .spot-sign {
