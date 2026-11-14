@@ -23,8 +23,44 @@ several machines, which the same file serves unchanged.
 
 ## 1. Build the image
 
-The image is built from this repository with the sites it is to carry present under
-`sites/`. A real site is cloned to `sites/<site-id>/` first.
+There are two ways, and they produce the same image.
+
+### From the site's own repository
+
+Each OpenWalk release publishes two images: `openwalk-build`, which holds the built
+app and a command, `add-sites`, that puts a site into it, and `openwalk-server`, the
+web server the result is copied into. A site's repository needs only a short
+`Dockerfile` of its own and none of OpenWalk's source:
+
+```dockerfile
+# The OpenWalk release to build on.
+ARG OPENWALK=1.0.0
+
+FROM ghcr.io/logicmagix/openwalk-build:${OPENWALK} AS build
+COPY . /src/sites/<site-id>
+RUN add-sites <site-id>
+
+FROM ghcr.io/logicmagix/openwalk-server:${OPENWALK}
+COPY --from=build /out/ /
+```
+
+```
+docker build -t <registry>/<name>:<tag> .
+```
+
+The site's directory must already hold the files the pipeline generates. A
+`.dockerignore` naming `.git`, `raw` and `debug.html` keeps the build quick;
+`add-sites` takes only the files the app reads in any case. A newer release of
+OpenWalk is taken by changing the version and building again.
+
+For several sites in one image, copy each to `/src/sites/<its id>` and name them
+all: `RUN add-sites north-campus south-campus`. With one site the root address opens
+it; with several it lists them.
+
+### From this repository
+
+With the sites present under `sites/`, a real site being cloned to
+`sites/<site-id>/` first:
 
 ```
 docker build -f deploy/web.Dockerfile \
@@ -32,10 +68,16 @@ docker build -f deploy/web.Dockerfile \
   -t <registry>/<name>:<tag> .
 ```
 
-- `SITES` takes one id or several separated by spaces. With one, the root address
-  opens it; with several, it lists them.
-- `HSTS` sets what the `Strict-Transport-Security` header says. The default is a year
-  for the one host. `--build-arg HSTS=""` sends none, for a host whose own proxy does.
+`SITES` takes one id or several separated by spaces. Without it the image carries the
+example site, which is the quick way to try the app: `docker compose -f
+deploy/compose.yaml up --build`, then `http://localhost:8080`.
+
+### Either way
+
+- The `Strict-Transport-Security` header says a year, for the one host, unless told
+  otherwise. From a site's repository, `RUN HSTS="..." add-sites <site-id>`; from
+  this one, `--build-arg HSTS="..."`. An empty value sends none, for a host whose
+  own proxy does.
 - Give every build its own tag, such as a date or a version. Swarm updates when the
   tag changes, and the tag says which build is running.
 

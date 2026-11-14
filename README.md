@@ -186,7 +186,8 @@ Greek, Cyrillic, Hebrew and Arabic scripts; `tools/basemap-assets/fetch.sh` fetc
 more glyph ranges for a site whose labels need another script.
 
 Testing on a real phone, including HTTPS on a local network, is described in
-`docs/DEVICE_TESTING.md`, and running it for real in `docs/DEPLOYMENT.md`. See `CONTRIBUTING.md` before opening a pull request.
+`docs/DEVICE_TESTING.md`, and running it for real in `docs/DEPLOYMENT.md`, which
+also shows how a site's own repository builds its image from a published release. See `CONTRIBUTING.md` before opening a pull request.
 
 ## License
 
