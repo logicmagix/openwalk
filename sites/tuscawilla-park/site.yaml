@@ -6,6 +6,14 @@ name: Tuscawilla Park
 operator:
   name: the OpenWalk project
   url: https://github.com/logicmagix/openwalk
+# Listed in the app's Safety panel, each as a number the phone can call.
+safety:
+  - label: Emergency
+    number: '911'
+    note: Police, fire and medical emergencies.
+  - label: Suicide and Crisis Lifeline
+    number: '988'
+    note: Call or text, at any hour.
 boundary:
   # The park's grounds as mapped in OpenStreetMap (leisure=park).
   osm_way: 462341602

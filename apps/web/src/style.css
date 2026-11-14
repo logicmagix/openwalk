@@ -775,6 +775,52 @@ li {
   cursor: pointer;
 }
 
+/* "Safety": each number is one wide row, the whole of which calls it. */
+.safety-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.safety-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.safety-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.safety-number {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.safety-row small {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.safety-row:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-halo);
+}
+
 #panel-save,
 #panel-share,
 #panel-close {

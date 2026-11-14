@@ -256,6 +256,26 @@
       </fieldset>
     </dialog>
 
+    <!-- The numbers the site lists for someone who needs help. Opened from the
+         foot of the legend, on a site that lists any. -->
+    <dialog id="safety" class="my-places" aria-labelledby="safety-title">
+      <div class="my-places-head">
+        <h2 id="safety-title">Safety</h2>
+        <button id="safety-close" class="dialog-close" type="button" aria-label="Close safety">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"
+            />
+          </svg>
+        </button>
+      </div>
+      <p>
+        Pressing a number hands it to your phone, which asks before it calls. The app makes no call
+        itself and keeps no record of one.
+      </p>
+      <div id="safety-list"></div>
+    </dialog>
+
     <!-- One place's link, to hand to someone else. Opened from the directions
          panel. -->
     <dialog id="share-place" class="my-places" aria-labelledby="share-place-title">

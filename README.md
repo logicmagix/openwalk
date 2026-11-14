@@ -54,7 +54,11 @@ described here. Paths below are relative to the repository root.
    site installs to a phone's home screen as its own app; a long name is cut off under
    the icon, so give it a `short_name` of about 12 characters. To have the
    privacy page say who runs the site, add `operator` with a `name` and, if you
-   wish, an `email` or an https `url` to reach them.
+   wish, an `email` or an https `url` to reach them. To give the app a Safety
+   panel, add `safety`: a list of telephone numbers for someone who needs help,
+   each with a `label`, a `number` and, if you wish, a short `note`. The numbers
+   are the site's to choose, emergency services included, since they differ from
+   one country to the next.
    `packages/schema/schemas/site.schema.json` lists every setting.
 3. **Fetch OpenStreetMap data.** `openwalk-pipeline fetch sites/<site-id>` queries the
    Overpass API for everything inside the boundary and caches the result in `raw/`.

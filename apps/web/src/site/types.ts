@@ -4,6 +4,7 @@
 
 import type { GraphDocument } from '@openwalk/routing';
 import type { PlacesDocument } from '@openwalk/search';
+import type { SafetyContact } from '../safety';
 
 /** A longitude and latitude pair in degrees, in GeoJSON order. */
 export type Position = readonly [lon: number, lat: number];
@@ -25,6 +26,8 @@ export interface SiteConfig {
     readonly email?: string;
     readonly url?: string;
   };
+  /** Numbers for someone who needs help, listed in the Safety panel in this order. */
+  readonly safety?: readonly SafetyContact[];
   /**
    * The site's kinds of place, in legend order, each with the name people read.
    * Kinds its places use but it does not list are added after these.
