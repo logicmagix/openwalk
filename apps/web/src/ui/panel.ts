@@ -22,6 +22,8 @@ export interface PanelElements {
   readonly saveRoute: HTMLButtonElement;
   /** The star: saves the place shown, or forgets it. */
   readonly save: HTMLButtonElement;
+  /** Opens the place's link, to hand to someone else. */
+  readonly share: HTMLButtonElement;
   readonly close: HTMLButtonElement;
 }
 
@@ -31,6 +33,8 @@ export interface PanelHandlers {
   readonly onAction: () => void;
   /** The star was pressed for the place shown. */
   readonly onSave: () => void;
+  /** The share button was pressed for the place shown. */
+  readonly onShare: () => void;
   /** "Save route" was pressed for the planned walk shown. */
   readonly onSaveRoute: () => void;
   /** The From line was pressed: the person wants to choose where the walk starts. */
@@ -101,6 +105,11 @@ export interface Panel {
    * the star away, for a destination that is not a place of the site.
    */
   setSaved(saved: boolean | null): void;
+  /**
+   * Offers the place's link, or takes the offer away for a destination that is
+   * not a place of the site and so has no link.
+   */
+  setShareable(shareable: boolean): void;
   hide(): void;
 }
 
@@ -118,6 +127,7 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
   elements.close.addEventListener('click', handlers.onClose);
   elements.action.addEventListener('click', handlers.onAction);
   elements.save.addEventListener('click', handlers.onSave);
+  elements.share.addEventListener('click', handlers.onShare);
   elements.from.addEventListener('click', handlers.onFrom);
   elements.saveRoute.addEventListener('click', handlers.onSaveRoute);
 
@@ -172,6 +182,9 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
     setSaved(saved) {
       elements.save.hidden = saved === null;
       elements.save.setAttribute('aria-pressed', String(saved === true));
+    },
+    setShareable(shareable) {
+      elements.share.hidden = !shareable;
     },
     hide() {
       elements.announce.textContent = '';

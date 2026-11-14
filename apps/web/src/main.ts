@@ -37,6 +37,7 @@ import { chooseProvider, replayAllowed, traceUrl } from './position/select';
 import {
   fetchJson,
   loadSite,
+  placeLink,
   placeLinkFromPath,
   siteBaseUrl,
   siteIdFromPath,
@@ -97,6 +98,7 @@ import { setupNotice, type NoticeLife } from './ui/notice';
 import { HERE_LABEL, labelOf, listFor } from './ui/listing';
 import { setupOfflineStatus } from './ui/offline-status';
 import { setupPanel } from './ui/panel';
+import { setupSharePlace } from './ui/share-place';
 import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
 import { ROUGH_MESSAGE, isRough, roughNoteStep } from './position/accuracy';
@@ -316,6 +318,17 @@ async function start(): Promise<void> {
   // directions are for people at the site, so locating is switched off again.
   let away = false;
 
+  const sharePlace = setupSharePlace({
+    dialog: element<HTMLDialogElement>('share-place'),
+    close: element('share-place-close'),
+    name: element('share-place-name'),
+    code: element('share-place-code'),
+    link: element('share-place-link'),
+    copy: element('share-place-copy'),
+    send: element('share-place-send'),
+    status: element('share-place-status'),
+  });
+
   const panel = setupPanel(
     {
       root: element('panel'),
@@ -329,6 +342,7 @@ async function start(): Promise<void> {
       fromName: element('panel-from-name'),
       saveRoute: element('panel-save-route'),
       save: element('panel-save'),
+      share: element('panel-share'),
       close: element('panel-close'),
     },
     {
@@ -347,6 +361,11 @@ async function start(): Promise<void> {
         if (destination === null || isSpotId(destination.id)) return;
         keep(toggleSaved(personal, destination.id));
         panel.setSaved(isSaved(personal, destination.id));
+      },
+      onShare: () => {
+        // A spot is a position the person marked, and positions go in no link.
+        if (destination === null || isSpotId(destination.id)) return;
+        sharePlace.open(labelOf(destination), placeLink(location.origin, siteId, destination.id));
       },
     },
   );
@@ -457,10 +476,13 @@ async function start(): Promise<void> {
     }
     panel.show(place);
     if (isSpotId(place.id)) {
-      // A spot is the person's own already: nothing to star, and not a recent place.
+      // A spot is the person's own already: nothing to star, no link to hand
+      // out, and not a recent place.
       panel.setSaved(null);
+      panel.setShareable(false);
     } else {
       panel.setSaved(isSaved(personal, place.id));
+      panel.setShareable(true);
       keep(withRecent(personal, place.id));
     }
     // The panel now carries the "not at the site" message, so drop the notice.

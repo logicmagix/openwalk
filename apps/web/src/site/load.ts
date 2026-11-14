@@ -45,6 +45,11 @@ export function placeLinkPath(siteId: string, placeId: string): string {
   return `/p/${siteId}/${placeId}`;
 }
 
+/** The full share link for one place, as handed to another person. */
+export function placeLink(origin: string, siteId: string, placeId: string): string {
+  return `${origin}${placeLinkPath(siteId, placeId)}`;
+}
+
 /** Where a site's files are served from. */
 export function siteBaseUrl(siteId: string): string {
   return `/sites/${siteId}/`;
