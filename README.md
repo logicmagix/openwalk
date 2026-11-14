@@ -130,8 +130,8 @@ packages/schema/   shared schemas for pipeline output and the app
 e2e/               browser tests of the built app (Playwright)
 sites/             the example site; real sites are separate repositories
 tools/pipeline/    Python data preparation
-deploy/            Dockerfile, compose file, nginx config
-docs/              requirements, architecture, device testing
+deploy/            Dockerfile, compose file, Swarm stack file, nginx config
+docs/              requirements, architecture, deployment, device testing
 ```
 
 ## Developing
@@ -184,7 +184,7 @@ Greek, Cyrillic, Hebrew and Arabic scripts; `tools/basemap-assets/fetch.sh` fetc
 more glyph ranges for a site whose labels need another script.
 
 Testing on a real phone, including HTTPS on a local network, is described in
-`docs/DEVICE_TESTING.md`. See `CONTRIBUTING.md` before opening a pull request.
+`docs/DEVICE_TESTING.md`, and running it for real in `docs/DEPLOYMENT.md`. See `CONTRIBUTING.md` before opening a pull request.
 
 ## License
 
