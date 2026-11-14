@@ -52,6 +52,18 @@ def _read_json(path: Path) -> JsonObject | None:
         return json.load(handle)
 
 
+def overlay_label(overlay: dict[str, Any]) -> str:
+    """The name an overlay goes by in the page's layer list.
+
+    An image placed by fitting control points shows how well the fit held. One whose
+    corners are known exactly, such as stored aerial imagery, has no fit to report.
+    """
+    fit = overlay.get("fit")
+    if fit is None:
+        return str(overlay["name"])
+    return f"{overlay['name']} (rms {fit['rms_m']} m)"
+
+
 def render(
     site: Site,
     max_gap_m: float = gaps.DEFAULT_MAX_GAP_M,
@@ -75,7 +87,7 @@ def render(
         "graph": graph,
         "islands": island_edges(graph),
         "gaps": gaps.as_geojson(gaps.find_gaps(graph, max_gap_m, min_detour_m)),
-        "overlays": overlays,
+        "overlays": [{**overlay, "label": overlay_label(overlay)} for overlay in overlays],
     }
     return PAGE.substitute(
         title=site.name,
@@ -218,7 +230,7 @@ const overlayObjects = [];
 DATA.overlays.forEach(o => {
   const [tl, tr, , bl] = o.corners.map(c => L.latLng(c[1], c[0]));
   const layer = L.imageOverlay.rotated(o.image, tl, tr, bl, { opacity: 0.6, attribution: o.attribution || '' });
-  overlayLayers[o.name + ' (rms ' + o.fit.rms_m + ' m)'] = layer;
+  overlayLayers[o.label] = layer;
   overlayObjects.push(layer);
   show('overlay', layer);
 });
