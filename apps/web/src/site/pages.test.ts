@@ -3,6 +3,8 @@ import { sitePagePath } from './load';
 import {
   installName,
   pageTitle,
+  privacyPathFor,
+  siteOfPrivacyPath,
   siteIndex,
   siteManifest,
   siteManifestPath,
@@ -93,5 +95,23 @@ describe('siteIndex', () => {
 
   it('is empty for a host with no sites', () => {
     expect(siteIndex([])).toEqual({ sites: [] });
+  });
+});
+
+describe('the privacy page reached from a site', () => {
+  it('has an address inside the one an installed app is bound to', () => {
+    const { scope } = siteManifest(site);
+    expect(privacyPathFor('some-site')).toBe('/s/some-site/privacy/');
+    expect(privacyPathFor('some-site').startsWith(scope)).toBe(true);
+  });
+
+  it('is told apart from a map and from the page by itself', () => {
+    expect(siteOfPrivacyPath('/s/some-site/privacy/')).toBe('some-site');
+    expect(siteOfPrivacyPath('/s/some-site/privacy')).toBe('some-site');
+    expect(siteOfPrivacyPath(privacyPathFor('north-campus'))).toBe('north-campus');
+    expect(siteOfPrivacyPath('/s/some-site/')).toBeNull();
+    expect(siteOfPrivacyPath('/privacy/')).toBeNull();
+    expect(siteOfPrivacyPath('/s/Some_Site/privacy/')).toBeNull();
+    expect(siteOfPrivacyPath('/s/some-site/privacy/more')).toBeNull();
   });
 });

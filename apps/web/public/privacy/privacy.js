@@ -1,8 +1,10 @@
 // The privacy page reads the same for every site. Reached from a site's map
-// (as /privacy/?site=<site-id>), it adds two things: a way back to that map,
-// and who runs it, when the site's settings say.
+// (as /s/<site-id>/privacy/), it adds two things: a way back to that map, and
+// who runs it, when the site's settings say. An older form of the address,
+// /privacy/?site=<site-id>, is still understood.
 
-const siteId = new URLSearchParams(location.search).get('site') ?? '';
+const fromPath = /^\/s\/([^/]+)\/privacy\/?$/.exec(location.pathname);
+const siteId = fromPath ? fromPath[1] : (new URLSearchParams(location.search).get('site') ?? '');
 
 async function showSite() {
   // A site id is lower-case letters, digits and hyphens; anything else is ignored.
