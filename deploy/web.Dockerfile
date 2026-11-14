@@ -9,9 +9,17 @@
 # opens it; with several it lists them.
 ARG SITES=tuscawilla-park
 
+# What the Strict-Transport-Security header says: for how long a browser that
+# has reached this host over HTTPS is to refuse plain HTTP for it. A year, and
+# for this host alone. Whoever runs the host may want otherwise, for example
+# --build-arg HSTS="max-age=31536000; includeSubDomains", or --build-arg HSTS=""
+# to send none because a proxy in front already does.
+ARG HSTS="max-age=31536000"
+
 # ---- stage 1: build the bundle with Node ----------------------------------
 FROM node:24-alpine AS build
 ARG SITES
+ARG HSTS
 WORKDIR /src
 
 # Copy only the manifests first so the dependency layer is cached between
@@ -46,8 +54,10 @@ RUN node apps/web/scripts/site-pages.mjs apps/web/dist /out/sites
 RUN node apps/web/scripts/stamp-worker.mjs apps/web/dist /out/sites
 
 # The content security policy the pages carry as a tag is also sent as a
-# header; nginx's lines for it are written from the same source.
-RUN node apps/web/scripts/security-headers.mjs /out/security-headers.conf
+# header; nginx's lines for it are written from the same source, and beside
+# them the line for the strict transport security header.
+RUN HSTS="$HSTS" node apps/web/scripts/security-headers.mjs \
+      /out/security-headers.conf /out/transport-headers.conf
 
 # ---- stage 2: serve it with nginx as a non-root user -----------------------
 # The "unprivileged" variant of the official image runs as uid 101 (nginx)
@@ -56,6 +66,7 @@ FROM nginxinc/nginx-unprivileged:1.31-alpine
 
 COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /out/security-headers.conf /etc/nginx/snippets/security-headers.conf
+COPY --from=build /out/transport-headers.conf /etc/nginx/snippets/transport-headers.conf
 COPY --from=build /src/apps/web/dist /usr/share/nginx/html
 COPY --from=build /out/sites /usr/share/nginx/html/sites
 

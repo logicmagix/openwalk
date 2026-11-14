@@ -171,7 +171,9 @@ map for a site is at `/s/<site-id>/`, for example
 `https://localhost:5173/s/tuscawilla-park/`. The root address lists the sites a host
 serves, or opens the site directly when there is only one. An image carries one site
 or several, chosen with `--build-arg SITES="<site-id> <site-id>"` and defaulting to
-the example site.
+the example site. The image tells browsers to use only HTTPS for its host for a year;
+`--build-arg HSTS=...` changes what that header says, and an empty value sends none,
+for a host whose proxy already does.
 
 The image takes from each site only the generated files the app reads: its settings,
 places, walkways, graph and base map, any overlays, and recorded traces. The
