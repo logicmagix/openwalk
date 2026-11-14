@@ -27,6 +27,8 @@ export interface SpotsOptions {
 export interface SpotsMenu {
   /** Redraws the menu after the spots changed. */
   refresh(): void;
+  /** Opens the menu with one spot's rename and remove showing. */
+  show(spotId: string): void;
   close(): void;
 }
 
@@ -201,6 +203,11 @@ export function setupSpots(elements: SpotsElements, options: SpotsOptions): Spot
   return {
     refresh() {
       if (open) render();
+    },
+    show(spotId) {
+      setOpen(true);
+      expanded = spotId;
+      render();
     },
     close: () => setOpen(false),
   };

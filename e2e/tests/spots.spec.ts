@@ -302,3 +302,42 @@ test.describe('marking a spot while the position is still rough', () => {
     await expect(spots(page).markers).toHaveCount(0);
   });
 });
+
+test('pressing a spot on the map opens the menu at that spot', async ({ page, context }) => {
+  await context.setGeolocation(reading(arrivalPoint(from)));
+  await openMap(page);
+  await openMenu(page);
+  await spots(page).park.click();
+  const { markers, menu, rows } = spots(page);
+  await expect(markers).toHaveCount(1);
+  await expect(menu).toBeHidden();
+
+  await markers.click();
+  await expect(menu).toBeVisible();
+  // The pressed spot's row is open, with what can be done to it.
+  await expect(rows.first().getByRole('button', { name: 'Rename', exact: true })).toBeVisible();
+  await expect(rows.first().getByRole('button', { name: 'Remove', exact: true })).toBeVisible();
+  // Only the spot was pressed: no place under it was chosen.
+  await expect(controls(page).directions).toBeHidden();
+});
+
+test('with the spots button hidden, pressing a spot leads to directions', async ({
+  page,
+  context,
+}) => {
+  await context.setGeolocation(reading(arrivalPoint(from)));
+  await openMap(page);
+  await openMenu(page);
+  await spots(page).park.click();
+  await expect(spots(page).markers).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Map legend' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Settings' });
+  await dialog.getByRole('checkbox', { name: 'My spots button' }).uncheck();
+  await dialog.getByRole('button', { name: 'Close settings' }).click();
+  await expect(dialog).toBeHidden();
+
+  await spots(page).markers.click();
+  await expect(controls(page).directions).toContainText('My car');
+});

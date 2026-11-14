@@ -476,13 +476,27 @@ async function start(): Promise<void> {
     showSpots();
   }
 
+  /**
+   * A press on a spot's marker opens the menu at that spot, where it can be
+   * walked to, renamed or removed. With the menu's button hidden in settings,
+   * the press leads to directions, as a press on a place does.
+   */
+  function pressSpot(spot: Spot): void {
+    if (prefs.controls.spots) {
+      spotsMenu.show(spot.id);
+    } else {
+      searchInput.value = '';
+      chooseDestination(spotPlace(spot));
+    }
+  }
+
   function showSpots(): void {
     map.setMarkers(
       spots.map((spot) => {
         const marker = document.createElement('div');
         marker.className = `spot-marker ${spot.kind}`;
         marker.append(spotSign(spot.kind));
-        return { position: spot.position, element: marker };
+        return { position: spot.position, element: marker, onPress: () => pressSpot(spot) };
       }),
     );
     spotsMenu.refresh();
