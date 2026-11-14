@@ -24,24 +24,38 @@ Why: a handful of controls around a map does not justify React. Plain TypeScript
 small modules keeps the bundle small for phones and keeps tests simple (Vitest).
 A framework can be introduced behind the same module boundaries if the UI grows.
 
-## Static first; a backend only for services that never receive a position
+## A static site with no backend
 
-Version 1 is a static site. nginx serves the bundle, the site data, the PMTiles file
-and the overlay images, and sets the security headers (R18). Routing, search, and all
-personalization run in the browser. No request ever carries a user position, so there
-is no location data on any server to breach (R16).
-
-The second stage is a small Node.js (Fastify) service behind nginx for things that do
-not involve position: `GET /api/healthz`, an optional feedback endpoint, and
-a satellite tile proxy so the imagery provider sees only the server's address. The
-rule "no user coordinates in any request" is enforced by a test that inspects every
-outgoing request in the end-to-end suite.
+The application is a static site. nginx serves the bundle, the site data, the PMTiles
+file and the overlay images, and sets the security headers (R18). Routing, search, and
+all personalization run in the browser. There is no application server, so no request
+can carry a user position to one, and there is no location data on any server to
+breach (R16). The rule "no user coordinates in any request" is enforced by a test
+that inspects every outgoing request in the end-to-end suite (R27).
 
 Accounts are out of scope.
 
 Routing (R13 to R15) is a pure TypeScript package (`packages/routing`) with no I/O. It
-runs in the browser and inside the service worker for offline use; the same package
-could run on a server without change.
+runs in the browser, with or without a connection; the same package could run on a
+server without change.
+
+## Aerial imagery is stored, not fetched by the phone
+
+A map that showed live satellite tiles would have every phone ask an imagery provider
+for the ground around it, which tells the provider roughly where that phone's owner
+is looking, and would stop working without a connection. So the aerial layer (R9,
+R29) is a single photograph of the site, taken once when the site is prepared and
+kept with the site's data. The app serves it from its own host and draws it as an
+overlay like the official map image, and the service worker keeps it for offline use
+with the rest.
+
+There are two ways to get the photograph. The pipeline's `imagery` command asks an
+imagery service the site names for one picture of the site's extent, in the
+projection the map is drawn in, so its corners are exact; the service must be an
+ArcGIS ImageServer, the kind many government mapping agencies run. A photograph from
+anywhere else is added as an ordinary overlay: the image goes under `overlay/` as a
+PNG with control points, and the pipeline fits it to the ground. Either way the imagery must be
+the site's to redistribute, and its credit is shown beside the layer's switch.
 
 ## Data pipeline: Python scripts, run at build time only
 
@@ -58,15 +72,21 @@ OpenStreetMap.
 ```
 sites/
   <site-id>/
-    site.yaml          name, boundary (OSM way id or bbox), default view, tile layers,
-                       "nearest" categories, overlay image corners, attribution
+    site.yaml          name, boundary (OSM way id or bbox), default view, base map
+                       source, "nearest" categories, safety numbers, overlay control
+                       points, imagery service, attribution
     places.yaml        curated list: id, number, name, aliases/keywords, category,
                        annotation, entrances, OSM id (if any)
-    overlay/           the site's official map image + georeference metadata
+    walkways.yaml      hand-drawn connections that OpenStreetMap lacks
+    overlay/           the site's official map image
+    imagery/           an aerial photograph fetched by the pipeline, and its extent
     raw/               downloaded source files (treated as data only)
+    site.json          generated: the settings the app reads
     places.geojson     generated
     walkways.geojson   generated
     graph.json         generated
+    overlays.json      generated: each overlay image and its four corners
+    basemap.pmtiles    generated: the base map tiles covering the site
 ```
 
 Adding a new site is adding a new directory and running the pipeline.
@@ -114,13 +134,13 @@ no way to another site; that is done from the home screen.
 
 ```
 apps/web/        frontend (Vite + TypeScript + MapLibre GL JS)
-apps/api/        Fastify service
 packages/routing/  graph building, Dijkstra, A*, snapping, haversine; pure, tested
 packages/search/   fuzzy search over places; pure, tested
-packages/schema/   JSON Schema files shared by pipeline output, api, and web
+packages/schema/   JSON Schema files shared by the pipeline and the frontend
+e2e/             browser tests (Playwright)
 sites/           the example site; real sites are separate repositories cloned here
 tools/pipeline/  Python data preparation
-deploy/          Dockerfiles, compose file for local dev, swarm stack file, nginx conf
+deploy/          Dockerfile, compose file, nginx conf
 docs/            this folder
 ```
 
@@ -128,28 +148,24 @@ npm workspaces, one lockfile, one `npm test` at the root.
 
 ## Containers and deployment
 
-- Multi-stage Dockerfiles: build stage with Node, final images `nginx:alpine` (static
-  plus proxy) and `node:24-alpine` (API) running as non-root.
-- `deploy/compose.yaml` for local development (`docker compose up`).
-- `deploy/stack.yaml` for Swarm: `web` (and, once it exists, `api`) with `replicas: 2`,
-  `update_config: { order: start-first, parallelism: 1, failure_action: rollback }`,
-  `healthcheck` on each image, `restart_policy: on-failure`, overlay network, and
-  Docker secrets for anything sensitive (R17, R22, R23).
+- One multi-stage Dockerfile, `deploy/web.Dockerfile`: a build stage with Node, and a
+  final image of nginx serving the built files as a non-root user. The image carries
+  the sites named when it is built.
+- `deploy/compose.yaml` runs that image locally (`docker compose up`), with a read-only
+  filesystem, no added privileges and a health check.
 - Domain: `openwalk.app` (`.app` is HTTPS-only by browser policy). Subdomains:
   `staging.openwalk.app` for the staging stack, `openwalk.app` for production; demo
   sites as paths.
-- Hosting: one small cloud VM as a single-node Swarm for staging and first production.
-  An organization adopting OpenWalk can host it on its own infrastructure; a static
-  site plus a stack file makes that hand-off a configuration exercise.
-- Edge: Cloudflare DNS, proxied. Connectivity via a `cloudflared` tunnel service inside
-  the Swarm stack, so the host exposes no inbound ports. Origin certificates rejected
-  for version 1 (a public IP and open port for no benefit).
-- Images are built and pushed by CI on tags; the host pulls and runs
-  `docker stack deploy`. No building on the production host.
+- Hosting: one small cloud VM is enough. An organization adopting OpenWalk can host
+  it on its own infrastructure; a static site in one image makes that hand-off a
+  configuration exercise.
+- Edge: Cloudflare DNS, proxied. Connectivity via a `cloudflared` tunnel container
+  beside the web container, so the host exposes no inbound ports. Origin certificates
+  rejected for version 1 (a public IP and open port for no benefit).
 
 ## Testing
 
-- Vitest for `packages/*` and `apps/api`. Pyright for the pipeline's type checking.
+- Vitest for `packages/*` and `apps/web`. Pyright for the pipeline's type checking.
   Routing fixtures: a tiny hand-drawn graph with known answers, plus a real site graph
   with golden routes.
 - Playwright for end-to-end: load site, grant mocked geolocation, search, route,
@@ -161,8 +177,9 @@ npm workspaces, one lockfile, one `npm test` at the root.
 
 - Site facts live only under `sites/`. No coordinate literal appears in `apps/` or
   `packages/`.
-- All external hosts (tile providers, imagery) are listed in `site.yaml` and mirrored
-  into the CSP at build time.
+- The app contacts no host but its own. Outside sources (OpenStreetMap's Overpass
+  API, the base map archive, an imagery service) are named in `site.yaml` and
+  contacted only by the pipeline, when a site is prepared.
 - Logging: the web server keeps no access log, since every file it serves is the
   same for everyone and a log would hold little but visitors' addresses. It reports
   only its own failures. Any later service logs no request bodies, no coordinates,
