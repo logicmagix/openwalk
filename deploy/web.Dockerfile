@@ -42,7 +42,10 @@ RUN npm ci --no-audit --no-fund
 COPY tsconfig.base.json ./
 COPY apps/web apps/web
 COPY packages packages
-RUN npm run build
+# The version of the release being built, which the app shows at the foot of
+# its Settings. A build that is not a release gives none, and the app says so.
+ARG VERSION=""
+RUN VITE_APP_VERSION="$VERSION" npm run build
 
 COPY --chmod=755 deploy/add-sites.sh /usr/local/bin/add-sites
 # What add-sites has the header say unless told otherwise.

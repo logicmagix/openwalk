@@ -72,6 +72,10 @@ docker build -f deploy/web.Dockerfile \
 example site, which is the quick way to try the app: `docker compose -f
 deploy/compose.yaml up --build`, then `http://localhost:8080`.
 
+Built this way the app calls itself a development build at the foot of its
+Settings, unless `--build-arg VERSION="<version>"` says which release it is. An image
+built from a site's repository carries the version of the release it was built on.
+
 ### Either way
 
 - The `Strict-Transport-Security` header says a year, for the one host, unless told

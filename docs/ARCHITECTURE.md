@@ -322,6 +322,11 @@ changes. An app installed on an iPhone reads it only as the page loads, so there
 choice in Settings that calls for another color loads the page again, with Settings
 open on it as before; a choice that leaves the color as it was does not.
 
+The foot of Settings names the build: "OpenWalk" and the version of the release it
+was built as, which is the first thing asked when something goes wrong. A release
+gives its version to the build (`--build-arg VERSION=...`, which `deploy/release.sh`
+takes from the tag); a build made any other way says it is a development build.
+
 The colors come in three fixed sets, chosen for the device like light and dark:
 the standard one, a high contrast one (plain white or black ground, heavier lines and
 outlines, and hard-edged controls) and a muted one (a grayscale ground, so the route

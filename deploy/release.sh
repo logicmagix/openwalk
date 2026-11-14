@@ -45,6 +45,7 @@ trap cleanup EXIT
 echo "== building $build_image:$version and $server_image:$version"
 for part in build server; do
   docker build --file deploy/web.Dockerfile --target "$part" \
+    --build-arg "VERSION=$version" \
     --label "org.opencontainers.image.version=$version" \
     --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
     --label "org.opencontainers.image.source=${SOURCE_URL:-}" \
@@ -94,6 +95,15 @@ expect "/s/$example/" '^content-security-policy:'
 expect "/s/$example/" '^strict-transport-security:'
 expect "/sites/$example/site.json" '^HTTP/1.1 200'
 expect "/sites/$example/manifest.webmanifest" 'application/manifest+json'
+# The app says which release it is: its script carries the version it was built with.
+script=$(curl --silent "$address/s/$example/" | grep --only-matching '/assets/index-[^"]*\.js' | head -n 1)
+# It is looked for as a quoted piece of text, whichever quotes the build used.
+quoted="[\"'\`]$(printf '%s' "$version" | sed 's/[.[\*^$]/\\&/g')[\"'\`]"
+if ! curl --silent "$address$script" | grep --quiet "$quoted"; then
+  echo "FAIL the app's script does not carry the version $version" >&2
+  exit 1
+fi
+echo "ok   the app carries the version ($version)"
 
 scan() { # an image, and the exit code for a finding
   docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock "$trivy" image \
