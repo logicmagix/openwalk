@@ -81,6 +81,21 @@ test('on a host with one site the legend offers no other locations', async ({ pa
   await expect(page.getByRole('link', { name: 'Other locations' })).toHaveCount(0);
 });
 
+test('the links under the legend run from what is kept to what the app promises', async ({
+  page,
+}) => {
+  await openMap(page);
+  await legend(page).button.click();
+  const foot = legend(page).panel.locator('.legend-links');
+  await expect(foot.getByRole('link', { name: 'Privacy' })).toBeVisible();
+  const labels = await foot.locator('a:visible, button:visible').allTextContents();
+  expect(labels.filter((label) => label !== 'Other locations')).toEqual([
+    'My places',
+    'Settings',
+    'Privacy',
+  ]);
+});
+
 test.describe('other sites on the host', () => {
   // The test answers the request for the list of sites itself, which it can only
   // do for requests the page makes directly, not those made through a service worker.
@@ -102,5 +117,39 @@ test.describe('other sites on the host', () => {
     await page.getByRole('link', { name: 'Other locations' }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole('main').getByRole('list').getByRole('link')).toHaveCount(2);
+  });
+
+  const severalSites = {
+    sites: [
+      { id: SITE_ID, name: config.name },
+      { id: 'another-place', name: 'Another Place' },
+    ],
+  };
+
+  test('the others come after My places and before Settings', async ({ page }) => {
+    await page.route('**/sites/index.json', (route) => route.fulfill({ json: severalSites }));
+    await openMap(page);
+    await legend(page).button.click();
+    const foot = legend(page).panel.locator('.legend-links');
+    await expect(foot.getByRole('link', { name: 'Other locations' })).toBeVisible();
+    expect(await foot.locator('a:visible, button:visible').allTextContents()).toEqual([
+      'My places',
+      'Other locations',
+      'Settings',
+      'Privacy',
+    ]);
+  });
+
+  test('an app opened from the home screen offers no other locations', async ({ page }) => {
+    // An installed app is one site's app. An iPhone says it runs as one this way.
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true });
+    });
+    await page.route('**/sites/index.json', (route) => route.fulfill({ json: severalSites }));
+    await openMap(page);
+    await legend(page).button.click();
+    await expect(legend(page).panel.getByRole('link', { name: 'Privacy' })).toBeVisible();
+    await page.waitForTimeout(300);
+    await expect(page.getByRole('link', { name: 'Other locations' })).toHaveCount(0);
   });
 });

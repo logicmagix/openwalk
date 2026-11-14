@@ -28,7 +28,7 @@ export interface LegendLink {
 
 export interface Legend {
   /** Adds a link at the foot of the panel. */
-  addLink(link: LegendLink): void;
+  addLink(link: LegendLink): HTMLElement;
 }
 
 /** One kind of place: its color, its name, how many there are, and its switch. */
@@ -101,11 +101,13 @@ export function setupLegend(elements: LegendElements, options: LegendOptions): L
 
   return {
     addLink(link) {
+      let added: HTMLElement;
       if (link.path !== undefined) {
         const anchor = document.createElement('a');
         anchor.href = link.path;
         anchor.textContent = link.label;
         links.append(anchor);
+        added = anchor;
       } else {
         // Something that opens within the page is a button, not a link.
         const opener = document.createElement('button');
@@ -116,9 +118,11 @@ export function setupLegend(elements: LegendElements, options: LegendOptions): L
           link.onPress?.();
         });
         links.append(opener);
+        added = opener;
       }
       links.hidden = false;
       button.hidden = false;
+      return added;
     },
   };
 }
