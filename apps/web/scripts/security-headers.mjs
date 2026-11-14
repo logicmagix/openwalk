@@ -1,17 +1,27 @@
-// Writes the nginx lines that send the content security policy as a header.
+// Writes the nginx lines that send the security headers.
 //
-//   node apps/web/scripts/security-headers.mjs <output-file>
+//   node apps/web/scripts/security-headers.mjs <policy-file> <transport-file>
 //
-// The policy has one source, src/policy.ts, which also puts it in the page.
+// The content security policy has one source, src/policy.ts, which also puts it
+// in the page; it goes with the pages. The strict transport security header
+// takes its value from the HSTS environment variable and goes with everything
+// the server sends; an empty value leaves it out.
 // Node runs that TypeScript module directly, ignoring its type annotations.
 
 import { writeFileSync } from 'node:fs';
-import { nginxHeaders } from '../src/policy.ts';
+import { nginxHeaders, nginxTransportHeaders } from '../src/policy.ts';
 
-const [output] = process.argv.slice(2);
-if (!output) {
-  console.error('usage: security-headers.mjs <output-file>');
+const [policyFile, transportFile] = process.argv.slice(2);
+if (!policyFile || !transportFile) {
+  console.error('usage: security-headers.mjs <policy-file> <transport-file>');
   process.exit(2);
 }
-writeFileSync(output, nginxHeaders());
-console.log(`content security policy header written to ${output}`);
+writeFileSync(policyFile, nginxHeaders());
+console.log(`content security policy header written to ${policyFile}`);
+const hsts = process.env.HSTS ?? '';
+writeFileSync(transportFile, nginxTransportHeaders(hsts));
+console.log(
+  hsts.trim() === ''
+    ? `no strict transport security header: ${transportFile} is empty`
+    : `strict transport security header (${hsts.trim()}) written to ${transportFile}`,
+);

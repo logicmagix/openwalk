@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { choosePlace, controls, openMap } from './app';
-import { MAP_PATH, arrivalPoint, farthestPair, reading } from './site';
+import { MAP_PATH, SITE_ID, arrivalPoint, farthestPair, reading } from './site';
 
 // The content security policy: the page tells the browser to take code and data
 // from its own host only. These check that the rule is stated, that the app
@@ -54,6 +54,18 @@ test('the page states the policy in a tag and the server sends it as a header', 
   expect(header).toContain("frame-ancestors 'none'");
   // The tag comes before any script, so it is in force when they are reached.
   expect(html.indexOf('Content-Security-Policy')).toBeLessThan(html.indexOf('<script'));
+});
+
+test('the server tells browsers to use only HTTPS for the host, with every kind of file', async ({
+  request,
+}) => {
+  // A browser heeds this only over HTTPS, so it changes nothing for a copy
+  // reached over plain HTTP on one's own machine; the header is sent all the same.
+  for (const path of [MAP_PATH, '/sw.js', `/sites/${SITE_ID}/site.json`, '/favicon.svg']) {
+    const response = await request.get(path);
+    expect(response.ok(), path).toBe(true);
+    expect(response.headers()['strict-transport-security'] ?? '', path).toMatch(/^max-age=\d+/);
+  }
 });
 
 test.describe('living within the policy', () => {

@@ -73,6 +73,34 @@ export function withPolicy(html: string): string {
   return html.replace(charset, (tag) => `${tag}\n    ${policyTag()}`);
 }
 
+/**
+ * What a strict transport security header may say: for how many seconds the
+ * browser is to use only HTTPS for the host, and optionally that the same goes
+ * for the hosts beneath it and that the host may be put on browsers' built-in
+ * lists.
+ */
+const HSTS = /^max-age=\d+(; includeSubDomains)?(; preload)?$/;
+
+/**
+ * The nginx line that tells a browser to use only HTTPS for this host from now
+ * on. A browser heeds it only when it arrives over HTTPS, so it does nothing to
+ * a copy run over plain HTTP on one's own machine. An empty value writes no
+ * line, for a host whose owner sets the header elsewhere.
+ */
+export function nginxTransportHeaders(hsts: string): string {
+  const value = hsts.trim();
+  const lines = ['# Written by the image build; do not edit.'];
+  if (value !== '') {
+    if (!HSTS.test(value)) {
+      throw new Error(
+        `"${value}" is not a strict transport security value, such as "max-age=31536000"`,
+      );
+    }
+    lines.push(`add_header Strict-Transport-Security "${value}" always;`);
+  }
+  return [...lines, ''].join('\n');
+}
+
 /** The nginx lines that send the rule as a header. */
 export function nginxHeaders(): string {
   return [

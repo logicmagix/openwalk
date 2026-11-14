@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { HEADER_POLICY, PAGE_POLICY, nginxHeaders, policyTag, withPolicy } from './policy';
+import {
+  HEADER_POLICY,
+  PAGE_POLICY,
+  nginxHeaders,
+  nginxTransportHeaders,
+  policyTag,
+  withPolicy,
+} from './policy';
 
 const directives = (policy: string) =>
   new Map(policy.split('; ').map((part) => [part.split(' ')[0], part.split(' ').slice(1)]));
@@ -49,4 +56,26 @@ describe('putting the policy in a page', () => {
 
 it('writes the header as an nginx line', () => {
   expect(nginxHeaders()).toContain(`add_header Content-Security-Policy "${HEADER_POLICY}" always;`);
+});
+
+describe('the strict transport security header', () => {
+  it('is written as an nginx line', () => {
+    expect(nginxTransportHeaders('max-age=31536000')).toContain(
+      'add_header Strict-Transport-Security "max-age=31536000" always;',
+    );
+    expect(nginxTransportHeaders(' max-age=600; includeSubDomains; preload ')).toContain(
+      '"max-age=600; includeSubDomains; preload"',
+    );
+  });
+
+  it('is left out when no value is given', () => {
+    expect(nginxTransportHeaders('')).not.toContain('add_header');
+    expect(nginxTransportHeaders('  ')).not.toContain('add_header');
+  });
+
+  it('refuses a value that is not one, which would otherwise end up in the server config', () => {
+    expect(() => nginxTransportHeaders('forever')).toThrow(/strict transport security/);
+    expect(() => nginxTransportHeaders('max-age=600"; return 200')).toThrow();
+    expect(() => nginxTransportHeaders('includeSubDomains')).toThrow();
+  });
 });

@@ -207,6 +207,20 @@ reload works by adding scripts and styles to the page. A browser test adds a scr
 from another host, and one written into the page, and checks neither runs; another
 checks the app itself asks for nothing the policy refuses.
 
+## HTTPS only
+
+The server tells a browser that reaches it over HTTPS to refuse plain HTTP for the
+host from then on (R18): the `Strict-Transport-Security` header, sent with every
+file. It says a year, and speaks for the one host that serves the app. It does not
+claim the hosts beneath it or ask to be put on browsers' built-in lists, because
+those are promises about a whole domain, which only the domain's owner can make.
+
+The value is set when the image is built, with `--build-arg HSTS=...`. An operator
+whose whole domain is HTTPS can add `includeSubDomains`; one whose proxy in front of
+the app already sends the header can build with an empty value, and the app sends
+none. A browser ignores the header over plain HTTP, so a copy run on one's own
+machine is unaffected.
+
 ## Sharing a place
 
 A place's address, `/p/<site-id>/<place-id>`, opens the map on that place (R10). The
