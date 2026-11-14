@@ -106,7 +106,8 @@ import { Compass, bestHeading } from './position/compass';
 import { setupSafety } from './ui/safety';
 import { setupSearch } from './ui/search';
 import { setupSettings } from './ui/settings';
-import { runsInstalled } from './installed';
+import { barColor } from './appearance';
+import { readsBarColorAtLoadOnly, runsInstalled } from './installed';
 import { setupSpots, spotSign } from './ui/spots';
 
 // MapLibre wants absolute URLs for sprites, so every address is resolved against
@@ -115,6 +116,9 @@ const ASSETS_BASE = new URL('/basemap', location.href).href;
 
 /** How long after it was last seen open the "My places" panel is opened again on a restart. */
 const REOPEN_WITHIN_MS = 10 * 60 * 1000;
+// Left for the page that loads next, when a change in Settings made the page
+// load again: Settings opens again on it. It lasts only as long as the window.
+const REOPEN_SETTINGS_KEY = 'openwalk.reopen-settings';
 
 /** How long a spot waits for a rough position to settle before it is marked anyway. */
 const SPOT_WAIT_MS = 15_000;
@@ -967,9 +971,9 @@ async function start(): Promise<void> {
     },
     {
       appearance: () => themeControl.appearance,
-      onAppearance: (appearance) => themeControl.choose(appearance),
+      onAppearance: (appearance) => repaintingBar(() => themeControl.choose(appearance)),
       scheme: () => themeControl.scheme,
-      onScheme: (scheme) => themeControl.chooseScheme(scheme),
+      onScheme: (scheme) => repaintingBar(() => themeControl.chooseScheme(scheme)),
       choices: [
         { id: 'zoom', label: 'Zoom buttons' },
         // A site with no nearest buttons has nothing here to show or hide.
@@ -983,6 +987,32 @@ async function start(): Promise<void> {
       },
     },
   );
+  /**
+   * Makes a change to how the app looks and sees that the status bar follows.
+   * Where the bar's color is read only as the page loads, a change that calls
+   * for another color loads the page again, and Settings opens again on it so
+   * the person carries on where they were.
+   */
+  function repaintingBar(change: () => void): void {
+    const before = barColor(themeControl.theme, themeControl.scheme);
+    change();
+    if (!readsBarColorAtLoadOnly()) return;
+    if (barColor(themeControl.theme, themeControl.scheme) === before) return;
+    try {
+      sessionStorage.setItem(REOPEN_SETTINGS_KEY, '1');
+    } catch {
+      // Storage refused: the page loads again with Settings closed.
+    }
+    location.reload();
+  }
+  try {
+    if (sessionStorage.getItem(REOPEN_SETTINGS_KEY) !== null) {
+      sessionStorage.removeItem(REOPEN_SETTINGS_KEY);
+      settings.open();
+    }
+  } catch {
+    // Storage refused: nothing was left to reopen.
+  }
   // --- the legend's foot ----------------------------------------------------------
   // What a person keeps comes first, then the way to another map, then whom to
   // call for help, then how the app is set, then what it does with their position.

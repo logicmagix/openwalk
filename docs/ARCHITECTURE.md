@@ -316,6 +316,12 @@ is about the person's eyes and screen, so it is kept once for the device, in
 the page is drawn. Which optional buttons a map shows is kept per site with the rest
 of how that map was left. Search, location, layers and the compass are not optional.
 
+The color a phone paints its status bar around the app is the color of the app's
+surfaces, named in the page's `theme-color` tag. A browser repaints when the tag
+changes. An app installed on an iPhone reads it only as the page loads, so there a
+choice in Settings that calls for another color loads the page again, with Settings
+open on it as before; a choice that leaves the color as it was does not.
+
 The colors come in three fixed sets, chosen for the device like light and dark:
 the standard one, a high contrast one (plain white or black ground, heavier lines and
 outlines, and hard-edged controls) and a muted one (a grayscale ground, so the route

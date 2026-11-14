@@ -10,3 +10,13 @@ export function runsInstalled(): boolean {
   const own = (navigator as Navigator & { standalone?: boolean }).standalone === true;
   return own || window.matchMedia('(display-mode: standalone)').matches;
 }
+
+/**
+ * True where the color of the status bar around the app is read only as the
+ * page loads. An app installed on an iPhone is such a place: it paints the bar
+ * from the page's theme-color tag once, and overlooks a later change to it. The
+ * property asked for here exists on iPhones alone.
+ */
+export function readsBarColorAtLoadOnly(): boolean {
+  return (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}

@@ -297,6 +297,67 @@ test.describe('the color around the app', () => {
     expect(await bar(page)).toBe('#000000');
   });
 
+  test.describe('where it is read only as the page loads', () => {
+    // An app installed on an iPhone paints its status bar once, as the page
+    // loads. The test says it is such a place, and marks the page so that a
+    // fresh load can be told from the same page carrying on.
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(() => {
+        Object.defineProperty(Navigator.prototype, 'standalone', {
+          configurable: true,
+          get: () => true,
+        });
+      });
+    });
+    const mark = (page: Page) =>
+      page.evaluate(() => ((window as unknown as { marked?: boolean }).marked = true));
+    const marked = (page: Page) =>
+      page.evaluate(() => (window as unknown as { marked?: boolean }).marked === true);
+
+    test('a change of color loads the page again with Settings still open', async ({ page }) => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await openMap(page);
+      await openSettings(page);
+      await mark(page);
+      await settings(page).dark.check();
+      // The page that loads next has the new color from its first moment, and
+      // Settings open on the choice just made.
+      await expect.poll(() => marked(page)).toBe(false);
+      await expect(settings(page).dialog).toBeVisible();
+      await expect(settings(page).dark).toBeChecked();
+      expect(await bar(page)).toBe('#202124');
+      // Settings opens again once, not on every later visit.
+      await revisit(page);
+      await expect(settings(page).dialog).toBeHidden();
+    });
+
+    test('a change that leaves the color as it was does not', async ({ page }) => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await openMap(page);
+      await openSettings(page);
+      await mark(page);
+      // Light on a device already light, and muted, whose surfaces match the standard ones.
+      await settings(page).dialog.getByRole('radio', { name: 'Light', exact: true }).check();
+      await settings(page).dialog.getByRole('radio', { name: 'Muted' }).check();
+      await page.waitForTimeout(500);
+      expect(await marked(page)).toBe(true);
+      await expect(settings(page).dialog).toBeVisible();
+    });
+  });
+
+  test('elsewhere a change of color does not load the page again', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openMap(page);
+    await openSettings(page);
+    await page.evaluate(() => ((window as unknown as { marked?: boolean }).marked = true));
+    await settings(page).dark.check();
+    expect(await bar(page)).toBe('#202124');
+    await page.waitForTimeout(500);
+    expect(
+      await page.evaluate(() => (window as unknown as { marked?: boolean }).marked === true),
+    ).toBe(true);
+  });
+
   test('is set before the page is drawn, and on the privacy page', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' });
     await openMap(page);
