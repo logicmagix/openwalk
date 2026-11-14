@@ -203,6 +203,17 @@ Choosing a place does not change the address the browser shows. An installed app
 bound to its site's map address, and some phones draw a browser bar over the app as
 soon as it leaves that address.
 
+## Safety numbers
+
+A site may list telephone numbers for someone who needs help: emergency services,
+its own security office, a helpline. They are site settings, emergency numbers
+included, because they differ from one place and one country to the next; the
+application names none. A site that lists any gets a Safety panel, opened from the
+legend, in which each number is a `tel:` link: the browser hands the number to the
+phone's dialer, and the phone asks before it calls. The app makes no call and no
+request of its own, and the panel works without a connection because the numbers
+arrive with the rest of the site's settings.
+
 ## Position provider abstraction
 
 All position reads pass through one interface with three implementations: the browser

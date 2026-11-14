@@ -81,6 +81,9 @@ test('on a host with one site the legend offers no other locations', async ({ pa
   await expect(page.getByRole('link', { name: 'Other locations' })).toHaveCount(0);
 });
 
+// The numbers to call for help have a link only on a site that lists some.
+const SAFETY = config.safety === undefined ? [] : ['Safety'];
+
 test('the links under the legend run from what is kept to what the app promises', async ({
   page,
 }) => {
@@ -91,6 +94,7 @@ test('the links under the legend run from what is kept to what the app promises'
   const labels = await foot.locator('a:visible, button:visible').allTextContents();
   expect(labels.filter((label) => label !== 'Other locations')).toEqual([
     'My places',
+    ...SAFETY,
     'Settings',
     'Privacy',
   ]);
@@ -126,7 +130,7 @@ test.describe('other sites on the host', () => {
     ],
   };
 
-  test('the others come after My places and before Settings', async ({ page }) => {
+  test('the others come after My places and before the rest', async ({ page }) => {
     await page.route('**/sites/index.json', (route) => route.fulfill({ json: severalSites }));
     await openMap(page);
     await legend(page).button.click();
@@ -135,6 +139,7 @@ test.describe('other sites on the host', () => {
     expect(await foot.locator('a:visible, button:visible').allTextContents()).toEqual([
       'My places',
       'Other locations',
+      ...SAFETY,
       'Settings',
       'Privacy',
     ]);

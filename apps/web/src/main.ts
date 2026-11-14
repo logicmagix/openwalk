@@ -103,6 +103,7 @@ import { showPicker } from './ui/picker';
 import { setupZoom } from './ui/zoom';
 import { ROUGH_MESSAGE, isRough, roughNoteStep } from './position/accuracy';
 import { Compass, bestHeading } from './position/compass';
+import { setupSafety } from './ui/safety';
 import { setupSearch } from './ui/search';
 import { setupSettings } from './ui/settings';
 import { runsInstalled } from './installed';
@@ -983,8 +984,8 @@ async function start(): Promise<void> {
     },
   );
   // --- the legend's foot ----------------------------------------------------------
-  // What a person keeps comes first, then the way to another map, then how the
-  // app is set, then what it does with their position.
+  // What a person keeps comes first, then the way to another map, then whom to
+  // call for help, then how the app is set, then what it does with their position.
   legend.addLink({ label: 'My places', onPress: () => myPlaces.open() });
   // An installed app is one site's app, and a phone opens any other address in
   // a browser laid over it. So the way to the host's other sites is offered in
@@ -998,6 +999,20 @@ async function start(): Promise<void> {
         otherLocations.hidden = (list as SiteIndex).sites.length <= 1;
       })
       .catch(() => undefined);
+  }
+  // The numbers to call for help are the site's to list; a site that lists none
+  // has no panel for them.
+  const contacts = site.config.safety ?? [];
+  if (contacts.length > 0) {
+    const safety = setupSafety(
+      {
+        dialog: element<HTMLDialogElement>('safety'),
+        close: element('safety-close'),
+        list: element('safety-list'),
+      },
+      contacts,
+    );
+    legend.addLink({ label: 'Safety', onPress: () => safety.open() });
   }
   legend.addLink({ label: 'Settings', onPress: () => settings.open() });
   legend.addLink({ label: 'Privacy', path: privacyPathFor(siteId) });

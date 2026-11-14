@@ -146,6 +146,33 @@
       },
       "uniqueItems": true
     },
+    "safety": {
+      "description": "Telephone numbers for someone who needs help, listed in the app's Safety panel in this order: emergency services, the site's own security office, helplines. Each is offered as a number the phone can call. Left out, the app shows no Safety panel.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["label", "number"],
+        "properties": {
+          "label": {
+            "description": "Who answers, for example \"Emergency\" or \"Campus security\".",
+            "type": "string",
+            "minLength": 1
+          },
+          "number": {
+            "description": "The number as people write it, for example \"911\" or \"(352) 555-0100\". Digits, with spaces, brackets, hyphens and dots between them as wished, and a leading plus for a country code. Quote it in YAML so it stays text.",
+            "type": "string",
+            "pattern": "^\\+?[(]?[0-9][0-9 ().-]*$"
+          },
+          "note": {
+            "description": "A few words on when to use the number or when it is answered.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "walkways": {
       "description": "Which OpenStreetMap highway values count as walkways for this site.",
       "type": "object",
