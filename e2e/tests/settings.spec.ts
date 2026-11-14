@@ -243,6 +243,17 @@ test.describe('colors', () => {
   }
 });
 
+test('the two choices of look are named for what they are', async ({ page }) => {
+  await openMap(page);
+  await openSettings(page);
+  const { dialog } = settings(page);
+  // Light and dark is the theme; the three sets of colors are the color scheme.
+  await expect(dialog.getByRole('group', { name: 'Theme' }).getByRole('radio')).toHaveCount(3);
+  await expect(
+    dialog.getByRole('group', { name: 'Color scheme' }).getByRole('radio', { name: 'Muted' }),
+  ).toBeVisible();
+});
+
 test.describe('the color around the app', () => {
   // A phone paints its status bar, and a browser its toolbar, in the color the
   // page names. It should be the color of the app's own surfaces.
