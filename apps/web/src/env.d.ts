@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   /** "true" lets a production build replay traces and take a fixed position. */
   readonly VITE_ENABLE_REPLAY?: string;
+  /** The version of the release being built, such as "1.2.0"; absent otherwise. */
+  readonly VITE_APP_VERSION?: string;
 }
 
 interface ImportMeta {

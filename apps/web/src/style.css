@@ -1575,6 +1575,13 @@ body.no-nearest .spots-panel {
   border: 0;
 }
 
+/* Which build this is: a quiet line at the foot of the panel. */
+.settings-version {
+  margin: 20px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
 .settings-group legend {
   padding: 0;
   font-size: 16px;

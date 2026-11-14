@@ -254,6 +254,15 @@ test('the two choices of look are named for what they are', async ({ page }) => 
   ).toBeVisible();
 });
 
+test('the foot of the panel says which build of the app this is', async ({ page }) => {
+  await openMap(page);
+  await openSettings(page);
+  // A release names its version; any other build says it is not one.
+  await expect(settings(page).dialog.locator('#settings-version')).toHaveText(
+    /^OpenWalk(, development build| \S+)$/,
+  );
+});
+
 test.describe('the color around the app', () => {
   // A phone paints its status bar, and a browser its toolbar, in the color the
   // page names. It should be the color of the app's own surfaces.

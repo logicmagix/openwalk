@@ -68,6 +68,7 @@ import {
 } from './spots';
 import { openStore } from './store/kv';
 import { watchTheme } from './theme';
+import { versionLine } from './version';
 import {
   isEmpty,
   mergeMessage,
@@ -987,6 +988,7 @@ async function start(): Promise<void> {
       },
     },
   );
+  element('settings-version').textContent = versionLine(import.meta.env.VITE_APP_VERSION);
   /**
    * Makes a change to how the app looks and sees that the status bar follows.
    * Where the bar's color is read only as the page loads, a change that calls
