@@ -209,7 +209,10 @@ npm workspaces, one lockfile, one `npm test` at the root.
 - The privacy page, `/privacy/`, says in plain words what the app does with a
   person's position, what it keeps on the phone and what the server sees. It is one
   static page for every site, linked from the legend and from the list of maps;
-  opened from a site it also names the site's `operator` when one is set. What it
+  opened from a site it also names the site's `operator` when one is set. From a
+  site it is served at `/s/<site-id>/privacy/`, beneath the address an installed app
+  is bound to, so the app shows it as part of itself; some phones open any address
+  outside that in a browser laid over the app. What it
   promises is what the browser tests check: no request leaves the host and none
   carries a position.
 

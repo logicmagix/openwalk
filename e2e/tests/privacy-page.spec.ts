@@ -6,7 +6,9 @@ import { MAP_PATH, SITE_ID, config } from './site';
 // The page that says, in plain words, what the app does with a person's
 // position. It is reached from the foot of the legend and from the list of maps.
 
-const PRIVACY_FROM_SITE = `/privacy/?site=${SITE_ID}`;
+// From a site the page has an address beneath the site's own, so an installed
+// app shows it as part of itself.
+const PRIVACY_FROM_SITE = `${MAP_PATH}privacy/`;
 
 test('the legend leads to the privacy page, which leads back to the map', async ({ page }) => {
   await openMap(page);
@@ -61,8 +63,24 @@ test('the way back is right even before the site has answered', async ({ page })
   release();
 });
 
+test('an address of the older form still shows the page for its site', async ({ page }) => {
+  await page.goto(`/privacy/?site=${SITE_ID}`);
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to the map' })).toHaveAttribute(
+    'href',
+    MAP_PATH,
+  );
+});
+
+test('the page lies within the address an installed app is bound to', async ({ page }) => {
+  await openMap(page);
+  const manifest = await page.locator('link[rel="manifest"]').getAttribute('href');
+  const { scope } = (await (await page.request.get(manifest!)).json()) as { scope: string };
+  expect(PRIVACY_FROM_SITE.startsWith(scope)).toBe(true);
+});
+
 test('a site that looks real but is not here leads back to the list of maps', async ({ page }) => {
-  await page.goto('/privacy/?site=no-such-place');
+  await page.goto('/s/no-such-place/privacy/');
   await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Back to the map' })).toHaveAttribute('href', '/');
 });

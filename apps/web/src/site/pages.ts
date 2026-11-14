@@ -48,9 +48,20 @@ export function siteManifestPath(siteId: string): string {
 /** Where the privacy page is served; the same page for every site. */
 export const PRIVACY_PATH = '/privacy/';
 
-/** The privacy page as reached from a site's map, so it can lead back there. */
+/**
+ * The privacy page as reached from a site's map. It is the same page, served
+ * at an address beneath the site's own, for two reasons: the page can lead
+ * back to that map, and an installed app, which is bound to its site's
+ * address, shows the page as part of itself and not in a browser laid over it.
+ */
 export function privacyPathFor(siteId: string): string {
-  return `${PRIVACY_PATH}?site=${encodeURIComponent(siteId)}`;
+  return `/s/${encodeURIComponent(siteId)}/privacy/`;
+}
+
+/** The site a privacy page address belongs to, or null for the page by itself. */
+export function siteOfPrivacyPath(pathname: string): string | null {
+  const match = /^\/s\/([a-z0-9]+(?:-[a-z0-9]+)*)\/privacy\/?$/.exec(pathname);
+  return match ? (match[1] ?? null) : null;
 }
 
 /** The privacy page's own files, for keeping a copy to use with no network. */
