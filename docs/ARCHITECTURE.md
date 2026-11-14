@@ -96,8 +96,9 @@ Adding a new site is adding a new directory and running the pipeline.
 This repository contains the application, the pipeline, the schemas, and one example
 site used to demonstrate and test the pipeline. A real site is its own repository with
 the layout above, cloned to `sites/<site-id>/` for local work; everything under
-`sites/` except the example is ignored by git. For deployment, a site repository builds
-its own image from the published generic web image and copies its directory in. The
+`sites/` except the example is ignored by git. For deployment, a site is put into the
+built application by one command, `add-sites`, which needs the site's directory and
+nothing else of this repository (see "Containers and deployment"). The
 application repository therefore never carries an institution's names, coordinates, or
 map images, and a site owner can withdraw their data by deleting one repository.
 
@@ -148,9 +149,18 @@ npm workspaces, one lockfile, one `npm test` at the root.
 
 ## Containers and deployment
 
-- One multi-stage Dockerfile, `deploy/web.Dockerfile`: a build stage with Node, and a
-  final image of nginx serving the built files as a non-root user. The image carries
-  the sites named when it is built.
+- One multi-stage Dockerfile, `deploy/web.Dockerfile`, in parts that can each be
+  built by name. `build` holds Node, the built application and the `add-sites`
+  command; `server` holds nginx, running as a non-root user, and its configuration.
+  Neither depends on a site. The image that runs is the server with the output of
+  `add-sites` copied in, for the sites named when it is built.
+- `add-sites <site-id>...` (`deploy/add-sites.sh`) is the one way a site gets into the
+  application. It takes from each site only the files the app reads, writes each
+  site its page and web app manifest, stamps the service worker, and writes the
+  header lines, all under `/out`, laid out so that copying `/out/` onto the server
+  image's root puts everything in place. Because the two parts hold all that is not
+  the site's, a site's own repository can build its image from them without the
+  application's source.
 - `deploy/compose.yaml` runs that image locally (`docker compose up`), with a read-only
   filesystem, no added privileges and a health check.
 - Domain: `openwalk.app` (`.app` is HTTPS-only by browser policy). Subdomains:
