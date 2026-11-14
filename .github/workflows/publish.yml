@@ -1,0 +1,44 @@
+# A release: pushing a tag such as v1.2.0 builds the two images a site is built
+# from, checks that a site built from them serves, scans them for known
+# vulnerabilities, and publishes them to GitHub's container registry as
+#
+#   ghcr.io/<owner>/openwalk-build:1.2.0
+#   ghcr.io/<owner>/openwalk-server:1.2.0
+#
+# and under the tag `latest`. Nothing is published if a check or the scan of
+# what gets deployed fails. deploy/release.sh does the work and can be run on
+# one's own machine without publishing.
+name: Publish images
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  # Lets this run, and only this run, write to the repository's packages.
+  packages: write
+
+jobs:
+  publish:
+    name: Build, check, scan, publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # The token is made by GitHub for this run and expires with it; there is
+      # no stored secret.
+      - name: Sign in to the registry
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build, check, scan and publish
+        env:
+          SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          # Image names are lowercase, whatever the owner's name is.
+          owner=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          # The tag v1.2.0 names version 1.2.0.
+          PREFIX="ghcr.io/$owner" deploy/release.sh "${GITHUB_REF_NAME#v}" --push

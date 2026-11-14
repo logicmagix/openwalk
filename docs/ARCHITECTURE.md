@@ -161,6 +161,13 @@ npm workspaces, one lockfile, one `npm test` at the root.
   image's root puts everything in place. Because the two parts hold all that is not
   the site's, a site's own repository can build its image from them without the
   application's source.
+- A release publishes the two parts, not a finished image: pushing a version tag has
+  CI build `openwalk-build` and `openwalk-server`, put the example site into them the
+  way a site's repository would, check that the result serves, scan both for known
+  vulnerabilities that have a fix, and publish them to the repository's container
+  registry (`deploy/release.sh`, `.github/workflows/publish.yml`). A finding in what
+  gets deployed stops the release. The server part takes the fixes available for its
+  system packages each time it is built.
 - `deploy/compose.yaml` runs that image locally (`docker compose up`), with a read-only
   filesystem, no added privileges and a health check.
 - `deploy/stack.yaml` runs it under Docker Swarm (R21 to R23): two copies of the web

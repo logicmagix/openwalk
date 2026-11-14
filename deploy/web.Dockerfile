@@ -55,6 +55,13 @@ ENV HSTS="max-age=31536000"
 # header lines that command writes.
 FROM nginxinc/nginx-unprivileged:1.31-alpine AS server
 
+# The base image is rebuilt only now and then, and fixes to its system packages
+# come out in between. Take those that exist today; installing needs root for
+# this one step.
+USER root
+RUN apk upgrade --no-cache
+USER 101
+
 COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080
