@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 import {
   PRIVACY_PATH,
+  siteOfPrivacyPath,
   SITE_INDEX_PATH,
   siteIndex,
   siteManifest,
@@ -69,7 +70,7 @@ const serveSites: Plugin = {
       // directory's index.html by itself; here the address is spelled out, or
       // the development server would answer with the app's page.
       const [path = '', query] = url.split('?');
-      if (path === PRIVACY_PATH) {
+      if (path === PRIVACY_PATH || siteOfPrivacyPath(path) !== null) {
         request.url = `${PRIVACY_PATH}index.html${query === undefined ? '' : `?${query}`}`;
       }
       next();

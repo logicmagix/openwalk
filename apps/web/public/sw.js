@@ -110,8 +110,10 @@ async function cacheFirst(request) {
  * site's own name and manifest; any other route is the plain app shell.
  */
 function pageKey(url) {
-  // The privacy page is a page of its own, whichever site it was opened from.
+  // The privacy page is a page of its own, whichever site it was opened from
+  // and whichever of its addresses was used: by itself, or beneath a site.
   if (url.pathname.startsWith('/privacy/')) return '/privacy/';
+  if (/^\/s\/[a-z0-9-]+\/privacy\/?$/.test(url.pathname)) return '/privacy/';
   const match = /^\/(?:s|p)\/([a-z0-9-]+)(?:\/|$)/.exec(url.pathname);
   return match ? `/s/${match[1]}/` : '/index.html';
 }
