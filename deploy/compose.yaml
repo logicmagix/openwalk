@@ -2,8 +2,7 @@
 #
 #   docker compose -f deploy/compose.yaml up --build
 #
-# then open http://localhost:8080. Swarm deployment uses deploy/stack.yaml,
-# not this file.
+# then open http://localhost:8080.
 
 name: openwalk
 

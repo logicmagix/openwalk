@@ -28,7 +28,7 @@ Each site is a directory, `sites/<site-id>/`, with this content:
 
 | File                                               | Purpose                                                            |
 | -------------------------------------------------- | ------------------------------------------------------------------ |
-| `site.yaml`                                        | Name, boundary, default view, tile layers, categories, attribution |
+| `site.yaml`                                        | Name, boundary, default view, categories, numbers, attribution     |
 | `places.yaml`                                      | Curated places: numbers, names, keywords, category, entrance       |
 | `overlay/`                                         | An optional official map image and its georeference                |
 | `imagery/`                                         | An optional aerial photograph of the site, fetched by the pipeline |
@@ -111,6 +111,9 @@ described here. Paths below are relative to the repository root.
     It is served with the rest of the site's data, so it works with no network and no
     phone contacts the imagery service. The service must be an ArcGIS ImageServer, and
     the imagery must be yours to redistribute: government orthoimagery often is.
+    A photograph from any other source is added the way an official map is, in the
+    step before: put the picture under `overlay/` as a PNG with control points, and
+    the build fits it to the ground.
 
 Which ways count as walkways is set per site under `walkways` in `site.yaml`:
 the highway values admitted, surface values treated as unpaved, whether parking aisles
@@ -127,7 +130,7 @@ packages/schema/   shared schemas for pipeline output and the app
 e2e/               browser tests of the built app (Playwright)
 sites/             the example site; real sites are separate repositories
 tools/pipeline/    Python data preparation
-deploy/            Dockerfiles, compose and stack files, nginx config
+deploy/            Dockerfile, compose file, nginx config
 docs/              requirements, architecture, device testing
 ```
 

@@ -116,7 +116,7 @@ no request ever carries a position (R27).
 4. Get directions to a place across the site and walk it. Did the route stay on real
    paths? Did it announce arrival at the right spot?
 5. Try each "nearest" button (parking, call box, or whatever the site offers). Correct?
-6. Switch layers. Does the site's official map overlay line up with the satellite view?
+6. Switch layers. Does the site's official map overlay line up with the aerial photo, where the site has both?
 7. Add to home screen, turn on airplane mode, open from the icon. Does it still work?
 8. Send: phone model, browser, what broke, screenshot. Do not send your location
    history.
