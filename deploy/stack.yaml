@@ -1,0 +1,104 @@
+# The production stack, for Docker Swarm. Deploy from the repository root:
+#
+#   WEB_IMAGE=<registry>/<image>:<tag> docker stack deploy -c deploy/stack.yaml openwalk
+#
+# docs/DEPLOYMENT.md walks through it, with the one secret the stack needs.
+#
+# The same command with a new tag updates a running stack: Swarm replaces one
+# copy of the web service at a time, starting the new one and waiting for it
+# to report healthy before stopping the old, so there is never a moment with
+# none serving. If the new copies do not become healthy, it goes back to the
+# image that was running.
+
+services:
+  web:
+    # The image to run, with an exact tag: Swarm sees a new tag as an update,
+    # and an exact one says which build is running. There is no default,
+    # because a site's own image is built from the generic one and only its
+    # operator knows what it is called.
+    image: ${WEB_IMAGE:?set WEB_IMAGE to the image and tag to run}
+    networks: [edge]
+    # No ports are published. The only way in is the tunnel below, which
+    # reaches this service by name over the stack's own network.
+    read_only: true
+    # nginx needs a few writable places; they live in memory and vanish with
+    # the container.
+    volumes:
+      - { type: tmpfs, target: /tmp }
+      - { type: tmpfs, target: /var/cache/nginx }
+      - { type: tmpfs, target: /var/run }
+    cap_drop: [ALL]
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
+      interval: 15s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    deploy:
+      # Two copies: one can fail, or be replaced during an update, while the
+      # other serves. On a swarm of several machines they land on different
+      # ones where they can.
+      replicas: 2
+      placement:
+        preferences:
+          - spread: node.id
+      update_config:
+        parallelism: 1
+        # Start the new copy before stopping the old one.
+        order: start-first
+        # Watch each new copy for this long after it starts; failing its health
+        # check within it counts as a failed update.
+        monitor: 45s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 128M
+
+  # The way in from the internet: an outbound connection to Cloudflare, which
+  # sends visitors' requests back down it. The host therefore opens no port to
+  # the outside. In the Cloudflare dashboard the tunnel's public hostname
+  # points at http://web:8080.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.11.0
+    command: tunnel --no-autoupdate run
+    networks: [edge]
+    environment:
+      # The tunnel's token is read from a file that Swarm mounts in memory from
+      # the secret below. It is never in this file, an image or the environment.
+      TUNNEL_TOKEN_FILE: /run/secrets/cloudflare_tunnel_token
+    secrets: [cloudflare_tunnel_token]
+    read_only: true
+    cap_drop: [ALL]
+    deploy:
+      # Two connections to the same tunnel; Cloudflare uses whichever is up.
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  # An overlay network spans every machine in the swarm; services on it find
+  # each other by name.
+  edge:
+    driver: overlay
+
+secrets:
+  # Created once on the swarm, outside this file:
+  #   docker secret create cloudflare_tunnel_token -
+  cloudflare_tunnel_token:
+    external: true
