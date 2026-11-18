@@ -82,6 +82,10 @@ built from a site's repository carries the version of the release it was built o
   otherwise. From a site's repository, `RUN HSTS="..." add-sites <site-id>`; from
   this one, `--build-arg HSTS="..."`. An empty value sends none, for a host whose
   own proxy does.
+- Search engines are asked not to list the host: `/robots.txt` keeps crawlers out,
+  and an `X-Robots-Tag: noindex, nofollow` header goes with every file. A host that
+  is meant to be found says so when its image is built: from a site's repository,
+  `RUN LISTED=yes add-sites <site-id>`; from this one, `--build-arg LISTED=yes`.
 - Give every build its own tag, such as a date or a version. Swarm updates when the
   tag changes, and the tag says which build is running.
 

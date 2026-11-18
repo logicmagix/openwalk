@@ -173,7 +173,8 @@ serves, or opens the site directly when there is only one. An image carries one 
 or several, chosen with `--build-arg SITES="<site-id> <site-id>"` and defaulting to
 the example site. The image tells browsers to use only HTTPS for its host for a year;
 `--build-arg HSTS=...` changes what that header says, and an empty value sends none,
-for a host whose proxy already does.
+for a host whose proxy already does. The image also asks search engines not to list
+its host; `--build-arg LISTED=yes` lets them.
 
 The image takes from each site only the generated files the app reads: its settings,
 places, walkways, graph and base map, any overlays, and recorded traces. The

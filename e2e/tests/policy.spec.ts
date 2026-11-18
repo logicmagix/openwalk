@@ -68,6 +68,25 @@ test('the server tells browsers to use only HTTPS for the host, with every kind 
   }
 });
 
+test('the server says whether search engines may list it, the same way everywhere', async ({
+  request,
+}) => {
+  // robots.txt is a file of its own and not the app's page, and it either
+  // lets crawlers in or keeps them out.
+  const robots = await request.get('/robots.txt');
+  expect(robots.ok()).toBe(true);
+  expect(robots.headers()['content-type'] ?? '').toContain('text/plain');
+  const rules = await robots.text();
+  expect(rules).toMatch(/^User-agent: \*\n(Allow|Disallow): \/\n$/);
+  // A host that keeps them out also asks, with every kind of file, not to be
+  // listed; one that lets them in sends no such header.
+  const keptOut = rules.includes('Disallow');
+  for (const path of [MAP_PATH, '/sw.js', `/sites/${SITE_ID}/site.json`, '/favicon.svg']) {
+    const header = (await request.get(path)).headers()['x-robots-tag'] ?? '';
+    expect(header, path).toBe(keptOut ? 'noindex, nofollow' : '');
+  }
+});
+
 test.describe('living within the policy', () => {
   test.use({ permissions: ['geolocation'] });
 
