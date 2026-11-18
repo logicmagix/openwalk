@@ -3,6 +3,15 @@
 /** A longitude and latitude pair in degrees, in GeoJSON order. */
 export type Position = readonly [lon: number, lat: number];
 
+/** Something a visitor can find inside a place, searchable by its own name. */
+export interface PlaceService {
+  readonly name: string;
+  /** A short note shown beside the name, such as the floor or the room. */
+  readonly note?: string;
+  /** Plain words a visitor might search for that are not in the name. */
+  readonly keywords: readonly string[];
+}
+
 export interface PlaceProperties {
   readonly name: string;
   /** The number the site's own signage uses, if any. */
@@ -12,6 +21,8 @@ export interface PlaceProperties {
   readonly annotation?: string;
   /** Plain words a visitor might search for that are not in the name. */
   readonly keywords: readonly string[];
+  /** What a visitor can find inside the place. */
+  readonly services?: readonly PlaceService[];
   readonly osm_id?: string;
   readonly verified: boolean;
 }

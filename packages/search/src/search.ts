@@ -1,20 +1,31 @@
 // Ranking places against what someone typed. Every word of the query is scored
-// against every place on its number, name, keywords, category and annotation; a
-// place's score is the sum of its best match per word, scaled by how many of the
-// words it matched at all. Words that match nothing anywhere ("the", "bldg") are
+// against every place on its number, name, keywords, the services inside it,
+// category and annotation; a place's score is the sum of its best match per word,
+// scaled by how many of the words it matched at all. Words that match nothing anywhere ("the", "bldg") are
 // ignored so filler does not drag good matches down.
 
 import { allowedEdits, editDistance } from './fuzzy';
 import { normalize, tokenize } from './normalize';
-import type { PlaceFeature, PlacesDocument } from './places';
+import type { PlaceFeature, PlaceService, PlacesDocument } from './places';
 
 /** Where the strongest match for a result came from, for the app to show. */
-export type MatchField = 'number' | 'name' | 'keyword' | 'category' | 'annotation';
+export type MatchField = 'number' | 'name' | 'keyword' | 'service' | 'category' | 'annotation';
 
 export interface SearchResult {
   readonly place: PlaceFeature;
   readonly score: number;
   readonly field: MatchField;
+  /**
+   * The service that was found, when the place is here because of something inside
+   * it (`field` is `service`): the one of its services the query fits best.
+   */
+  readonly service?: PlaceService;
+}
+
+/** A service's name and keywords, as words to match against. */
+interface IndexedService {
+  readonly service: PlaceService;
+  readonly tokens: readonly string[];
 }
 
 interface IndexedPlace {
@@ -23,6 +34,7 @@ interface IndexedPlace {
   readonly name: string;
   readonly nameTokens: readonly string[];
   readonly keywordTokens: readonly string[];
+  readonly services: readonly IndexedService[];
   readonly categoryTokens: readonly string[];
   readonly annotationTokens: readonly string[];
 }
@@ -41,6 +53,10 @@ export function buildIndex(places: PlacesDocument): SearchIndex {
       name: normalize(p.name),
       nameTokens: tokenize(p.name),
       keywordTokens: p.keywords.flatMap(tokenize),
+      services: (p.services ?? []).map((service) => ({
+        service,
+        tokens: [...tokenize(service.name), ...service.keywords.flatMap(tokenize)],
+      })),
       categoryTokens: tokenize(p.category),
       annotationTokens: p.annotation === undefined ? [] : tokenize(p.annotation),
     };
@@ -50,11 +66,13 @@ export function buildIndex(places: PlacesDocument): SearchIndex {
 
 // Points per word. A field's three figures are for an exact word, a word the query
 // word is the start of, and a word within typo distance. Numbers and names outrank
-// keywords, which outrank the category and the annotation.
+// keywords, which outrank a service inside the place, which outranks the category
+// and the annotation.
 const SCORES = {
   number: { exact: 100, prefix: 30, fuzzy: 0 },
   name: { exact: 20, prefix: 12, fuzzy: 8 },
   keyword: { exact: 18, prefix: 10, fuzzy: 6 },
+  service: { exact: 16, prefix: 9, fuzzy: 5 },
   category: { exact: 10, prefix: 4, fuzzy: 0 },
   annotation: { exact: 6, prefix: 3, fuzzy: 2 },
 } as const;
@@ -62,7 +80,14 @@ const SCORES = {
 /** Bonus when the whole query is exactly the place's name. */
 const WHOLE_NAME_BONUS = 50;
 
-const FIELD_ORDER: readonly MatchField[] = ['number', 'name', 'keyword', 'category', 'annotation'];
+const FIELD_ORDER: readonly MatchField[] = [
+  'number',
+  'name',
+  'keyword',
+  'service',
+  'category',
+  'annotation',
+];
 
 export interface SearchOptions {
   /** Most results to return. */
@@ -108,7 +133,14 @@ export function search(
       total += WHOLE_NAME_BONUS;
       best = { score: total, field: 'name' };
     }
-    results.push({ place: entry.place, score: (total * matched) / knownCount, field: best.field });
+    const score = (total * matched) / knownCount;
+    const service = best.field === 'service' ? bestService(entry, words) : undefined;
+    results.push({
+      place: entry.place,
+      score,
+      field: best.field,
+      ...(service === undefined ? {} : { service }),
+    });
   });
 
   results.sort(compareResults);
@@ -132,6 +164,10 @@ function scoreWord(entry: IndexedPlace, word: string): { score: number; field: M
     number: scoreNumber(entry.number, word),
     name: scoreTokens(entry.nameTokens, word, SCORES.name),
     keyword: scoreTokens(entry.keywordTokens, word, SCORES.keyword),
+    service: Math.max(
+      0,
+      ...entry.services.map((service) => scoreTokens(service.tokens, word, SCORES.service)),
+    ),
     category: scoreTokens(entry.categoryTokens, word, SCORES.category),
     annotation: scoreTokens(entry.annotationTokens, word, SCORES.annotation),
   };
@@ -140,6 +176,21 @@ function scoreWord(entry: IndexedPlace, word: string): { score: number; field: M
     if (candidates[field] > best.score) best = { score: candidates[field], field };
   }
   return best;
+}
+
+/**
+ * The one of a place's services the whole query fits best: "testing center" names
+ * the Testing Center, not another service that merely has "center" in its name.
+ * Ties go to the service listed first.
+ */
+function bestService(entry: IndexedPlace, words: readonly string[]): PlaceService | undefined {
+  let best: { total: number; service: PlaceService } | undefined;
+  for (const { service, tokens } of entry.services) {
+    let total = 0;
+    for (const word of words) total += scoreTokens(tokens, word, SCORES.service);
+    if (total > 0 && (best === undefined || total > best.total)) best = { total, service };
+  }
+  return best?.service;
 }
 
 function scoreNumber(number: string | null, word: string): number {

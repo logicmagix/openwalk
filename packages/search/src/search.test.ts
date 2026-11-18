@@ -96,6 +96,72 @@ describe('search by keyword, category and annotation', () => {
   });
 });
 
+describe('search by a service inside a place', () => {
+  const place = (
+    id: string,
+    name: string,
+    services: { name: string; note?: string; keywords?: string[] }[],
+    keywords: string[] = [],
+  ) => ({
+    type: 'Feature',
+    id,
+    geometry: { type: 'Point', coordinates: [20, 10] },
+    properties: {
+      name,
+      category: 'building',
+      keywords,
+      verified: true,
+      ...(services.length === 0 ? {} : { services: services.map((s) => ({ keywords: [], ...s })) }),
+    },
+  });
+  const campusIndex = buildIndex({
+    type: 'FeatureCollection',
+    features: [
+      place('union', 'Student Union', [
+        { name: 'Advising Center' },
+        { name: 'Financial Aid', keywords: ['fafsa', 'scholarships'] },
+        { name: 'Testing Center', note: 'Second floor' },
+      ]),
+      place('library', 'Library', [{ name: 'Computer Lab' }], ['testing']),
+      place('aid-station', 'Aid Station', []),
+    ],
+  } as unknown as PlacesDocument);
+
+  it('finds the place the service is in, and says which service', () => {
+    const [top] = search(campusIndex, 'financial');
+    expect(top?.place.id).toBe('union');
+    expect(top?.field).toBe('service');
+    expect(top?.service?.name).toBe('Financial Aid');
+  });
+
+  it('finds a service by its own keywords, and through a typo', () => {
+    expect(search(campusIndex, 'fafsa')[0]?.service?.name).toBe('Financial Aid');
+    expect(search(campusIndex, 'finacial')[0]?.service?.name).toBe('Financial Aid');
+  });
+
+  it('names the service the whole query fits, whatever the order of its words', () => {
+    // Both the Advising Center and the Testing Center have "center" in their names.
+    expect(search(campusIndex, 'testing center')[0]?.service?.name).toBe('Testing Center');
+    expect(search(campusIndex, 'center testing')[0]?.service?.name).toBe('Testing Center');
+    expect(search(campusIndex, 'center')[0]?.service?.name).toBe('Advising Center');
+  });
+
+  it("ranks a place's own name and keywords above a service inside another", () => {
+    // "aid" is in the Aid Station's name and in the union's Financial Aid.
+    expect(ids(campusIndex, 'aid')).toEqual(['aid-station', 'union']);
+    // "testing" is a keyword of the library and a service of the union.
+    const results = search(campusIndex, 'testing');
+    expect(results.map((r) => r.place.id)).toEqual(['library', 'union']);
+    expect(results[0]?.service).toBeUndefined();
+  });
+
+  it('names no service when the place was found some other way', () => {
+    const [top] = search(campusIndex, 'union');
+    expect(top?.field).toBe('name');
+    expect(top?.service).toBeUndefined();
+  });
+});
+
 describe('search by number', () => {
   it('puts the exact number first and numbers starting with it after', () => {
     expect(ids(numberedIndex, '12')).toEqual(['library', 'health-center']);
