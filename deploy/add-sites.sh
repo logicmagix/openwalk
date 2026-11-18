@@ -11,7 +11,8 @@
 #   COPY --from=build /out/ /
 #
 # HSTS, in the environment, sets what the Strict-Transport-Security header
-# says; empty sends none.
+# says; empty sends none. LISTED=yes lets search engines list the host; without
+# it they are asked not to.
 set -eu
 
 if [ "$#" -eq 0 ]; then
@@ -40,6 +41,10 @@ node apps/web/scripts/gather-sites.mjs sites "$gathered" "$@"
 # Give each site its own copy of the page and its own web app manifest, so it
 # installs to a phone as an app named after the site.
 node apps/web/scripts/site-pages.mjs "$html" "$gathered"
+
+# Say whether search engines may list the host: the robots.txt it serves, and
+# nginx's line for the header that goes with everything it sends.
+node apps/web/scripts/listing.mjs "$html/robots.txt" "$snippets/listing-headers.conf"
 
 # Stamp the service worker with a fingerprint of the app and the sites' data
 # together, so a phone that has the app saved is offered the new version when

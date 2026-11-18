@@ -247,6 +247,18 @@ the app already sends the header can build with an empty value, and the app send
 none. A browser ignores the header over plain HTTP, so a copy run on one's own
 machine is unaffected.
 
+## Not listed by search engines unless the operator says so
+
+A host asks search engines not to list it. `/robots.txt` asks crawlers not to fetch
+its pages, and an `X-Robots-Tag: noindex, nofollow` header, sent with every file,
+asks a search engine not to list a page it has heard of some other way. A copy put up
+to try the app, or a site still being prepared, therefore stays out of search results
+without anyone having to remember to keep it out.
+
+Being found is the operator's choice, made when the image is built, with
+`--build-arg LISTED=yes`: `robots.txt` then lets crawlers in and the header is not
+sent. Both are written from one source, `apps/web/src/listing.ts`.
+
 ## Sharing a place
 
 A place's address, `/p/<site-id>/<place-id>`, opens the map on that place (R10). The

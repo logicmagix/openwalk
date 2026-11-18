@@ -93,6 +93,9 @@ expect / '^HTTP/1.1 200'
 expect "/s/$example/" '^HTTP/1.1 200'
 expect "/s/$example/" '^content-security-policy:'
 expect "/s/$example/" '^strict-transport-security:'
+# Built without saying otherwise, a host asks search engines not to list it.
+expect "/s/$example/" '^x-robots-tag: noindex'
+expect /robots.txt '^content-type: text/plain'
 expect "/sites/$example/site.json" '^HTTP/1.1 200'
 expect "/sites/$example/manifest.webmanifest" 'application/manifest+json'
 # The app says which release it is: its script carries the version it was built with.

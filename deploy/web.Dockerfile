@@ -26,6 +26,12 @@ ARG SITES=tuscawilla-park
 # to send none because a proxy in front already does.
 ARG HSTS="max-age=31536000"
 
+# Whether search engines may list the host. They are asked not to, by the
+# robots.txt the image serves and a header sent with everything, unless the
+# image is built with --build-arg LISTED=yes. A copy put up to try the app
+# then stays out of search results without anyone remembering to keep it out.
+ARG LISTED=""
+
 # ---- build: the app, built with Node, and the command that adds sites ------
 FROM node:24-alpine AS build
 WORKDIR /src
@@ -78,8 +84,9 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
 FROM build AS sites
 ARG SITES
 ARG HSTS
+ARG LISTED
 COPY sites sites
-RUN HSTS="$HSTS" add-sites $SITES
+RUN HSTS="$HSTS" LISTED="$LISTED" add-sites $SITES
 
 # ---- the image that runs: the server with the app and its sites ------------
 FROM server
