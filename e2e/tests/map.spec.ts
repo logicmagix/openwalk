@@ -9,6 +9,19 @@ test('the map opens, named after the site', async ({ page }) => {
   await expect(controls(page).locate).toBeEnabled();
 });
 
+test('the map opens without asking for a file that is not there', async ({ page }) => {
+  // A request the server answers with "not found" is an error in the browser's
+  // console, even for a file the app can do without.
+  const failed: string[] = [];
+  page.on('response', (response) => {
+    if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
+  });
+  await openMap(page);
+  await expect(page.locator('#map canvas')).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect(failed).toEqual([]);
+});
+
 test('the search box lists every place before anything is typed', async ({ page }) => {
   await openMap(page);
   const { search, results } = controls(page);

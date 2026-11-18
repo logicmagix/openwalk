@@ -64,11 +64,24 @@ export async function fetchJson(url: string): Promise<unknown> {
   return response.json();
 }
 
+/** Whether a site's configuration names anything that overlays.json would describe. */
+export function offersOverlays(config: SiteConfig): boolean {
+  return config.imagery !== undefined || (config.overlays ?? []).length > 0;
+}
+
 /**
- * Loads a site's overlays, if it has any. overlays.json is optional: a site with no
- * official map image simply has no file, so a failed fetch means "no overlays".
+ * Loads a site's overlays, if it has any. overlays.json is optional, and a site
+ * whose configuration names no aerial photograph and no map image has no such
+ * file, so it is not asked for: a request for a file that is not there is an
+ * error in the browser's console and a wasted trip. Where the configuration
+ * names one that was never prepared, the failed fetch means "no overlays".
  */
-async function loadOverlays(base: string, fetchFn: JsonFetcher): Promise<OverlayEntry[]> {
+async function loadOverlays(
+  base: string,
+  config: SiteConfig,
+  fetchFn: JsonFetcher,
+): Promise<OverlayEntry[]> {
+  if (!offersOverlays(config)) return [];
   try {
     const document = (await fetchFn(`${base}overlays.json`)) as OverlaysDocument;
     return [...(document.overlays ?? [])];
@@ -84,12 +97,15 @@ export async function loadSite(
 ): Promise<SiteData> {
   if (!ID.test(siteId)) throw new Error(`invalid site id: ${siteId}`);
   const base = siteBaseUrl(siteId);
+  // The overlays wait for the configuration, which says whether there are any;
+  // everything else is fetched alongside.
+  const settings = fetchFn(`${base}site.json`) as Promise<SiteConfig>;
   const [config, places, walkways, graph, overlays] = await Promise.all([
-    fetchFn(`${base}site.json`) as Promise<SiteConfig>,
+    settings,
     fetchFn(`${base}places.geojson`) as Promise<PlacesDocument>,
     fetchFn(`${base}walkways.geojson`) as Promise<WalkwaysDocument>,
     fetchFn(`${base}graph.json`) as Promise<GraphDocument>,
-    loadOverlays(base, fetchFn),
+    settings.then((config) => loadOverlays(base, config, fetchFn)),
   ]);
   return { config, places, walkways, graph, overlays, basemapUrl: `${base}basemap.pmtiles` };
 }

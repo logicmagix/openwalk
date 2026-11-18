@@ -67,7 +67,9 @@ describe('loadSite', () => {
     const requested: string[] = [];
     const fake = async (url: string) => {
       requested.push(url);
-      if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo' };
+      if (url.endsWith('site.json')) {
+        return { id: 'demo-site', name: 'Demo', overlays: [{ id: 'map', name: 'Map' }] };
+      }
       if (url.endsWith('graph.json')) return { nodes: [], edges: [], places: {} };
       if (url.endsWith('overlays.json')) return { overlays: [{ id: 'map', name: 'Map' }] };
       return { type: 'FeatureCollection', features: [] };
@@ -86,9 +88,33 @@ describe('loadSite', () => {
     expect(data.basemapUrl).toBe('/sites/demo-site/basemap.pmtiles');
   });
 
+  it('does not ask for overlays.json when the site names no overlay', async () => {
+    const requested: string[] = [];
+    const fake = async (url: string) => {
+      requested.push(url);
+      if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo', overlays: [] };
+      if (url.endsWith('graph.json')) return { nodes: [], edges: [], places: {} };
+      return { type: 'FeatureCollection', features: [] };
+    };
+    const data = await loadSite('demo-site', fake);
+    expect(data.overlays).toEqual([]);
+    expect(requested.some((url) => url.endsWith('overlays.json'))).toBe(false);
+  });
+
+  it('asks for it when the site names only an aerial photograph', async () => {
+    const fake = async (url: string) => {
+      if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo', imagery: {} };
+      if (url.endsWith('graph.json')) return { nodes: [], edges: [], places: {} };
+      if (url.endsWith('overlays.json')) return { overlays: [{ id: 'aerial', name: 'Aerial' }] };
+      return { type: 'FeatureCollection', features: [] };
+    };
+    const data = await loadSite('demo-site', fake);
+    expect(data.overlays).toEqual([{ id: 'aerial', name: 'Aerial' }]);
+  });
+
   it('treats a missing overlays.json as no overlays', async () => {
     const fake = async (url: string) => {
-      if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo' };
+      if (url.endsWith('site.json')) return { id: 'demo-site', name: 'Demo', imagery: {} };
       if (url.endsWith('graph.json')) return { nodes: [], edges: [], places: {} };
       if (url.endsWith('overlays.json')) throw new Error('404');
       return { type: 'FeatureCollection', features: [] };
