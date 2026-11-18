@@ -32,11 +32,15 @@ test('moving the map pauses following and the locate button resumes it', async (
   await expect(locate).toHaveAttribute('aria-pressed', 'true');
   await expect(locate).toHaveAttribute('data-following', 'true');
 
-  // Let the glide to the person's position finish before taking hold of the map.
-  await page.waitForTimeout(800);
-  await dragMap(page);
+  // The map glides to the person when their position first arrives, and a
+  // glide that starts while the map is being dragged takes it out of the hand.
+  // How long the position takes is not the test's to know, so it does what a
+  // person would: if the map slipped away, it takes hold of it again.
+  await expect(async () => {
+    await dragMap(page);
+    await expect(locate).toHaveAttribute('data-following', 'false', { timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
   await expect(locate).toHaveAttribute('aria-pressed', 'true');
-  await expect(locate).toHaveAttribute('data-following', 'false');
 
   // One press returns to the person and keeps locating on.
   await locate.click();

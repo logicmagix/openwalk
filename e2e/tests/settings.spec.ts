@@ -320,8 +320,12 @@ test.describe('the color around the app', () => {
     });
     const mark = (page: Page) =>
       page.evaluate(() => ((window as unknown as { marked?: boolean }).marked = true));
-    const marked = (page: Page) =>
-      page.evaluate(() => (window as unknown as { marked?: boolean }).marked === true);
+    // Asked at the very moment one page gives way to the next, the browser
+    // has no page to ask and says so with an error; that is "no answer yet".
+    const marked = (page: Page): Promise<boolean | null> =>
+      page
+        .evaluate(() => (window as unknown as { marked?: boolean }).marked === true)
+        .catch(() => null);
 
     test('a change of color loads the page again with Settings still open', async ({ page }) => {
       await page.emulateMedia({ colorScheme: 'light' });
