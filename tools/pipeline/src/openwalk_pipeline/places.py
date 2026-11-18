@@ -71,6 +71,14 @@ def resolve_position(place: JsonObject, by_osm_id: dict[str, JsonObject]) -> lis
     return hand_placed_entrances(place)[0]
 
 
+def _service(service: JsonObject) -> JsonObject:
+    """A service as the app reads it: its keywords always present, like a place's."""
+    output: JsonObject = {"name": service["name"], "keywords": list(service.get("keywords", []))}
+    if "note" in service:
+        output["note"] = service["note"]
+    return output
+
+
 def build_places(places: Iterable[JsonObject], features: Iterable[JsonObject]) -> JsonObject:
     """Return the places FeatureCollection, sorted by id."""
     by_osm_id = {feature["id"]: feature for feature in features}
@@ -85,6 +93,8 @@ def build_places(places: Iterable[JsonObject], features: Iterable[JsonObject]) -
         for key in OPTIONAL_PROPERTIES:
             if key in place:
                 properties[key] = place[key]
+        if "services" in place:
+            properties["services"] = [_service(service) for service in place["services"]]
         if "osm" in place:
             properties["osm_id"] = place["osm"]
         output.append(
