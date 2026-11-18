@@ -72,7 +72,11 @@ described here. Paths below are relative to the repository root.
    keywords, and a position given as an OpenStreetMap element or a hand-placed
    location. Directions end where the place meets the nearest walkway unless you say
    where its doors are: give one as `entrance`, or several as `entrances`, and the
-   app leads to whichever is the shortest walk from where the person stands. Mark
+   app leads to whichever is the shortest walk from where the person stands. To say
+   what a visitor finds inside a place, list its `services`: each an office, a
+   counter or a café with a `name` and, if you wish, a `note` such as the floor and
+   search `keywords` of its own. Searching for a service finds the place it is in,
+   and the place lists its services when opened. Mark
    each `verified: true` only after checking it on foot. Rebuild. To give a category a one-tap "nearest" button on the map, list it
    under `nearest` in `site.yaml` with the label the button should show; nearest is
    measured by walking distance over the network. The map colors each place by
