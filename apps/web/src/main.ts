@@ -126,6 +126,8 @@ const SPOT_WAIT_MS = 15_000;
 
 /** Screen space kept clear around a route when the map is fitted to it. */
 const ROUTE_PADDING = 80;
+/** The name of the browser timing mark set when the map is first drawn whole. */
+const MAP_DRAWN_MARK = 'openwalk-map-drawn';
 
 function element<T extends HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -289,6 +291,10 @@ async function start(): Promise<void> {
     ...view,
     ...(extent ? { extent } : {}),
   });
+  // Note the moment the map is first drawn whole, in the browser's own record
+  // of the page's timings. Nothing reads it but a developer's tools and the
+  // test that checks the app has not grown slow to open; it never leaves the page.
+  map.onFirstDraw(() => performance.mark(MAP_DRAWN_MARK));
 
   function restyle(change: Partial<StyleInputs>): void {
     inputs.current = { ...inputs.current, ...change };
