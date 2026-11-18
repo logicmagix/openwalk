@@ -3,7 +3,7 @@
 // place, each opening onto its own places, so a long list is never one scroll.
 // Pure, so the ordering is testable.
 
-import { search, type PlaceFeature, type SearchIndex } from '@openwalk/search';
+import { search, type PlaceFeature, type PlaceService, type SearchIndex } from '@openwalk/search';
 import type { Category } from '../categories';
 import type { PlacesDocument } from '../site/types';
 
@@ -15,7 +15,10 @@ export type Listing =
       readonly place: PlaceFeature;
       /** The number and name, as shown on the map. */
       readonly label: string;
-      /** The annotation, or an empty string. */
+      /**
+       * The annotation, else the names of the services inside, else an empty
+       * string. In a search that found the place by a service, that service.
+       */
       readonly detail: string;
       /**
        * Set on a row listed because it is the person's own: a place they saved
@@ -97,24 +100,43 @@ export function compareForDropdown(a: PlaceFeature, b: PlaceFeature): number {
   return (a.properties.annotation ?? '').localeCompare(b.properties.annotation ?? '');
 }
 
-function placeRow(place: PlaceFeature): Listing {
+/** A service as one line: its name, and its note when it has one. */
+export function serviceLine(service: PlaceService): string {
+  return service.note === undefined ? service.name : `${service.name} \u00b7 ${service.note}`;
+}
+
+/**
+ * The short line beside a place's name in a list: its annotation, or failing
+ * that the names of the services inside it.
+ */
+export function detailOf(place: PlaceFeature): string {
+  const { annotation, services } = place.properties;
+  if (annotation !== undefined && annotation !== '') return annotation;
+  return (services ?? []).map((service) => service.name).join(', ');
+}
+
+/**
+ * A row for a place. A place found by a service inside it says which, so that
+ * someone who typed "financial aid" sees why a building is the answer.
+ */
+function placeRow(place: PlaceFeature, found?: PlaceService): Listing {
   return {
     kind: 'place',
     place,
     label: labelOf(place),
-    detail: place.properties.annotation ?? '',
+    detail: found === undefined ? detailOf(place) : serviceLine(found),
   };
 }
 
 /** A place listed at the head because it is the person's own: the word says why. */
 function ownRow(place: PlaceFeature, mark: 'saved' | 'recent'): Listing {
   const word = mark === 'saved' ? SAVED_WORD : RECENT_WORD;
-  const annotation = place.properties.annotation ?? '';
+  const detail = detailOf(place);
   return {
     kind: 'place',
     place,
     label: labelOf(place),
-    detail: annotation === '' ? word : `${word} · ${annotation}`,
+    detail: detail === '' ? word : `${word} · ${detail}`,
     mark,
   };
 }
@@ -196,17 +218,23 @@ export function listFor(
   if (query.trim() !== '') {
     return search(source.index, query, { limit })
       .slice(0, limit)
-      .map((result) => placeRow(result.place));
+      .map((result) => placeRow(result.place, result.service));
   }
   const all = [...source.places.features].sort(compareForDropdown);
   const grouped = all.length > GROUP_ABOVE && source.categories.length > 1;
   if (grouped && browsing === ALL_PLACES) {
-    return [{ kind: 'back', label: BACK_LABEL, detail: ALL_LABEL }, ...all.map(placeRow)];
+    return [
+      { kind: 'back', label: BACK_LABEL, detail: ALL_LABEL },
+      ...all.map((place) => placeRow(place)),
+    ];
   }
   const open = source.categories.find((category) => category.id === browsing);
   if (open !== undefined) {
     const inside = all.filter((place) => place.properties.category === open.id);
-    return [{ kind: 'back', label: BACK_LABEL, detail: open.label }, ...inside.map(placeRow)];
+    return [
+      { kind: 'back', label: BACK_LABEL, detail: open.label },
+      ...inside.map((place) => placeRow(place)),
+    ];
   }
   const here: Listing[] = source.offerHere
     ? [{ kind: 'here', label: HERE_LABEL, detail: HERE_DETAIL }]
@@ -224,5 +252,5 @@ export function listFor(
       })),
     ];
   }
-  return [...here, ...ownRows(source), ...all.map(placeRow)];
+  return [...here, ...ownRows(source), ...all.map((place) => placeRow(place))];
 }

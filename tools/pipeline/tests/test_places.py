@@ -89,3 +89,39 @@ def test_entrance_and_entrances_together_are_refused(tmp_path: Path) -> None:
     )
     with pytest.raises((SchemaError, places.PlaceError)):
         places.load_places_yaml(path)
+
+
+def test_services_are_carried_through_with_their_keywords_filled_in() -> None:
+    curated = [
+        {
+            "id": "union",
+            "name": "Union",
+            "category": "building",
+            "location": [20.0, 10.0],
+            "services": [
+                {"name": "Financial Aid", "note": "First floor", "keywords": ["fafsa"]},
+                {"name": "Café"},
+            ],
+        },
+        {"id": "gate", "name": "Gate", "category": "landmark", "location": [20.1, 10.1]},
+    ]
+    collection = places.build_places(curated, [])
+    by_id = {f["id"]: f for f in collection["features"]}
+    assert by_id["union"]["properties"]["services"] == [
+        {"name": "Financial Aid", "keywords": ["fafsa"], "note": "First floor"},
+        {"name": "Café", "keywords": []},
+    ]
+    assert "services" not in by_id["gate"]["properties"]
+    validate(collection, "places")
+
+
+def test_a_service_needs_a_name(tmp_path: Path) -> None:
+    path = tmp_path / "places.yaml"
+    path.write_text(
+        "places:\n"
+        "  - id: union\n    name: Union\n    category: building\n    location: [20.0, 10.0]\n"
+        "    services:\n      - {note: First floor}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SchemaError, match="places-yaml"):
+        places.load_places_yaml(path)

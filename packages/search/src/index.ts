@@ -1,10 +1,16 @@
-// @openwalk/search: search over a site's places by number, name, keywords, category
-// and annotation, tolerant of typos. Pure functions, no I/O: the caller loads
+// @openwalk/search: search over a site's places by number, name, keywords, the
+// services inside them, category and annotation, tolerant of typos. Pure functions, no I/O: the caller loads
 // places.geojson and passes it in.
 
 export { allowedEdits, editDistance } from './fuzzy';
 export { normalize, tokenize } from './normalize';
-export type { PlaceFeature, PlaceProperties, PlacesDocument, Position } from './places';
+export type {
+  PlaceFeature,
+  PlaceProperties,
+  PlaceService,
+  PlacesDocument,
+  Position,
+} from './places';
 export {
   buildIndex,
   search,

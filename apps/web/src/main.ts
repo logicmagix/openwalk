@@ -340,6 +340,7 @@ async function start(): Promise<void> {
       root: element('panel'),
       name: element('panel-name'),
       detail: element('panel-detail'),
+      services: element('panel-services'),
       status: element('panel-status'),
       announce: element('panel-announce'),
       arrow: element('panel-arrow'),

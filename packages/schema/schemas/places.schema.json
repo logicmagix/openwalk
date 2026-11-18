@@ -20,6 +20,17 @@
       "minItems": 2,
       "maxItems": 2
     },
+    "service": {
+      "description": "Something a visitor can find inside a place, searchable by its own name.",
+      "type": "object",
+      "required": ["name", "keywords"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 },
+        "keywords": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
     "place": {
       "type": "object",
       "required": ["type", "id", "geometry", "properties"],
@@ -44,6 +55,7 @@
             "category": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
             "annotation": { "type": "string" },
             "keywords": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "services": { "type": "array", "items": { "$ref": "#/$defs/service" }, "minItems": 1 },
             "osm_id": { "type": "string", "pattern": "^(node|way|relation)/[0-9]+$" },
             "verified": { "type": "boolean" }
           },
