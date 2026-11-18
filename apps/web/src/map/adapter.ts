@@ -252,6 +252,11 @@ export class MapView {
     this.map.easeTo({ center: [center[0], center[1]], duration: 400 });
   }
 
+  /** Calls back once, when the map has first been drawn whole. */
+  onFirstDraw(callback: () => void): void {
+    this.map.once('load', callback);
+  }
+
   /** Calls back when the person starts dragging the map, not when code moves it. */
   onUserPan(callback: () => void): void {
     this.map.on('dragstart', callback);

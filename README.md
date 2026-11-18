@@ -150,7 +150,9 @@ npm run test:e2e    # browser tests against that running stack
 
 The browser tests (`e2e/`, Playwright) drive the built app the way a person would:
 search, directions with a pretended position, arrival, being away from the site,
-installing, working with no network, and automated accessibility checks. One test
+installing, working with no network, and automated accessibility checks. Two coarse
+alarms watch for the app growing slow to open: one for how long the map takes to be
+drawn, one for the weight of the files a first visit downloads. One test
 watches every request the page makes and fails if any leaves the site or carries a
 position. They read their places from the example site, so they hold no site facts.
 Before the first run, `npx playwright install chromium webkit` in `e2e/` downloads the
