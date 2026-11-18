@@ -39,6 +39,10 @@ export interface SiteConfig {
     readonly weights?: Partial<Record<string, number>>;
     readonly walking_speed?: number;
   };
+  /** Set when the site offers an aerial photograph as a layer of the map. */
+  readonly imagery?: object;
+  /** The site's own map images, as configured; overlays.json describes them fitted. */
+  readonly overlays?: readonly object[];
 }
 
 export interface WalkwayProperties {
