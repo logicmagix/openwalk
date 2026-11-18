@@ -76,7 +76,8 @@ sites/
                        source, "nearest" categories, safety numbers, overlay control
                        points, imagery service, attribution
     places.yaml        curated list: id, number, name, aliases/keywords, category,
-                       annotation, entrances, OSM id (if any)
+                       annotation, the services inside it, entrances, OSM id
+                       (if any)
     walkways.yaml      hand-drawn connections that OpenStreetMap lacks
     overlay/           the site's official map image
     imagery/           an aerial photograph fetched by the pipeline, and its extent

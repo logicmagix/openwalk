@@ -669,6 +669,22 @@ li {
   opacity: 0.75;
 }
 
+/* The services inside the place. A building can hold a dozen, so past a few
+   lines the list scrolls inside the panel and the map keeps its room. */
+.panel-services {
+  max-height: 6.5em;
+  margin: 2px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  font-size: 15px;
+  opacity: 0.75;
+}
+
+.panel-services[hidden] {
+  display: none;
+}
+
 /* Where the walk starts. It reads as a line of the panel and acts as a button:
    pressing it chooses another start. */
 .panel-from {

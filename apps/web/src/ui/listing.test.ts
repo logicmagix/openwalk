@@ -8,8 +8,10 @@ import {
   BACK_LABEL,
   GROUP_ABOVE,
   HERE_LABEL,
+  detailOf,
   labelOf,
   listFor,
+  serviceLine,
 } from './listing';
 
 const places: PlacesDocument = {
@@ -263,5 +265,64 @@ describe('saved walks', () => {
     expect(listFor(own, '').filter((row) => row.kind === 'route')).toHaveLength(1);
     const starting = { ...own, offerHere: true };
     expect(listFor(starting, '').some((row) => row.kind === 'route')).toBe(false);
+  });
+});
+
+describe('a place with services inside it', () => {
+  const feature = (
+    id: string,
+    name: string,
+    extra: Partial<PlacesDocument['features'][number]['properties']> = {},
+  ): PlacesDocument['features'][number] => ({
+    type: 'Feature',
+    id,
+    geometry: { type: 'Point', coordinates: [0, 0] },
+    properties: { name, category: 'building', keywords: [], verified: false, ...extra },
+  });
+  const union = feature('union', 'Student Union', {
+    services: [
+      { name: 'Financial Aid', keywords: ['fafsa'] },
+      { name: 'Testing Center', note: 'Second floor', keywords: [] },
+    ],
+  });
+  const library = feature('library', 'Library', {
+    annotation: 'Open late',
+    services: [{ name: 'Computer Lab', keywords: [] }],
+  });
+  const campus: PlacesDocument = {
+    type: 'FeatureCollection',
+    features: [union, library, feature('gym', 'Gym')],
+  };
+  const campusSource = {
+    places: campus,
+    index: buildIndex(campus),
+    categories: siteCategories({}, campus),
+  };
+  const detailFor = (query: string, id: string) =>
+    listFor(campusSource, query).find((row) => row.kind === 'place' && row.place.id === id)?.detail;
+
+  it('lists them beside its name when it has no annotation', () => {
+    expect(detailOf(union)).toBe('Financial Aid, Testing Center');
+    expect(detailOf(library)).toBe('Open late');
+    expect(detailOf(campus.features[2]!)).toBe('');
+    expect(detailFor('', 'union')).toBe('Financial Aid, Testing Center');
+  });
+
+  it('says which service a search found it by, with the note', () => {
+    expect(detailFor('fafsa', 'union')).toBe('Financial Aid');
+    expect(detailFor('testing', 'union')).toBe('Testing Center \u00b7 Second floor');
+    expect(detailFor('computer', 'library')).toBe('Computer Lab');
+  });
+
+  it('keeps its usual line when the search found it by its own name', () => {
+    expect(detailFor('union', 'union')).toBe('Financial Aid, Testing Center');
+    expect(detailFor('library', 'library')).toBe('Open late');
+  });
+
+  it('writes a service as its name and its note', () => {
+    expect(serviceLine({ name: 'Testing Center', note: 'Second floor', keywords: [] })).toBe(
+      'Testing Center \u00b7 Second floor',
+    );
+    expect(serviceLine({ name: 'Financial Aid', keywords: [] })).toBe('Financial Aid');
   });
 });

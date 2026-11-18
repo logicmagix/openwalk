@@ -1,14 +1,16 @@
-// The directions panel at the bottom of the map: the chosen destination, how far
-// and how long, an arrow for the way to head, and the arrival message.
+// The directions panel at the bottom of the map: the chosen destination, what a
+// visitor can find inside it, how far and how long, an arrow for the way to head, and the arrival message.
 
 import type { PlaceFeature } from '@openwalk/search';
 import type { Guidance } from '../directions';
-import { labelOf } from './listing';
+import { labelOf, serviceLine } from './listing';
 
 export interface PanelElements {
   readonly root: HTMLElement;
   readonly name: HTMLElement;
   readonly detail: HTMLElement;
+  /** A list, filled with the services inside the place shown. */
+  readonly services: HTMLElement;
   readonly status: HTMLElement;
   /** Hidden from view; what a screen reader is told when the directions change. */
   readonly announce: HTMLElement;
@@ -150,6 +152,15 @@ export function setupPanel(elements: PanelElements, handlers: PanelHandlers): Pa
       elements.name.textContent = labelOf(place);
       elements.detail.textContent = place.properties.annotation ?? '';
       elements.detail.hidden = elements.detail.textContent === '';
+      const services = place.properties.services ?? [];
+      elements.services.replaceChildren(
+        ...services.map((service) => {
+          const item = document.createElement('li');
+          item.textContent = serviceLine(service);
+          return item;
+        }),
+      );
+      elements.services.hidden = services.length === 0;
       elements.root.hidden = false;
     },
     update(state) {

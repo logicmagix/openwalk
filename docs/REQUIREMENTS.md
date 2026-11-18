@@ -23,8 +23,9 @@ other docs cite.
 - R5. You are here. A position marker with an accuracy circle, updated live while the
   page is open, using the browser Geolocation API. The app remains usable with
   location denied (no marker, no directions, everything else works).
-- R6. Search. Find a place by its number, name, or plain words tied to it
-  ("cafeteria", "first aid"). Tolerant of small typos. Works offline against local
+- R6. Search. Find a place by its number, name, plain words tied to it
+  ("cafeteria", "first aid"), or a service inside it ("financial aid"), which finds
+  the building and says which service was meant. Tolerant of small typos. Works offline against local
   data.
 - R7. Directions. Shortest walking route from the user's position (or a chosen start)
   to a destination, drawn on the map, with distance, estimated walking time, and a
